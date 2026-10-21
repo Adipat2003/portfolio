@@ -7,6 +7,30 @@
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
+/* Seasonal palette. content/seasons.json holds the source of truth and
+   src/content/season.ts resolves it; build.py does the same for the static
+   page. These override the base tokens only. Art and structure never change
+   with the season. Overrides sit after :root so they win the cascade. */
+[data-season="winter"]{
+  --accent:#2f5d73; --accent-soft:#dce8ee;
+  --atlas-sky-1:#0a0f18; --atlas-sky-2:#101826; --atlas-sky-3:#18202f;
+  --atlas-lights:#cfe0ee;
+}
+[data-season="spring"]{
+  --accent:#3f6b4f; --accent-soft:#e2ecdf;
+  --atlas-sky-1:#0a1210; --atlas-sky-2:#10201a; --atlas-sky-3:#16281f;
+  --atlas-lights:#cfe8c0;
+}
+[data-season="summer"]{
+  --accent:#c07b16; --accent-soft:#f6e6c8;
+  --atlas-sky-1:#0c0e1c; --atlas-sky-2:#141830; --atlas-sky-3:#1d2440;
+  --atlas-lights:#ffd98a;
+}
+[data-season="fall"]{
+  --accent:#b3541e; --accent-soft:#f3e3d5;
+  --atlas-sky-1:#14100c; --atlas-sky-2:#1e1810; --atlas-sky-3:#2b2114;
+  --atlas-lights:#e8b04b;
+}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
 body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.55}

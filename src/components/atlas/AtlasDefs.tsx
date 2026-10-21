@@ -10,8 +10,14 @@ export default function AtlasDefs() {
   return (
     <defs>
       <linearGradient id={atlas.sky.id} x1={atlas.sky.x1} y1={atlas.sky.y1} x2={atlas.sky.x2} y2={atlas.sky.y2}>
-        {atlas.sky.stops.map((stop) => (
-          <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
+        {atlas.sky.stops.map((stop, i) => (
+          <stop
+            key={stop.offset}
+            offset={stop.offset}
+            /* The season's sky, with the content value as the fallback so an
+               unthemed render still draws the authored sky. */
+            style={{ stopColor: `var(--atlas-sky-${i + 1}, ${stop.color})` }}
+          />
         ))}
       </linearGradient>
       <linearGradient
