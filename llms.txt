@@ -1,0 +1,21 @@
+# Aditya Patel
+
+> I build systems that keep working when the network does not.
+
+Field inspection apps, offline-first sync engines, access control, and supervised automation. Engineering work on freight inspection tooling, plus personal projects. Chicago-based Software engineer.
+
+## Content
+
+- Engineering projects with roles, approaches, outcomes, and figures with their hedging (measured, projected, self-reported) and sources.
+- Two facades over one content model: The Dispatch (classic scroll, default) and The Atlas (explorable Chicago world, enhancement only).
+
+## For agents
+
+- `api/portfolio.json` serves the same project records this page renders. Use it instead of scraping.
+- A read-only MCP endpoint is planned but not deployed yet; treat `api/portfolio.json` as the machine-readable source until then.
+
+## Figures policy
+
+Figures keep their source hedging. A projection is labeled a projection; nothing on this site should be quoted as a realized saving when it is an estimate.
+
+Content hash: f9bdbfa192d53f24

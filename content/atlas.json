@@ -1,0 +1,44 @@
+{
+  "note": "Geometry for Facade 2 (The Atlas). Landmark paths are authored abstractions; each names its source building. Stations reference project slugs from projects.json.",
+  "viewBox": "0 0 1200 470",
+  "sky": "linearGradient(id=atlasSky): #0b0e18 0%, #131a2c 60%, #1d2233 100%",
+  "building_fill": "linearGradient(id=towerGlass): #222b42 0%, #141a29 100%",
+  "buildings": [
+    {"name": "Willis Tower", "feature": "bundled setback tubes with twin antennas", "d": "M120 420 L120 250 L136 250 L136 210 L152 210 L152 175 L168 175 L168 210 L184 210 L184 250 L200 250 L200 420 Z", "extra": "M156 175 L156 128 M164 175 L164 128", "extra_stroke": "#2a3a5c", "extra_width": 2},
+    {"name": "Hancock Center", "feature": "tapered body with visible cross-bracing", "d": "M240 420 L252 120 L268 120 L280 420 Z", "extra": "M252 190 L280 250 M268 170 L240 230 M252 250 L280 310 M268 230 L240 290 M252 165 L280 225 M268 145 L240 205", "extra_stroke": "#4a5c86", "extra_width": 1},
+    {"name": "Aon Center", "feature": "slim rectangular column", "d": "M300 420 L300 170 L334 170 L334 420 Z"},
+    {"name": "Two Prudential Plaza", "feature": "slanted top", "d": "M356 420 L356 200 L373 168 L390 200 L390 420 Z"},
+    {"name": "Marina City (west)", "feature": "corncob cylinder", "d": "M412 420 L412 200 L442 200 L442 420 Z"},
+    {"name": "Marina City (east)", "feature": "corncob cylinder", "d": "M452 420 L452 200 L482 200 L482 420 Z"},
+    {"name": "Trump International Hotel and Tower", "feature": "spire", "d": "M508 420 L508 190 L518 190 L518 150 L522 128 L526 150 L526 190 L536 190 L536 420 Z"},
+    {"name": "CNA Center", "feature": "red-banded block", "d": "M556 420 L556 215 L600 215 L600 420 Z", "extra": "M556 215 L600 215 L600 227 L556 227 Z", "extra_fill": "#8e3b2c"},
+    {"name": "One Eleven (former Wolf Point)", "feature": "stepped crown", "d": "M620 420 L620 235 L628 235 L628 220 L632 208 L636 220 L636 235 L644 235 L644 420 Z"},
+    {"name": "Wrigley Building (south tower)", "feature": "clock-tower crown", "d": "M672 420 L672 230 L686 210 L700 230 L700 420 Z"},
+    {"name": "Wrigley Building (north tower)", "feature": "clock-tower crown", "d": "M704 420 L704 240 L716 222 L728 240 L728 420 Z"},
+    {"name": "Tribune Tower", "feature": "crown with buttresses", "d": "M752 420 L752 200 L760 180 L768 200 L768 420 Z"},
+    {"name": "Chicago Board of Trade", "feature": "statue-topped pyramid", "d": "M792 420 L792 240 L804 214 L816 240 L816 420 Z", "extra": "M802 196 L802 214 L806 214 L806 196 Z", "extra_fill": "#222b42"}
+  ],
+  "window_lights": [
+    [126, 228], [142, 228], [158, 196], [174, 196], [126, 268], [158, 268],
+    [258, 176], [272, 212], [258, 248],
+    [306, 196], [324, 230], [306, 264],
+    [420, 232], [432, 268], [460, 232],
+    [560, 238], [588, 238], [560, 272],
+    [682, 246], [712, 254], [800, 228]
+  ],
+  "window_size": [4, 6],
+  "river": [
+    {"d": "M0 372 C 200 356, 420 392, 640 372 S 1050 344, 1200 366 L1200 420 L0 420 Z", "fill": "#0e1626", "stroke": "#24344f", "width": 1},
+    {"d": "M120 384 C 320 372, 520 398, 760 380 S 1020 360, 1140 376", "stroke": "#3d5878", "width": 1.5, "opacity": 0.6, "fill": "none"},
+    {"d": "M80 400 C 300 390, 540 412, 800 396 S 1060 382, 1180 398", "stroke": "#3d5878", "width": 1, "opacity": 0.4, "fill": "none"}
+  ],
+  "station_style": {"r": 6, "fill": "#f7f4ee", "stroke_width": 2.5, "halo": "#0b0e18"},
+  "labels": {
+    "offline-sync-engine": {"label": "Offline sync engine", "cx": 248, "cy": 256, "dx": 14, "dy": -4},
+    "inspection-platform-api": {"label": "Access control platform", "cx": 560, "cy": 196, "dx": 14, "dy": -4},
+    "legacy-report-pipeline": {"label": "Inspection reporting", "cx": 880, "cy": 174, "dx": 14, "dy": -4},
+    "cross-platform-rollout": {"label": "Android rollout", "cx": 420, "cy": 314, "dx": 14, "dy": -4},
+    "supervised-automation": {"label": "Supervised agent runner", "cx": 760, "cy": 302, "dx": 14, "dy": -4},
+    "personal-projects": {"label": "Personal projects", "cx": 1080, "cy": 286, "dx": -70, "dy": 26}
+  }
+}
