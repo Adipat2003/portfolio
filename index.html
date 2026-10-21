@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Aditya Patel: Engineering Portfolio Concept</title>
+<title>Aditya Patel: Engineering Portfolio</title>
+<meta name="description" content="I build systems that keep working when the network does not. Field inspection apps, offline-first sync engines, access control, and supervised automation. Engineering work on freight inspection tooling, plus personal projects."/>
+<link rel="alternate" type="application/json" href="api/portfolio.json"/>
 <style>
   :root{
     --ink:#12100e; --ink-soft:#4a443c; --paper:#f7f4ee; --paper-2:#efe9df;
@@ -15,15 +17,13 @@
     --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   }
   *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
   body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.55}
   h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-0.01em;margin:0}
   p{margin:0}
   a{color:inherit}
   :focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:2px}
   .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
-
-  /* concept chrome */
   .concept-bar{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:1px solid var(--rule)}
   .concept-bar-inner{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;padding:12px 24px;max-width:1120px;margin:0 auto}
   .concept-title{font-family:var(--mono);font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft)}
@@ -32,30 +32,32 @@
   .seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
   .toggle-view{display:none}
   .toggle-view[data-active="true"]{display:block}
-
-  /* shared */
   .kicker{font-family:var(--mono);font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent)}
   .lede{font-size:19px;color:var(--ink-soft);max-width:62ch}
   .rule{height:1px;background:var(--rule);border:0;margin:0}
-
-  /* ===== FACADE A: classic scroll ===== */
-  .hero{padding:96px 0 72px;background:
-      radial-gradient(1200px 500px at 78% -10%, var(--accent-soft), transparent 60%),
-      var(--paper)}
+  .hero{padding:96px 0 72px;background:radial-gradient(1200px 500px at 78% -10%, var(--accent-soft), transparent 60%), var(--paper)}
   .hero h1{font-size:clamp(40px,6vw,68px);line-height:1.02;margin:20px 0 0;max-width:16ch}
   .hero .lede{margin-top:22px}
   .hero-meta{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:36px;font-size:14px;color:var(--ink-soft)}
   .hero-meta b{color:var(--ink);font-weight:600}
   .impact-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);border-block:1px solid var(--rule)}
-  .impact-strip div{background:var(--paper);padding:26px 4px 24px;text-align:left}
+  .impact-strip div{background:var(--paper);padding:26px 4px 24px}
   .impact-strip .num{font-family:var(--serif);font-size:38px;line-height:1}
   .impact-strip .lab{font-size:13px;color:var(--ink-soft);margin-top:8px}
+  .impact-strip .kind{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-top:6px;display:block}
   section{padding:76px 0}
   .sec-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 24px;justify-content:space-between;margin-bottom:36px}
   .sec-head h2{font-size:clamp(28px,4vw,40px)}
   .card{border:1px solid var(--rule);border-radius:14px;padding:26px;background:var(--paper);display:flex;flex-direction:column;gap:14px}
   .card h3{font-size:21px}
+  .card h3 a{text-decoration:none}
+  .card h3 a:hover{text-decoration:underline}
   .card p{color:var(--ink-soft);font-size:15px}
+  .card .role{font-size:14px;color:var(--ink-soft)}
+  .card .role b{color:var(--ink)}
+  .card .figs{list-style:none;padding:0;margin:0;font-size:13px;color:var(--ink-soft);display:grid;gap:4px}
+  .card .figs b{color:var(--ink);font-family:var(--mono);font-size:12px}
+  .pending{border-style:dashed}
   .tags{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:0}
   .tags li{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;color:var(--ink-soft);border:1px solid var(--rule);border-radius:999px;padding:4px 10px}
   .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
@@ -63,43 +65,45 @@
   .ask-row{display:flex;gap:12px;flex-wrap:wrap}
   .chip{appearance:none;font:inherit;font-size:14px;min-height:44px;padding:10px 16px;border-radius:999px;border:1px solid var(--rule);background:var(--paper);cursor:pointer;text-align:left}
   .chip[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--paper)}
-  .answer{background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:18px 20px;min-height:96px;color:var(--ink)}
+  .answer{background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:18px 20px;min-height:96px}
   .answer .src{display:block;margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-
-  /* ===== FACADE B: the atlas ===== */
   .atlas{background:var(--night);color:var(--night-ink)}
-  .atlas .lede,.atlas .card p{color:var(--night-soft)}
+  .atlas .lede,.atlas .card p,.atlas .card .role{color:var(--night-soft)}
   .atlas .kicker{color:var(--signal)}
   .atlas .card{background:var(--night-2);border-color:var(--night-rule)}
+  .atlas .card .figs b,.atlas .card .role b{color:var(--night-ink)}
   .atlas .tags li{border-color:var(--night-rule);color:var(--night-soft)}
-  [data-facade="atlas"].concept-bar{background:var(--night);border-color:var(--night-rule)}
-  [data-facade="atlas"] .concept-title{color:var(--night-soft)}
-  [data-facade="atlas"] .seg{border-color:var(--night-rule);background:var(--night-2)}
-  [data-facade="atlas"] .seg button{color:var(--night-soft)}
-  [data-facade="atlas"] .seg button[aria-pressed="true"]{background:var(--signal);color:#171208}
+  .atlas .impact-strip .kind{color:var(--signal)}
+  .atlas .seg{border-color:var(--night-rule);background:var(--night-2)}
+  .atlas .seg button{color:var(--night-soft)}
+  .atlas .seg button[aria-pressed="true"]{background:var(--signal);color:#171208}
   .atlas .impact-strip{background:var(--night-rule);border-color:var(--night-rule)}
   .atlas .impact-strip div{background:var(--night)}
   .atlas .impact-strip .lab{color:var(--night-soft)}
   .atlas .ask-box{background:var(--night-2);border-color:var(--night-rule)}
   .atlas .chip{background:var(--night-2);border-color:var(--night-rule);color:var(--night-ink)}
   .atlas .chip[aria-pressed="true"]{background:var(--signal);color:#171208;border-color:var(--signal)}
-  .atlas .answer{background:var(--night);border-color:var(--night-rule);color:var(--night-ink)}
+  .atlas .answer{background:var(--night);border-color:var(--night-rule)}
   .atlas .answer .src{color:var(--night-soft)}
+  .atlas .card.pending{border-color:var(--night-rule)}
   .atlas :focus-visible{outline-color:var(--signal)}
   .atlas-hero{position:relative;overflow:hidden;border-bottom:1px solid var(--night-rule)}
   .atlas-hero svg{display:block;width:100%;height:auto}
   .atlas-copy{position:relative;padding:56px 0 0}
   .atlas-copy h1{font-size:clamp(36px,5vw,58px);line-height:1.05;margin:18px 0 0;max-width:18ch}
   .atlas-copy .lede{margin-top:20px}
-  .atlas-modes{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;list-style:none;padding:0}
-  .atlas-modes button{appearance:none;font:inherit;font-size:13px;font-family:var(--mono);letter-spacing:0.05em;min-height:44px;padding:10px 14px;border-radius:10px;border:1px solid var(--night-rule);background:var(--night-2);color:var(--night-soft);cursor:pointer}
-  .atlas-modes button[aria-pressed="true"]{border-color:var(--signal);color:var(--signal)}
   .atelier-note{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font-family:var(--mono);font-size:12px;color:var(--night-soft);padding:18px 24px;border:1px dashed var(--night-rule);border-radius:12px;margin-top:32px}
   .atelier-note b{color:var(--signal);font-weight:600}
-
-  @media (prefers-reduced-motion: reduce){ *{animation:none !important;transition:none !important} }
-  @media (max-width: 860px){
+  footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:flex;flex-wrap:wrap;gap:8px 24px}
+  .atlas footer.site-foot{color:var(--night-soft)}
+  [data-facade="atlas"].concept-bar{background:var(--night);border-color:var(--night-rule)}
+  [data-facade="atlas"] .concept-title{color:var(--night-soft)}
+  [data-facade="atlas"] .seg{border-color:var(--night-rule);background:var(--night-2)}
+  [data-facade="atlas"] .seg button{color:var(--night-soft)}
+  [data-facade="atlas"] .seg button[aria-pressed="true"]{background:var(--signal);color:#171208}
+  @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+  @media (max-width:860px){
     .grid-3{grid-template-columns:1fr}
     .impact-strip{grid-template-columns:repeat(2,1fr)}
     .hero{padding:64px 0 56px}
@@ -108,74 +112,85 @@
 </style>
 </head>
 <body>
-
-<!-- concept chrome: facade switch -->
-<div class="concept-bar" id="concept-bar" data-facade="dispatch" role="region" aria-label="Concept controls">
+<div class="concept-bar" id="concept-bar" data-facade="dispatch" role="region" aria-label="Facade switch">
   <div class="concept-bar-inner">
-    <span class="concept-title">Concept board: two facades, one portfolio</span>
+    <span class="concept-title">Aditya Patel: Engineering Portfolio</span>
     <div class="seg" role="group" aria-label="Choose a facade">
-      <button type="button" id="btn-dispatch" aria-pressed="true">Facade 1: The Dispatch</button>
-      <button type="button" id="btn-atlas" aria-pressed="false">Facade 2: The Atlas</button>
+      <button type="button" id="btn-dispatch" aria-pressed="true">The Dispatch</button>
+      <button type="button" id="btn-atlas" aria-pressed="false">The Atlas</button>
     </div>
   </div>
 </div>
 
 <main>
-<!-- ============ FACADE 1: THE DISPATCH (classic scroll) ============ -->
-<div class="toggle-view" id="view-dispatch" data-active="true" aria-label="The Dispatch facade">
+<div class="toggle-view" id="view-dispatch" data-active="true" aria-label="The Dispatch">
   <header class="hero">
     <div class="wrap">
       <span class="kicker">Aditya Patel &middot; Software engineer, Chicago</span>
       <h1>I build systems that keep working when the network does not.</h1>
-      <p class="lede">Field inspection apps, offline-first sync engines, access control, and supervised automation. Engineering work on freight inspection tooling and personal projects.</p>
-      <div class="hero-meta">
-        <span><b>1,325</b> commits</span>
-        <span><b>253</b> merged PRs</span>
-        <span><b>~4,500</b> field hours saved</span>
-        <span><b>5+</b> production releases</span>
-      </div>
+      <p class="lede">Field inspection apps, offline-first sync engines, access control, and supervised automation. Engineering work on freight inspection tooling, plus personal projects.</p>
+      <p class="hero-meta"><span><b>~4,500</b> reporting hours saved</span><span><b>297</b> reports processed in a single month</span><span><b>$4-10M</b> projected annual savings</span></p>
     </div>
   </header>
-
   <div class="impact-strip" aria-label="Headline impact figures">
-    <div><div class="num">~4,500</div><div class="lab">reporting hours saved per year</div></div>
-    <div><div class="num">297</div><div class="lab">reports processed in a single month</div></div>
-    <div><div class="num">$4-10M</div><div class="lab">projected annual savings (estimate, not realized)</div></div>
-    <div><div class="num">75</div><div class="lab">API paths on the inspection platform</div></div>
+<div><div class="num">~4,500</div><div class="lab">reporting hours saved</div><span class="kind">measured</span></div><div><div class="num">297</div><div class="lab">reports processed in a single month</div><span class="kind">measured</span></div><div><div class="num">$4-10M</div><div class="lab">projected annual savings, an estimate rather than a realized figure</div><span class="kind">projected</span></div><div><div class="num">75</div><div class="lab">API paths on the inspection platform</div><span class="kind">self-reported</span></div>
   </div>
-
   <section aria-labelledby="f1-work">
     <div class="wrap">
       <div class="sec-head">
         <div>
           <span class="kicker">Selected work</span>
-          <h2 id="f1-work">Three projects that show the range</h2>
+          <h2 id="f1-work">Projects and what changed</h2>
         </div>
-        <span class="concept-title">Detailed stories live in project pages</span>
+        <span class="concept-title">6 engineering projects</span>
       </div>
       <div class="grid-3">
-        <article class="card">
-          <span class="kicker">Offline-first</span>
-          <h3>Inspection reporting that survives dead zones</h3>
-          <p>Mobile capture, camera OCR, and a sync engine where edits and photos stop getting lost. Field officers finish a report in a rail yard with no signal and it still lands.</p>
-          <ul class="tags"><li>React Native</li><li>Sync engine</li><li>OCR</li></ul>
-        </article>
-        <article class="card">
-          <span class="kicker">Platform</span>
-          <h3>Access control for a 75-endpoint inspection API</h3>
-          <p>Role and facility permissions resolved on every request, with an audit trail of who could see and change what. The rules live in one contract, not scattered checks.</p>
-          <ul class="tags"><li>Spring Boot</li><li>OpenAPI</li><li>RBAC</li></ul>
-        </article>
-        <article class="card">
-          <span class="kicker">Automation</span>
-          <h3>Supervised agents that a human still approves</h3>
-          <p>A hackathon runner where an agent plans each step, deterministic scripts do the screen work, and the operator approves every write before it happens.</p>
-          <ul class="tags"><li>MCP</li><li>Agent runner</li><li>940+ tests</li></ul>
-        </article>
+      <article class="card">
+        <span class="kicker">red line</span>
+        <h3>Inspection reporting that survives dead zones</h3>
+        <p>Field officers complete rail-yard inspections with no signal, and the reports and photos still land. A single-writer sync framework replaced an edit model that lost work.</p>
+        <p class="role"><b>Role:</b> Owned the offline flow end to end: state model, sync engine, photo pipeline, and the recovery paths.</p><ul class="figs"><li><b>546</b> commits on the mobile monorepo <i>(self-reported)</i></li></ul>
+        <ul class="tags"><li>mobile</li><li>offline-first</li><li>sync</li><li>react-native</li></ul>
+      </article>      <article class="card">
+        <span class="kicker">red line</span>
+        <h3>Access control for a 75-endpoint inspection API</h3>
+        <p>Role and facility permissions resolved on every request and enforced by one shared gate at every write path, so users only see and edit what their role and ramps allow.</p>
+        <p class="role"><b>Role:</b> Designed and built the role and facility access model, the shared request gate, the refusal error surface, and the access-assignment audit trail.</p><ul class="figs"><li><b>75</b> API paths on the platform <i>(self-reported)</i></li><li><b>214</b> commits on the backend service <i>(self-reported)</i></li></ul>
+        <ul class="tags"><li>platform</li><li>api</li><li>security</li><li>spring-boot</li></ul>
+      </article>      <article class="card">
+        <span class="kicker">red line</span>
+        <h3>Connecting mobile reports to a long-lived reporting system</h3>
+        <p>A mobile inspection app submits reports into a decades-old reporting pipeline through a message queue, serving both automated machine submissions and officers&#x27; manual submissions on separate audience-scoped endpoints.</p>
+        <p class="role"><b>Role:</b> Built the integrated submission endpoint, image ingest, queue submission, report editing, and the de-duplication gate.</p><ul class="figs"><li><b>~4,500</b> reporting hours saved <i>(measured)</i></li><li><b>297</b> reports processed in a single month <i>(measured)</i></li></ul>
+        <ul class="tags"><li>integration</li><li>messaging</li><li>backend</li></ul>
+      </article>      <article class="card">
+        <span class="kicker">blue line</span>
+        <h3>Taking an inspection app from one phone platform to both</h3>
+        <p>Stood up the second mobile platform from scratch: toolchain, builds, deployment to test devices, and the two failures that only appeared on managed corporate devices.</p>
+        <p class="role"><b>Role:</b> Owned the rollout end to end, including build signing, same-day redeploys, and driving the fix with the security and device-management teams.</p>
+        <ul class="tags"><li>mobile</li><li>android</li><li>ios</li><li>rollout</li></ul>
+      </article>      <article class="card">
+        <span class="kicker">blue line</span>
+        <h3>Supervised automation that a human still approves</h3>
+        <p>A competition runner where an AI agent plans each step, deterministic scripts do all the screen work, and the operator approves every write before it happens.</p>
+        <p class="role"><b>Role:</b> Top contributor, 68 of 97 team commits: built the agent run layer, the live operator console, the run journals, and the documentation.</p><ul class="figs"><li><b>68 / 97</b> team commits <i>(self-reported)</i></li><li><b>940+</b> passing tests <i>(self-reported)</i></li></ul>
+        <ul class="tags"><li>automation</li><li>agents</li><li>mcp</li><li>testing</li></ul>
+      </article>      <article class="card">
+        <span class="kicker">blue line</span>
+        <h3>Helping a team adopt AI-assisted engineering</h3>
+        <p>Authored the shared rules, commands, and review practices that define how AI coding tools are used across the codebase, and turned review findings into permanent team rules.</p>
+        <p class="role"><b>Role:</b> Authored the repository-level standards, a skill plugin with 21 agents and skills, and the confirmation gate used before review findings are posted or fixed.</p><ul class="figs"><li><b>500+</b> AI coding sessions <i>(self-reported)</i></li><li><b>172</b> teammate pull requests reviewed <i>(self-reported)</i></li></ul>
+        <ul class="tags"><li>ai</li><li>process</li><li>tooling</li><li>standards</li></ul>
+      </article>      <article class="card pending">
+        <span class="kicker">blue line</span>
+        <h3>Personal and school projects</h3>
+        <p>Coursework and personal builds. This chapter is being assembled from Aditya&#x27;s own repositories and will fill in as those are provided.</p>
+        
+        <ul class="tags"><li>personal</li><li>school</li></ul>
+      </article>
       </div>
     </div>
   </section>
-
   <section aria-labelledby="f1-ask" style="background:var(--paper-2)">
     <div class="wrap">
       <div class="sec-head">
@@ -186,138 +201,1001 @@
       </div>
       <div class="ask-box">
         <div class="ask-row" role="group" aria-label="Example questions">
-          <button type="button" class="chip" data-answer="Sync work: single-writer fact logs, per-ramp store keys, and recovery from lost acknowledgements and stale versions. Source: hub-and-terminal-mobile-apps contribution log.">How does the offline sync stay correct?</button>
-          <button type="button" class="chip" data-answer="Savings: about 4,500 reporting hours saved and 297 reports processed in one month. Source: SEAL / SIR results section.">What was the measurable impact?</button>
-          <button type="button" class="chip" data-answer="Trackathon: 68 of 97 team commits on a guarded agent runner over 940+ tests. Source: Trackathon contribution log.">What did you build at the hackathon?</button>
+<button type="button" class="chip" data-answer="Single-writer fact logs, per-ramp store keys, idempotent retries, and recovery from lost acknowledgements and stale versions. Edits and photos stop disappearing when a ramp loses signal." data-source="Contribution log, offline-first sync section">How does the offline sync stay correct?</button><button type="button" class="chip" data-answer="About 4,500 reporting hours saved and 297 reports processed in a single month on the inspection reporting project." data-source="SEAL / SIR results section">What was the measurable impact?</button><button type="button" class="chip" data-answer="172 teammate pull requests reviewed across 6 engineers, with findings turned into 30-plus standing team rules so the same defect class does not repeat." data-source="Review practice section">How do you raise the quality bar for a team?</button><button type="button" class="chip" data-answer="Top contributor, 68 of 97 team commits, on a guarded agent runner where an agent plans each step, deterministic scripts do the screen work, and the operator approves every write. Test suite reached 940-plus passing tests." data-source="Trackathon contribution log">What did you build at the hackathon?</button>
         </div>
-        <div class="answer" id="f1-answer" role="status" aria-live="polite">Pick a question to see how answers stay tied to the evidence.
+        <div class="answer" id="f1-answer" role="status" aria-live="polite"> Pick a question to see how answers stay tied to the evidence.
           <span class="src">No answer yet</span>
         </div>
       </div>
     </div>
   </section>
-
   <hr class="rule"/>
-  <footer class="wrap" style="padding:36px 24px;color:var(--ink-soft);font-size:14px">
-    Facade 1 keeps the classic scroll: landmarks, headings, and links. An agent reading this page gets the same content an agent reading Facade 2 gets.
-  </footer>
+  <footer class="wrap site-foot"><span>Classic scroll. The default facade, and the primary surface for readers and indexing agents.</span><span>Machine-readable content: <a href="api/portfolio.json">portfolio.json</a></span></footer>
 </div>
 
-<!-- ============ FACADE 2: THE ATLAS (rail-map world) ============ -->
-<div class="toggle-view atlas" id="view-atlas" data-active="false" aria-label="The Atlas facade" hidden>
+<div class="toggle-view atlas" id="view-atlas" data-active="false" aria-label="The Atlas" hidden>
   <header class="atlas-hero">
     <svg viewBox="0 0 1200 470" role="img" aria-label="The Atlas: a Chicago rail-map world where projects become stations">
       <defs>
         <linearGradient id="atlasSky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#0b0e18"/>
-          <stop offset="0.6" stop-color="#131a2c"/>
-          <stop offset="1" stop-color="#1d2233"/>
+          <stop offset="0" stop-color="#0b0e18"/><stop offset="0.6" stop-color="#131a2c"/><stop offset="1" stop-color="#1d2233"/>
         </linearGradient>
         <linearGradient id="towerGlass" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#222b42"/>
-          <stop offset="1" stop-color="#141a29"/>
+          <stop offset="0" stop-color="#222b42"/><stop offset="1" stop-color="#141a29"/>
         </linearGradient>
       </defs>
       <rect width="1200" height="470" fill="url(#atlasSky)"/>
-
-      <!-- skyline: named landmarks, stylized silhouettes -->
-      <g fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1">
-        <!-- Willis Tower: bundled setbacks -->
-        <path d="M120 420 L120 250 L136 250 L136 210 L152 210 L152 175 L168 175 L168 210 L184 210 L184 250 L200 250 L200 420 Z"/>
-        <path d="M156 175 L156 128 M164 175 L164 128" stroke="#2a3a5c" stroke-width="2"/>
-        <!-- Hancock Center: tapered body with visible cross-bracing -->
-        <path d="M240 420 L252 120 L268 120 L280 420 Z"/>
-        <path d="M252 190 L280 250 M268 170 L240 230 M252 250 L280 310 M268 230 L240 290 M252 165 L280 225 M268 145 L240 205" stroke="#4a5c86" stroke-width="1" fill="none"/>
-        <!-- Aon Center: slim rectangular column -->
-        <rect x="300" y="170" width="34" height="250"/>
-        <!-- Two Prudential Plaza: slanted top -->
-        <path d="M356 420 L356 200 L373 168 L390 200 L390 420 Z"/>
-        <!-- Marina City: corncob cylinders -->
-        <rect x="412" y="200" width="30" height="220" rx="15"/>
-        <rect x="452" y="200" width="30" height="220" rx="15"/>
-        <!-- Trump Tower: spire -->
-        <path d="M508 420 L508 190 L518 190 L518 150 L522 128 L526 150 L526 190 L536 190 L536 420 Z"/>
-        <!-- CNA Center: red-white block -->
-        <rect x="556" y="215" width="44" height="205"/>
-        <rect x="556" y="215" width="44" height="12" fill="#8e3b2c" stroke="none"/>
-        <!-- Legacy at One Eleven: stepped crown -->
-        <path d="M620 420 L620 235 L628 235 L628 220 L632 208 L636 220 L636 235 L644 235 L644 420 Z"/>
-        <!-- Wrigley Building: twin clock-tower crowns -->
-        <path d="M672 420 L672 230 L686 210 L700 230 L700 420 Z"/>
-        <path d="M704 420 L704 240 L716 222 L728 240 L728 420 Z"/>
-        <!-- Tribune Tower: crown with buttresses -->
-        <path d="M752 420 L752 200 L760 180 L768 200 L768 420 Z"/>
-        <!-- Board of Trade: statue-topped pyramid -->
-        <path d="M792 420 L792 240 L804 214 L816 240 L816 420 Z"/>
-        <rect x="802" y="196" width="4" height="18"/>
+      <g>
+        <g><title>Willis Tower: bundled setback tubes with twin antennas</title><path d="M120 420 L120 250 L136 250 L136 210 L152 210 L152 175 L168 175 L168 210 L184 210 L184 250 L200 250 L200 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/><path d="M156 175 L156 128 M164 175 L164 128" stroke="#2a3a5c" stroke-width="2" fill="none"/></g>
+        <g><title>Hancock Center: tapered body with visible cross-bracing</title><path d="M240 420 L252 120 L268 120 L280 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/><path d="M252 190 L280 250 M268 170 L240 230 M252 250 L280 310 M268 230 L240 290 M252 165 L280 225 M268 145 L240 205" stroke="#4a5c86" stroke-width="1" fill="none"/></g>
+        <g><title>Aon Center: slim rectangular column</title><path d="M300 420 L300 170 L334 170 L334 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/></g>
+        <g><title>Two Prudential Plaza: slanted top</title><path d="M356 420 L356 200 L373 168 L390 200 L390 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/></g>
+        <g><title>Marina City (west): corncob cylinder</title><path d="M412 420 L412 200 L442 200 L442 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/></g>
+        <g><title>Marina City (east): corncob cylinder</title><path d="M452 420 L452 200 L482 200 L482 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/></g>
+        <g><title>Trump International Hotel and Tower: spire</title><path d="M508 420 L508 190 L518 190 L518 150 L522 128 L526 150 L526 190 L536 190 L536 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/></g>
+        <g><title>CNA Center: red-banded block</title><path d="M556 420 L556 215 L600 215 L600 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/><path d="M556 215 L600 215 L600 227 L556 227 Z" fill="#8e3b2c" stroke="none"/></g>
+        <g><title>One Eleven (former Wolf Point): stepped crown</title><path d="M620 420 L620 235 L628 235 L628 220 L632 208 L636 220 L636 235 L644 235 L644 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/></g>
+        <g><title>Wrigley Building (south tower): clock-tower crown</title><path d="M672 420 L672 230 L686 210 L700 230 L700 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/></g>
+        <g><title>Wrigley Building (north tower): clock-tower crown</title><path d="M704 420 L704 240 L716 222 L728 240 L728 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/></g>
+        <g><title>Tribune Tower: crown with buttresses</title><path d="M752 420 L752 200 L760 180 L768 200 L768 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/></g>
+        <g><title>Chicago Board of Trade: statue-topped pyramid</title><path d="M792 420 L792 240 L804 214 L816 240 L816 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/><path d="M802 196 L802 214 L806 214 L806 196 Z" fill="#222b42" stroke="none"/></g>
       </g>
-
-      <!-- window lights: sparse warm grid, data-driven look -->
       <g fill="#e8b04b" opacity="0.75">
-        <rect x="126" y="228" width="4" height="6"/><rect x="142" y="228" width="4" height="6"/><rect x="158" y="196" width="4" height="6"/>
-        <rect x="174" y="196" width="4" height="6"/><rect x="126" y="268" width="4" height="6"/><rect x="158" y="268" width="4" height="6"/>
-        <rect x="258" y="176" width="4" height="6"/><rect x="272" y="212" width="4" height="6"/><rect x="258" y="248" width="4" height="6"/>
-        <rect x="306" y="196" width="4" height="6"/><rect x="324" y="230" width="4" height="6"/><rect x="306" y="264" width="4" height="6"/>
-        <rect x="420" y="232" width="4" height="6"/><rect x="432" y="268" width="4" height="6"/><rect x="460" y="232" width="4" height="6"/>
-        <rect x="560" y="238" width="4" height="6"/><rect x="588" y="238" width="4" height="6"/><rect x="560" y="272" width="4" height="6"/>
-        <rect x="682" y="246" width="4" height="6"/><rect x="712" y="254" width="4" height="6"/><rect x="800" y="228" width="4" height="6"/>
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        1
+        2
+        6
+        "
+         
+        y
+        =
+        "
+        2
+        2
+        8
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        1
+        4
+        2
+        "
+         
+        y
+        =
+        "
+        2
+        2
+        8
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        1
+        5
+        8
+        "
+         
+        y
+        =
+        "
+        1
+        9
+        6
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        1
+        7
+        4
+        "
+         
+        y
+        =
+        "
+        1
+        9
+        6
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        1
+        2
+        6
+        "
+         
+        y
+        =
+        "
+        2
+        6
+        8
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        1
+        5
+        8
+        "
+         
+        y
+        =
+        "
+        2
+        6
+        8
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        2
+        5
+        8
+        "
+         
+        y
+        =
+        "
+        1
+        7
+        6
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        2
+        7
+        2
+        "
+         
+        y
+        =
+        "
+        2
+        1
+        2
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        2
+        5
+        8
+        "
+         
+        y
+        =
+        "
+        2
+        4
+        8
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        3
+        0
+        6
+        "
+         
+        y
+        =
+        "
+        1
+        9
+        6
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        3
+        2
+        4
+        "
+         
+        y
+        =
+        "
+        2
+        3
+        0
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        3
+        0
+        6
+        "
+         
+        y
+        =
+        "
+        2
+        6
+        4
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        4
+        2
+        0
+        "
+         
+        y
+        =
+        "
+        2
+        3
+        2
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        4
+        3
+        2
+        "
+         
+        y
+        =
+        "
+        2
+        6
+        8
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        4
+        6
+        0
+        "
+         
+        y
+        =
+        "
+        2
+        3
+        2
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        5
+        6
+        0
+        "
+         
+        y
+        =
+        "
+        2
+        3
+        8
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        5
+        8
+        8
+        "
+         
+        y
+        =
+        "
+        2
+        3
+        8
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        5
+        6
+        0
+        "
+         
+        y
+        =
+        "
+        2
+        7
+        2
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        6
+        8
+        2
+        "
+         
+        y
+        =
+        "
+        2
+        4
+        6
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        7
+        1
+        2
+        "
+         
+        y
+        =
+        "
+        2
+        5
+        4
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
+        <
+        r
+        e
+        c
+        t
+         
+        x
+        =
+        "
+        8
+        0
+        0
+        "
+         
+        y
+        =
+        "
+        2
+        2
+        8
+        "
+         
+        w
+        i
+        d
+        t
+        h
+        =
+        "
+        4
+        "
+         
+        h
+        e
+        i
+        g
+        h
+        t
+        =
+        "
+        6
+        "
+        /
+        >
       </g>
-
-      <!-- the river -->
-      <path d="M0 372 C 200 356, 420 392, 640 372 S 1050 344, 1200 366 L1200 420 L0 420 Z" fill="#0e1626" stroke="#24344f"/>
-      <path d="M120 384 C 320 372, 520 398, 760 380 S 1020 360, 1140 376" stroke="#3d5878" stroke-width="1.5" fill="none" opacity="0.6"/>
-      <path d="M80 400 C 300 390, 540 412, 800 396 S 1060 382, 1180 398" stroke="#3d5878" stroke-width="1" fill="none" opacity="0.4"/>
-
-      <!-- the 'L': two lines as project routes -->
+      <g>
+        <path d="M0 372 C 200 356, 420 392, 640 372 S 1050 344, 1200 366 L1200 420 L0 420 Z" fill="#0e1626" stroke="#24344f" stroke-width="1"/>
+        <path d="M120 384 C 320 372, 520 398, 760 380 S 1020 360, 1140 376" fill="none" stroke="#3d5878" stroke-width="1.5" opacity="0.6"/>
+        <path d="M80 400 C 300 390, 540 412, 800 396 S 1060 382, 1180 398" fill="none" stroke="#3d5878" stroke-width="1" opacity="0.4"/>
+      </g>
       <g fill="none" stroke-width="3" stroke-linecap="round">
         <path d="M40 300 C 240 250, 520 190, 760 170 S 1060 150, 1170 120" stroke="#c0392b"/>
         <path d="M0 340 C 260 320, 560 300, 900 290 S 1120 280, 1200 268" stroke="#2e86c1"/>
       </g>
-
-      <!-- stations = projects -->
       <g font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#e9e6df" style="paint-order:stroke" stroke="#0b0e18" stroke-width="5" stroke-linejoin="round">
-        <g>
-          <circle cx="248" cy="256" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/>
-          <text x="262" y="252">Offline sync engine</text>
-        </g>
-        <g>
-          <circle cx="560" cy="196" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/>
-          <text x="574" y="192">Access control platform</text>
-        </g>
-        <g>
-          <circle cx="880" cy="174" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/>
-          <text x="894" y="170">Inspection reporting</text>
-        </g>
-        <g>
-          <circle cx="420" cy="314" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/>
-          <text x="434" y="310">Android rollout</text>
-        </g>
-        <g>
-          <circle cx="760" cy="302" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/>
-          <text x="774" y="298">Supervised agent runner</text>
-        </g>
-        <g>
-          <circle cx="1080" cy="286" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/>
-          <text x="1010" y="312">Personal projects</text>
-        </g>
+        <g><title>Offline sync engine</title><circle cx="248" cy="256" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="262" y="252">Offline sync engine</text></g>
+        <g><title>Access control platform</title><circle cx="560" cy="196" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="574" y="192">Access control platform</text></g>
+        <g><title>Inspection reporting</title><circle cx="880" cy="174" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="894" y="170">Inspection reporting</text></g>
+        <g><title>Android rollout</title><circle cx="420" cy="314" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/><text x="434" y="310">Android rollout</text></g>
+        <g><title>Supervised agent runner</title><circle cx="760" cy="302" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/><text x="774" y="298">Supervised agent runner</text></g>
+        <g><title>Personal projects</title><circle cx="1080" cy="286" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/><text x="1010" y="312">Personal projects</text></g>
       </g>
     </svg>
+  <div class="impact-strip" aria-label="Headline impact figures">
+<div><div class="num">~4,500</div><div class="lab">reporting hours saved</div><span class="kind">measured</span></div><div><div class="num">297</div><div class="lab">reports processed in a single month</div><span class="kind">measured</span></div><div><div class="num">$4-10M</div><div class="lab">projected annual savings, an estimate rather than a realized figure</div><span class="kind">projected</span></div><div><div class="num">75</div><div class="lab">API paths on the inspection platform</div><span class="kind">self-reported</span></div>
+  </div>
   </header>
-
   <div class="atlas-copy">
     <div class="wrap">
       <span class="kicker">Facade 2: The Atlas</span>
       <h1>The city is the navigation.</h1>
-      <p class="lede">Same portfolio, different facade: the skyline is built from hand-drawn SVG, the river and elevated lines are live routes, and each project is a station on the map.</p>
-      <ul class="atlas-modes" role="group" aria-label="Atlas interaction modes">
-        <li><button type="button" aria-pressed="true" id="atlas-opt-pointer">Pointer parallax: on</button></li>
-        <li><button type="button" aria-pressed="false" id="atlas-opt-tilt">Device tilt: off</button></li>
-        <li><button type="button" aria-pressed="false" id="atlas-opt-calm">Reduced motion: auto</button></li>
-      </ul>
-      <p class="atelier-note"><b>Art pipeline:</b> landmarks are authored SVG (Willis, Hancock, Marina City, Trump, Wrigley, Tribune, Board of Trade). <span>Routes and stations render from data, so the map is diffable source, not a mystery image.</span></p>
+      <p class="lede">Same portfolio, different facade: the skyline is authored SVG, the river and elevated lines are routes, and each project is a station on the map.</p>
+      <p class="atelier-note"><b>Art pipeline:</b> 13 named landmarks as authored SVG. <span>Routes and stations render from data, so the map is diffable source.</span></p>
     </div>
   </div>
-
   <section aria-labelledby="f2-work">
     <div class="wrap">
       <div class="sec-head">
@@ -327,29 +1205,53 @@
         </div>
       </div>
       <div class="grid-3">
-        <article class="card">
-          <span class="kicker">Red line</span>
-          <h3>Offline sync engine</h3>
-          <p>Single-writer fact logs and per-ramp store keys. Edits and photos stop vanishing when a ramp loses signal.</p>
-          <ul class="tags"><li>Field</li><li>Mobile</li></ul>
-        </article>
-        <article class="card">
-          <span class="kicker">Red line</span>
-          <h3>Access control platform</h3>
-          <p>Role and facility checks resolved per request, enforced by one guard at every write path.</p>
-          <ul class="tags"><li>Platform</li><li>API</li></ul>
-        </article>
-        <article class="card">
-          <span class="kicker">Blue line</span>
-          <h3>Supervised agent runner</h3>
-          <p>Agent plans, scripts act, operator approves writes. Hash-chained journals make runs recoverable.</p>
-          <ul class="tags"><li>Automation</li><li>Hackathon</li></ul>
-        </article>
+      <article class="card">
+        <span class="kicker">red line</span>
+        <h3>Inspection reporting that survives dead zones</h3>
+        <p>Field officers complete rail-yard inspections with no signal, and the reports and photos still land. A single-writer sync framework replaced an edit model that lost work.</p>
+        <p class="role"><b>Role:</b> Owned the offline flow end to end: state model, sync engine, photo pipeline, and the recovery paths.</p><ul class="figs"><li><b>546</b> commits on the mobile monorepo <i>(self-reported)</i></li></ul>
+        <ul class="tags"><li>mobile</li><li>offline-first</li><li>sync</li><li>react-native</li></ul>
+      </article>      <article class="card">
+        <span class="kicker">red line</span>
+        <h3>Access control for a 75-endpoint inspection API</h3>
+        <p>Role and facility permissions resolved on every request and enforced by one shared gate at every write path, so users only see and edit what their role and ramps allow.</p>
+        <p class="role"><b>Role:</b> Designed and built the role and facility access model, the shared request gate, the refusal error surface, and the access-assignment audit trail.</p><ul class="figs"><li><b>75</b> API paths on the platform <i>(self-reported)</i></li><li><b>214</b> commits on the backend service <i>(self-reported)</i></li></ul>
+        <ul class="tags"><li>platform</li><li>api</li><li>security</li><li>spring-boot</li></ul>
+      </article>      <article class="card">
+        <span class="kicker">red line</span>
+        <h3>Connecting mobile reports to a long-lived reporting system</h3>
+        <p>A mobile inspection app submits reports into a decades-old reporting pipeline through a message queue, serving both automated machine submissions and officers&#x27; manual submissions on separate audience-scoped endpoints.</p>
+        <p class="role"><b>Role:</b> Built the integrated submission endpoint, image ingest, queue submission, report editing, and the de-duplication gate.</p><ul class="figs"><li><b>~4,500</b> reporting hours saved <i>(measured)</i></li><li><b>297</b> reports processed in a single month <i>(measured)</i></li></ul>
+        <ul class="tags"><li>integration</li><li>messaging</li><li>backend</li></ul>
+      </article>      <article class="card">
+        <span class="kicker">blue line</span>
+        <h3>Taking an inspection app from one phone platform to both</h3>
+        <p>Stood up the second mobile platform from scratch: toolchain, builds, deployment to test devices, and the two failures that only appeared on managed corporate devices.</p>
+        <p class="role"><b>Role:</b> Owned the rollout end to end, including build signing, same-day redeploys, and driving the fix with the security and device-management teams.</p>
+        <ul class="tags"><li>mobile</li><li>android</li><li>ios</li><li>rollout</li></ul>
+      </article>      <article class="card">
+        <span class="kicker">blue line</span>
+        <h3>Supervised automation that a human still approves</h3>
+        <p>A competition runner where an AI agent plans each step, deterministic scripts do all the screen work, and the operator approves every write before it happens.</p>
+        <p class="role"><b>Role:</b> Top contributor, 68 of 97 team commits: built the agent run layer, the live operator console, the run journals, and the documentation.</p><ul class="figs"><li><b>68 / 97</b> team commits <i>(self-reported)</i></li><li><b>940+</b> passing tests <i>(self-reported)</i></li></ul>
+        <ul class="tags"><li>automation</li><li>agents</li><li>mcp</li><li>testing</li></ul>
+      </article>      <article class="card">
+        <span class="kicker">blue line</span>
+        <h3>Helping a team adopt AI-assisted engineering</h3>
+        <p>Authored the shared rules, commands, and review practices that define how AI coding tools are used across the codebase, and turned review findings into permanent team rules.</p>
+        <p class="role"><b>Role:</b> Authored the repository-level standards, a skill plugin with 21 agents and skills, and the confirmation gate used before review findings are posted or fixed.</p><ul class="figs"><li><b>500+</b> AI coding sessions <i>(self-reported)</i></li><li><b>172</b> teammate pull requests reviewed <i>(self-reported)</i></li></ul>
+        <ul class="tags"><li>ai</li><li>process</li><li>tooling</li><li>standards</li></ul>
+      </article>      <article class="card pending">
+        <span class="kicker">blue line</span>
+        <h3>Personal and school projects</h3>
+        <p>Coursework and personal builds. This chapter is being assembled from Aditya&#x27;s own repositories and will fill in as those are provided.</p>
+        
+        <ul class="tags"><li>personal</li><li>school</li></ul>
+      </article>
       </div>
     </div>
   </section>
-
-  <section aria-labelledby="f2-ask" >
+  <section aria-labelledby="f2-ask">
     <div class="wrap">
       <div class="sec-head">
         <div>
@@ -359,75 +1261,57 @@
       </div>
       <div class="ask-box">
         <div class="ask-row" role="group" aria-label="Example questions">
-          <button type="button" class="chip" data-answer="Offline design: single writer per ramp, idempotent retries, ETag concurrency. Source: contribution log, offline-first section.">What keeps the sync engine correct?</button>
-          <button type="button" class="chip" data-answer="Reviews: 172 teammate PRs across 6 engineers, turned into 30+ standing team rules. Source: review practice section.">How do you level up a team?</button>
-          <button type="button" class="chip" data-answer="Android: certificate trust, single sign-on session bugs, same-day redeploys. Source: Android rollout section.">What broke going cross-platform?</button>
+<button type="button" class="chip" data-answer="Single-writer fact logs, per-ramp store keys, idempotent retries, and recovery from lost acknowledgements and stale versions. Edits and photos stop disappearing when a ramp loses signal." data-source="Contribution log, offline-first sync section">How does the offline sync stay correct?</button><button type="button" class="chip" data-answer="About 4,500 reporting hours saved and 297 reports processed in a single month on the inspection reporting project." data-source="SEAL / SIR results section">What was the measurable impact?</button><button type="button" class="chip" data-answer="172 teammate pull requests reviewed across 6 engineers, with findings turned into 30-plus standing team rules so the same defect class does not repeat." data-source="Review practice section">How do you raise the quality bar for a team?</button><button type="button" class="chip" data-answer="Top contributor, 68 of 97 team commits, on a guarded agent runner where an agent plans each step, deterministic scripts do the screen work, and the operator approves every write. Test suite reached 940-plus passing tests." data-source="Trackathon contribution log">What did you build at the hackathon?</button>
         </div>
-        <div class="answer" id="f2-answer" role="status" aria-live="polite"> Ask, get an answer that cites the source section.
+        <div class="answer" id="f2-answer" role="status" aria-live="polite"> Pick a question to see how answers stay tied to the evidence.
           <span class="src">No answer yet</span>
         </div>
       </div>
     </div>
   </section>
+  <hr class="rule"/>
+  <footer class="wrap site-foot"><span>The explorable Chicago world. Enhancement only; it never holds information the Dispatch does not.</span><span>Machine-readable content: <a href="api/portfolio.json">portfolio.json</a></span></footer>
 </div>
 </main>
-
 <script>
 (function(){
   var d=document, btnD=d.getElementById('btn-dispatch'), btnA=d.getElementById('btn-atlas'),
-      vD=d.getElementById('view-dispatch'), vA=d.getElementById('view-atlas');
+      vD=d.getElementById('view-dispatch'), vA=d.getElementById('view-atlas'),
+      bar=d.getElementById('concept-bar');
   function show(which){
     var dispatch = which==='dispatch';
     vD.hidden=!dispatch; vD.dataset.active=String(dispatch);
     vA.hidden=dispatch;  vA.dataset.active=String(!dispatch);
     btnD.setAttribute('aria-pressed',String(dispatch));
     btnA.setAttribute('aria-pressed',String(!dispatch));
-    d.getElementById('concept-bar').dataset.facade = which;
+    bar.dataset.facade = which;
     document.title = dispatch ? 'Aditya Patel: The Dispatch' : 'Aditya Patel: The Atlas';
   }
   btnD.addEventListener('click',function(){show('dispatch')});
   btnA.addEventListener('click',function(){show('atlas')});
-  // deep-link support: #atlas opens the world facade directly
   if(location.hash==='#atlas') show('atlas');
-
-  // answer chips
   d.querySelectorAll('.chip').forEach(function(btn){
     btn.addEventListener('click',function(){
       var box = btn.closest('.ask-box').querySelector('.answer');
-      var src = btn.closest('.toggle-view')===vD ? 'Facade 1:' : 'Facade 2:';
       box.firstChild.nodeValue = ' ' + btn.dataset.answer;
-      box.querySelector('.src').textContent = 'Source: ' + src + ' ' + btn.textContent.trim();
+      box.querySelector('.src').textContent = 'Source: ' + btn.dataset.source;
       btn.closest('.ask-row').querySelectorAll('.chip').forEach(function(c){c.setAttribute('aria-pressed','false')});
       btn.setAttribute('aria-pressed','true');
     });
   });
-
-  // pointer parallax on the atlas hero: display-only, reduced-motion aware
   var hero = d.querySelector('.atlas-hero svg');
   if(hero && matchMedia('(pointer:fine)').matches){
     var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var btnP = d.getElementById('atlas-opt-pointer'), btnT = d.getElementById('atlas-opt-tilt');
-    btnP.setAttribute('aria-pressed', String(!calm));
     if(!calm){
-      hero.parentElement.addEventListener('pointermove', function(e){
+      var region = hero.parentElement;
+      region.addEventListener('pointermove', function(ev){
         var r = this.getBoundingClientRect();
-        var nx = (e.clientX - r.left)/r.width - 0.5;
-        var ny = (e.clientY - r.top)/r.height - 0.5;
+        var nx = (ev.clientX - r.left)/r.width - 0.5;
+        var ny = (ev.clientY - r.top)/r.height - 0.5;
         hero.style.transform = 'translate('+(nx*-10).toFixed(1)+'px,'+(ny*-6).toFixed(1)+'px) scale(1.02)';
       });
-      hero.parentElement.addEventListener('pointerleave', function(){ hero.style.transform=''; });
+      region.addEventListener('pointerleave', function(){ hero.style.transform=''; });
     }
-    btnT.addEventListener('click',function(){
-      var on = this.getAttribute('aria-pressed')!=='true';
-      this.setAttribute('aria-pressed', String(on));
-      this.textContent = 'Device tilt: ' + (on?'on':'off');
-    });
-    d.getElementById('atlas-opt-calm').addEventListener('click',function(){
-      var on = this.getAttribute('aria-pressed')!=='true';
-      this.setAttribute('aria-pressed', String(on));
-      this.textContent = 'Reduced motion: ' + (on?'forced':'auto');
-      hero.style.transition = on ? 'none' : 'transform 120ms linear';
-    });
   }
 })();
 </script>

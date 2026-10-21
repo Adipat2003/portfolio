@@ -1,0 +1,139 @@
+{
+  "generated_from": "Engineering Contribution Portfolio, Oct 2025 to Oct 2026",
+  "public_safe_reviewed": true,
+  "projects": [
+    {
+      "slug": "offline-sync-engine",
+      "title": "Inspection reporting that survives dead zones",
+      "summary": "Field officers complete rail-yard inspections with no signal, and the reports and photos still land. A single-writer sync framework replaced an edit model that lost work.",
+      "problem": "The previous app lost edits and photos when a ramp lost connectivity, and stranded uploads retried forever after a failed acknowledgement.",
+      "role": "Owned the offline flow end to end: state model, sync engine, photo pipeline, and the recovery paths.",
+      "approach": [
+        "Single-writer fact logs so one ramp's writes cannot interleave and lose another ramp's",
+        "Per-ramp store keys, which killed cross-ramp data loss",
+        "Recovery from lost-acknowledgement conflicts, stale-version mismatches, and retry loops",
+        "Resumable partial photo sync with per-slot persistence to stop duplicate uploads"
+      ],
+      "outcome": "Edits and photos stop getting lost. Reports completed offline arrive once, without duplicates or stranded retries.",
+      "figures": [
+        {"value": "546", "label": "commits on the mobile monorepo", "kind": "self-reported", "source": "commit and PR breakdown"}
+      ],
+      "tags": ["mobile", "offline-first", "sync", "react-native"],
+      "line": "red",
+      "public_safe": true
+    },
+    {
+      "slug": "inspection-platform-api",
+      "title": "Access control for a 75-endpoint inspection API",
+      "summary": "Role and facility permissions resolved on every request and enforced by one shared gate at every write path, so users only see and edit what their role and ramps allow.",
+      "problem": "Authorization rules were scattered and easy to bypass, with no audit trail of who could reach what.",
+      "role": "Designed and built the role and facility access model, the shared request gate, the refusal error surface, and the access-assignment audit trail.",
+      "approach": [
+        "Roles plus facility scoping, resolved per request rather than cached per session",
+        "One declarative gate on every portal and write endpoint",
+        "Machine-readable refusal errors following a standard problem-details format",
+        "Filterable audit trail of access changes"
+      ],
+      "outcome": "Authorization lives in one contract instead of scattered checks, and every access change is attributable.",
+      "figures": [
+        {"value": "75", "label": "API paths on the platform", "kind": "self-reported", "source": "BAM OpenAPI contract"},
+        {"value": "214", "label": "commits on the backend service", "kind": "self-reported", "source": "commit and PR breakdown"}
+      ],
+      "tags": ["platform", "api", "security", "spring-boot"],
+      "line": "red",
+      "public_safe": true
+    },
+    {
+      "slug": "legacy-report-pipeline",
+      "title": "Connecting mobile reports to a long-lived reporting system",
+      "summary": "A mobile inspection app submits reports into a decades-old reporting pipeline through a message queue, serving both automated machine submissions and officers' manual submissions on separate audience-scoped endpoints.",
+      "problem": "Two very different submission flows needed to share one service without forking the logic, and duplicate resubmissions had to be rejected.",
+      "role": "Built the integrated submission endpoint, image ingest, queue submission, report editing, and the de-duplication gate.",
+      "approach": [
+        "Split OAuth audiences so machine and human callers cannot share a token path",
+        "Report edit and de-duplication so resubmissions are not counted twice",
+        "Direct coordination with the pipeline owner so the integration fit the existing setup"
+      ],
+      "outcome": "One service carries both flows, and the downstream system receives clean, deduplicated reports.",
+      "figures": [
+        {"value": "~4,500", "label": "reporting hours saved", "kind": "measured", "source": "SEAL / SIR results section"},
+        {"value": "297", "label": "reports processed in a single month", "kind": "measured", "source": "SEAL / SIR results section"}
+      ],
+      "tags": ["integration", "messaging", "backend"],
+      "line": "red",
+      "public_safe": true
+    },
+    {
+      "slug": "cross-platform-rollout",
+      "title": "Taking an inspection app from one phone platform to both",
+      "summary": "Stood up the second mobile platform from scratch: toolchain, builds, deployment to test devices, and the two failures that only appeared on managed corporate devices.",
+      "problem": "The app worked in the emulator but failed on corporate-network devices, and a previous user's sign-in session survived sign-out and blocked the next user.",
+      "role": "Owned the rollout end to end, including build signing, same-day redeploys, and driving the fix with the security and device-management teams.",
+      "approach": [
+        "Traced certificate failures with the security and network teams to a missing corporate root trust, fixed with a network security configuration",
+        "Found and fixed the single sign-on session that outlived sign-out",
+        "Same-day bug fixes and redeploys so testers were never blocked"
+      ],
+      "outcome": "The app runs on both platforms on managed devices, with a rollout that never left testers waiting.",
+      "figures": [],
+      "tags": ["mobile", "android", "ios", "rollout"],
+      "line": "blue",
+      "public_safe": true
+    },
+    {
+      "slug": "supervised-automation",
+      "title": "Supervised automation that a human still approves",
+      "summary": "A competition runner where an AI agent plans each step, deterministic scripts do all the screen work, and the operator approves every write before it happens.",
+      "problem": "Agentic automation is only safe in a live operational setting when a person stays in the loop and every action is recoverable.",
+      "role": "Top contributor, 68 of 97 team commits: built the agent run layer, the live operator console, the run journals, and the documentation.",
+      "approach": [
+        "Hash-chained run journals so an interrupted run can be recovered and audited",
+        "Plan-digest approval: the operator approves what the agent intends to do, before it writes",
+        "Deterministic scripts own all screen work, so the agent never improvises against production",
+        "Stop controls and a test suite that reached 940-plus passing tests"
+      ],
+      "outcome": "Two full scenarios ran with zero halts, retries, or unplanned operator interventions, inside the time target for the combo scenario.",
+      "figures": [
+        {"value": "68 / 97", "label": "team commits", "kind": "self-reported", "source": "Trackathon contribution log"},
+        {"value": "940+", "label": "passing tests", "kind": "self-reported", "source": "Trackathon quality section"}
+      ],
+      "tags": ["automation", "agents", "mcp", "testing"],
+      "line": "blue",
+      "public_safe": true
+    },
+    {
+      "slug": "ai-assisted-engineering",
+      "title": "Helping a team adopt AI-assisted engineering",
+      "summary": "Authored the shared rules, commands, and review practices that define how AI coding tools are used across the codebase, and turned review findings into permanent team rules.",
+      "problem": "AI tools produce inconsistent quality unless the team standardizes how they are driven, reviewed, and constrained.",
+      "role": "Authored the repository-level standards, a skill plugin with 21 agents and skills, and the confirmation gate used before review findings are posted or fixed.",
+      "approach": [
+        "Every fix-and-review round produces a retrospective that encodes the missed finding as a standing rule",
+        "Secret scanning before commit and subagent scope discipline as global governance",
+        "Spec-guided development: contracts regenerated from source, test plans rendered from requirements"
+      ],
+      "outcome": "One shared set of standards across the team, with 30-plus rules extracted from real review rounds and 500-plus AI coding sessions on record.",
+      "figures": [
+        {"value": "500+", "label": "AI coding sessions", "kind": "self-reported", "source": "AI engineering section"},
+        {"value": "172", "label": "teammate pull requests reviewed", "kind": "self-reported", "source": "review metrics"}
+      ],
+      "tags": ["ai", "process", "tooling", "standards"],
+      "line": "blue",
+      "public_safe": true
+    },
+    {
+      "slug": "personal-projects",
+      "title": "Personal and school projects",
+      "summary": "Coursework and personal builds. This chapter is being assembled from Aditya's own repositories and will fill in as those are provided.",
+      "problem": null,
+      "role": null,
+      "approach": [],
+      "outcome": null,
+      "figures": [],
+      "tags": ["personal", "school"],
+      "line": "blue",
+      "public_safe": true,
+      "status": "pending-content"
+    }
+  ]
+}

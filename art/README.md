@@ -13,8 +13,13 @@ recognizable massing matters more than detail:
 Standalone files exist so each landmark can be opened and edited alone. The
 concept page inlines the same geometry so it stays self-contained.
 
-## Generating the height map
+## Source of truth
 
-`skyline-partial-heightmap.svg` was an early composition probe (generic blocks,
-no named landmarks). It is superseded by the inline geometry in the concept
-page. Retained only as a scrapland for proportion experiments; do not ship it.
+Landmark, route, station, river, and window-light geometry lives in
+`content/atlas.json`, one entry per building with its source building and
+identifying feature named. `scripts/build.py` renders it into the Atlas facade,
+so the skyline is diffable source rather than inline markup, and the same data
+can flatten into the accessible text view.
+
+The early composition probe (`skyline-partial-heightmap.svg`, generic blocks, no
+named landmarks) was removed and is not part of the repository.
