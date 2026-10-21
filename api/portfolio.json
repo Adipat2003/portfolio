@@ -3,7 +3,7 @@
   "role": "Software engineer",
   "location": "Chicago",
   "tagline": "I build systems that keep working when the network does not.",
-  "content_sha256": "08d86dfb79d23c9c",
+  "content_sha256": "5f624cf3646782db",
   "facades": [
     "dispatch",
     "atlas"
@@ -239,7 +239,8 @@
         "Graph class supporting the textbook structures behind lists, trees, and graph search",
         "Dataset ingestion from CSV into the graph model",
         "Traversal and search solving the assignment's computational questions",
-        "CMake build matching the course machine-problem workflow"
+        "CMake build matching the course machine-problem workflow",
+        "Maintained the course's Fall 2022 release repository for the term"
       ],
       "outcome": "Final grade A in the course; the project solved the assigned dataset questions on top of the shared graph library.",
       "figures": [

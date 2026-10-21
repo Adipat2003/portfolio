@@ -202,56 +202,56 @@
     "offline-sync-engine": {
       "label": "Offline sync engine",
       "cx": 248,
-      "cy": 256,
+      "cy": 267,
       "dx": 14,
       "dy": -4
     },
     "inspection-platform-api": {
       "label": "Access control platform",
       "cx": 560,
-      "cy": 196,
+      "cy": 217,
       "dx": 14,
       "dy": -4
     },
     "legacy-report-pipeline": {
       "label": "Inspection reporting",
       "cx": 880,
-      "cy": 174,
+      "cy": 166,
       "dx": 14,
       "dy": -4
     },
     "cross-platform-rollout": {
       "label": "Android rollout",
       "cx": 420,
-      "cy": 314,
+      "cy": 315,
       "dx": 14,
       "dy": -4
     },
     "supervised-automation": {
       "label": "Supervised agent runner",
       "cx": 760,
-      "cy": 302,
+      "cy": 294,
       "dx": 14,
       "dy": -4
     },
     "personal-projects": {
       "label": "Personal projects",
       "cx": 1080,
-      "cy": 286,
+      "cy": 275,
       "dx": -70,
       "dy": 26
     },
     "cs411-la-crime": {
       "label": "Crime-data web app",
       "cx": 1080,
-      "cy": 160,
+      "cy": 134,
       "dx": 14,
       "dy": -4
     },
     "ece391-os-kernel": {
       "label": "Operating system kernel",
       "cx": 620,
-      "cy": 302,
+      "cy": 303,
       "dx": 14,
       "dy": -4
     }
