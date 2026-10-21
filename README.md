@@ -1,28 +1,23 @@
-# Aditya Patel portfolio: concept board
+# Aditya Patel portfolio
 
-Repository root for the personal portfolio site. Currently in the design exploration
-phase. Nothing here is deployed yet.
+Personal portfolio site: two facades over one content model.
 
-## What exists
-
-- `index.html` — a single self-contained concept page with both
-  facades, hand-authored SVG landmarks, and working interactions. Open it directly
-  in a browser.
-- `art/` — starting point for authored artwork (see below).
-- `previews/` — rendered captures of both facades from the last verification pass.
+Live at https://adipat2003.github.io/portfolio/ (GitHub Pages renders `main`).
+Repository: https://github.com/Adipat2003/portfolio (public).
 
 ## Architecture: two facades, one portfolio
 
 The site presents the same content through two facades. Both are first-class; the
-toggle lives in the page chrome and is deep-linkable (`#dispatch`, `#atlas`).
+toggle lives in the page chrome and is deep-linkable (`#atlas` opens the world
+facade directly).
 
 **Facade 1: The Dispatch.** A classic scroll: hero, impact strip, selected work,
-about, contact. This is the default view and the primary surface for people who
-want to read and for agents that index text. Everything essential lives here with
+ask. This is the default view and the primary surface for people who want to
+read and for agents that index text. Everything essential lives here with
 landmarks, headings, and stable URLs.
 
-**Facade 2: The Atlas.** The explorable Chicago world: a hand-drawn skyline, the
-river, elevated lines as routes, and projects as stations. Progressive enhancement
+**Facade 2: The Atlas.** The explorable Chicago world: authored skyline, river,
+elevated lines as routes, and projects as stations. Progressive enhancement
 only. It never holds information the Dispatch does not, and it degrades to a
 static, scrollable view when motion is reduced, permission is denied, or
 JavaScript fails.
@@ -32,19 +27,46 @@ readable, quotable, and indexable. Rather than compromise either, the content
 model is built once and rendered twice. The Dispatch is not a fallback; it is a
 peer.
 
+## Layout
+
+```text
+content/     the content model (single source of truth)
+  site.json      owner, hero copy, impact figures with hedging, ask examples
+  projects.json  sanitized project records; build refuses unsafe ones
+  atlas.json     Atlas geometry: landmarks, routes, stations, river, lights
+scripts/
+  build.py          renders the site from content; --check verifies committed output
+  mcp-server.mjs    read-only MCP endpoint (Node stdlib), see docs/ai-exposure.md
+index.html    generated: both facades in one page (do not edit by hand)
+api/          generated: portfolio.json for agents
+llms.txt, robots.txt   generated discovery files
+art/          artwork documentation (geometry lives in content/atlas.json)
+docs/          ai-exposure.md design
+previews/     verification captures (gitignored, local only)
+```
+
+Build and verify:
+
+```bash
+python3 scripts/build.py
+python3 scripts/build.py --check   # proves committed output matches content
+```
+
+Never hand-edit generated files; change content and rebuild.
+
 ## Content model
 
 One project record shape, rendered by both facades. Each project carries:
 
 - title, one-paragraph summary (plain language, no internal app or team names)
 - the problem, what was owned, what was technically interesting, the result
-- evidence links, tags, and the source document the claims come from
+- figures, tags, and the source document the claims come from
 - a `public_safe` flag: anything about a current employer's internal systems,
   repositories, or incidents must be marked reviewed before it renders
 
-Figures follow the source document's own hedging. The $4-10M BAM number is
-labeled a projection; hours-saved and report counts are labeled per their source.
-Nothing gets upgraded from "projected" to "achieved" in the UI copy.
+Figures follow their source hedging. The $4-10M figure is labeled a projection;
+hours-saved and report counts are labeled per their source. Nothing gets
+upgraded from "projected" to "achieved" in the UI copy.
 
 ## Artwork pipeline
 
@@ -52,13 +74,12 @@ Custom art, not stock imagery and not generated imagery.
 
 1. **Named landmarks as authored SVG.** Willis Tower's bundled setbacks, the
    Hancock's tapered cross-braced body, Marina City's corncob cylinders, and the
-   rest are hand-placed path data. Each landmark gets its own file under `art/`
-   with a comment naming its source building. Recognizable massing matters more
+   rest are hand-placed path data in `content/atlas.json`, each entry naming its
+   source building and identifying feature. Recognizable massing matters more
    than detail at silhouette scale.
-2. **Routes and stations from data.** A route definition file (line paths,
-   station anchors, labels) renders to SVG, so the map is diffable source rather
-   than a mystery image, and the same data can flatten into the accessible
-   text view.
+2. **Routes and stations from data.** Line paths, station anchors, and labels
+   render to SVG from the same file, so the map is diffable source rather than a
+   mystery image, and the same data can flatten into the accessible text view.
 3. **Atmosphere kept cheap and optional.** Dusk gradients, window lights, and the
    river are CSS and static SVG. Any heavier effect is opt-in and
    reduced-motion aware.
@@ -69,46 +90,39 @@ Three layers, in the order they matter:
 
 1. **Plain semantic HTML.** Landmarks, headings, list semantics, real links,
    visible focus, and text equivalents. Works with JavaScript disabled.
-2. **A machine-readable content API.** `GET /api/portfolio.json` returns the same
-   project records the page renders, so any agent can read the portfolio without
-   a browser.
-3. **An MCP endpoint.** A read-only Model Context Protocol server exposing the
-   portfolio as structured tools (`list_projects`, `get_project`,
-   `get_impact_figures`, `get_artwork_provenance`, plus a `ask` tool that answers
-   questions about the portfolio with source citations). Read-only, no write
-   tools, no secrets in responses. This is what an AI visitor uses to read the
-   site properly instead of scraping.
+2. **A machine-readable content API.** `api/portfolio.json` returns the same
+   project records the page renders with a content hash, so any agent can read
+   the portfolio without a browser.
+3. **A read-only MCP endpoint.** `scripts/mcp-server.mjs` exposes the portfolio
+   as structured tools (`list_projects`, `get_project`, `get_impact_figures`,
+   `get_artwork_provenance`, `ask`). Streamable HTTP transport per the MCP
+   specification revision 2026-07-28, Node standard library only, Origin
+   validation, rate limiting. Implementation and verification status live in
+   `docs/ai-exposure.md`.
 
 The `ask` tool is grounded: it answers from the portfolio records and cites the
-source document for each claim. It does not invent figures, and it says so when
-the portfolio does not support a claim. See `docs/ai-exposure.md` for the design.
+source for each claim. It does not invent figures, and it declines when the
+records do not support a claim.
 
-## Planned stack
+## Stack
 
-Still a proposal until you approve dependencies:
+Deliberately zero-dependency today, because dependency additions require
+explicit approval:
 
-- Next.js (App Router) + React + TypeScript, statically rendered
-- Plain CSS custom properties for tokens, SVG for artwork
-- MDX or Markdown project content compiled to typed records at build time
-- MCP endpoint as a small Node route inside the app, backed by the same build
-  output
-- Postgres + vector search only when the restaurant tracker and portfolio search
-  actually need it
+- Static HTML/CSS/JS rendered by a stdlib Python generator; GitHub Pages serves it
+- Node standard library only for the MCP endpoint
+- Hand-authored SVG artwork; no image model output, no stock imagery
 
-No dependencies are added without explicit approval, per the standing rule.
+Next.js + TypeScript remains an option if the site outgrows the static render
+(for project pages, search, or the Chicago data features), and would be proposed
+with its dependency list before installation.
 
-## Repository
-
-Live at https://github.com/Adipat2003/portfolio (public). GitHub Pages renders
-`main` root at https://adipat2003.github.io/portfolio/ and is the production
-renderer: verify the live URL after any push that changes the site.
-
-Work is tracked as GitHub issues (roadmap items 1 through 6) and lands on `main`
-through branches and pull requests. The initial bootstrap commit is the only
-direct push.
-
-Context for future work
+## Workflow
 
 Global codex instructions live at `~/.codex/AGENTS.md` and are loaded for
-implementation work. Repository instructions for agents live in `AGENTS.md`
-in this repository.
+implementation work. Repository instructions for agents live in `AGENTS.md`.
+
+Roadmap work is tracked as GitHub issues (1 through 6). Site changes land on
+`main` through branches and pull requests; the initial bootstrap commit is the
+only direct push. Verify the live Pages URL after any merge that changes the
+site.
