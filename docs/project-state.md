@@ -27,9 +27,20 @@ the lockfile.
 ```bash
 npm run typecheck                  # tsc --noEmit, expect clean
 npm run build                      # next build + postbuild, exports to out/
+node scripts/season-check.mjs      # 14 boundary and palette checks, expect PASS
+python3 scripts/season-check-python.py  # Python date and renderer parity, expect PASS
+node scripts/ask-check.mjs         # 20 retrieval assertions across 14 questions, expect PASS
 python3 scripts/build.py --check   # verifies committed static artifacts match content
 node scripts/art-export.mjs --check  # verifies art/*.svg match atlas.json
 ```
+
+`scripts/ask-check.mjs` and `scripts/season-check.mjs` import the modules the
+page itself imports and run them under plain Node with no test dependency and no
+build step. This is deliberate: `src/content/retrieval.ts` and
+`src/content/season.ts` take their content as a parameter rather than importing
+JSON, because a bare JSON import resolves under the Next bundler but not under
+Node. Do not add a runtime import to either module, or the checks silently stop
+exercising it and report success on an empty run.
 
 `python3 scripts/build.py` (no flag) regenerates index.html, every
 projects/<slug>/index.html, api/portfolio.json, and llms.txt in place. Run it
@@ -57,16 +68,23 @@ content/            single source of truth (JSON, hand-authored)
   projects.json     14 project records, each with public_safe: true
   atlas.json        Chicago map geometry: 13 buildings, 21 window lights,
                     river, 2 routes, 7 stations, gradients
+  seasons.json      four season boundaries, timezone, and palettes
 scripts/
   build.py          zero-dependency Python generator. Owns index.html, all
                     project pages, api/portfolio.json, llms.txt. --check mode.
   mcp-server.mjs    read-only MCP endpoint, Node stdlib only. Not deployed.
   postbuild.mjs     copies api/llms.txt/robots.txt into the Next export
   art-export.mjs    writes art/<landmark>.svg from atlas.json, --check mode
+  season-check.mjs  14 boundary dates and four palette checks against seasons.json
+  season-check-python.py  Python resolution and renderer parity checks for seasons
+  ask-check.mjs     20 retrieval assertions across 14 questions
 src/
   content/          Zod schemas (schema.ts) + validated loaders (load.ts)
+    retrieval.ts    grounded ask retrieval. No runtime imports.
+    season.ts       season resolution and palettes. No runtime imports.
   components/       React components for both facades
     atlas/          one component per Atlas layer (Phase 2)
+    SeasonSync.tsx  corrects data-season after hydration
   app/              Next.js App Router, static export, basePath /portfolio
 art/                13 standalone landmark SVGs, generated from atlas.json
 ```
@@ -101,6 +119,51 @@ The toggle sits in the sticky bar, is deep-linkable via #atlas, and updates
 document.title. On the Python side it is plain JS in index.html; on the Next
 side it is `src/components/FacadeSwitch.tsx` with client state.
 
+## Seasonal theming
+
+`content/seasons.json` defines four boundaries (astronomical equinox and solstice
+dates, fixed to the day) and a palette each. The layout resolves the season once
+at build time and emits `data-season` plus palette variables on the document root,
+so the first paint needs no client work. `SeasonSync` recomputes in an effect after
+hydration and updates both the attribute and variables, so a boundary passed
+since the build does not need a deploy. It runs in an effect rather than during
+render on purpose: the first paint must match the build-time value or hydration
+fails.
+
+Seasons vary the accent and accent-soft tokens, the three Atlas sky stops, and
+the window-light colour. Nothing else. Artwork, geometry, and structure are
+season-invariant. The sky stops and the light rects read CSS custom properties
+with the authored atlas.json value as the fallback, so an unthemed render still
+draws the authored sky and warm windows. `scripts/build.py` reads the same
+season definition and palette for the Python-rendered page and project details.
+
+Season boundaries are checked rather than eyeballed. `scripts/season-check.mjs`
+asserts all boundary transitions, six mid-season dates, and the four palette
+records. `scripts/season-check-python.py` verifies the corresponding Python date
+walk, palette variables, and SVG token usage.
+
+## The grounded ask feature
+
+`src/content/retrieval.ts` answers a typed question from the same records the
+page renders, and cites the record behind every claim. AskBox takes free text,
+renders the matched record itself (summary, role, outcome, approach steps,
+figures with their own hedging), and shows the source under every answer. A
+curated example ranks first where one exists for the subject, and the underlying
+project record follows it, so the reader gets the reviewed wording and the
+underlying data.
+
+Ranking weights title above tags above body. Two passes: exact terms first, and
+a one-edit typo pass only when the exact pass finds nothing. Ties break by
+record specificity, so a project outranks the biography record rather than losing
+to it on a name. An entry is accepted for two independent term hits, a single
+strong-field hit, or a typo correction onto a title-level term. Below that the UI
+says the records do not support the question, which is a correct answer.
+
+`scripts/ask-check.mjs` runs the shipped scoring under plain Node against the
+live content: should-match, should-decline, and misspelled questions, plus the
+hedge and identity rules. It caught four real ranking bugs that hand-testing
+missed, so it is not optional.
+
 ## Hard rules that bind every change
 
 From AGENTS.md, plus ~/.codex/AGENTS.md which applies globally:
@@ -132,6 +195,16 @@ phased plan. `docs/ai-exposure.md` carries the AI layer design.
   feat/atlas-artwork-components (closes #13). Route geometry moved to
   atlas.json; AtlasMap decomposed into per-layer typed components; gradients
   typed; station cross-checks added; art/*.svg export added.
+- **Grounded ask retrieval.** DONE on PR #14, browser-verified. AskBox takes free
+  text, ranks the records, and cites the record behind each answer. This is the
+  retrieval half of the RAG feature; the NVIDIA step rephrases what it returns
+  with citations attached, so a model can reword but never becomes the source
+  of a claim. `scripts/ask-check.mjs` currently covers 20 assertions across 14
+  questions.
+- **Seasonal theming.** DONE on PR #14. Layout emits `data-season` and the
+  content-driven palette at build time; SeasonSync updates the attribute and
+  CSS variables after hydration. The Python renderer emits the same season and
+  palette from `seasons.json`. Browser-verified for all four seasons.
 - **Phase 3, detail pages and filtering as routes and components.** Mostly
   delivered inside Phase 1 (generateStaticParams and FilterBar already exist).
   Remaining work is to confirm nothing is missing and close it.
@@ -164,12 +237,17 @@ These block work and belong to Aditya:
   NWS. Research can start now and needs no host.
 - **Phase 2 adjustments**, requested by Aditya and not yet specified.
 - **An NVIDIA model on the site itself**, requested by Aditya: a RAG-style
-  model fed on a corpus about him, to answer visitors about him. Needs the
-  corpus contents, the route through the Node service, and a decision on how
-  the "sound great" framing coexists with the no-fabrication rule.
+  model fed on a corpus about him, to answer visitors about him. The retrieval
+  half is now built and the corpus is the portfolio records. Still needed: his
+  own context file to widen the corpus, the route through the Node service, and
+  a decision on how the "sound great" framing coexists with the no-fabrication
+  rule. A model may rephrase what retrieval returns; it may never be the source
+  of a claim.
 - **Chicago interactivity**, requested by Aditya: bars and food spots, and a
-  rotating list of city events such as sports. Needs the data sources and the
-  terms review above.
+  rotating list of city events such as sports. Public venue content is blocked
+  on a user-approved scope and source review. Do not copy private inventory or
+  personal reviews into `content/chicago.json` or a public view without explicit
+  approval. Live feeds still require the terms review above.
 
 ## Work started outside this repo and not lost
 

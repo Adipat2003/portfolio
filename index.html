@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-season="fall" style="--accent:#b3541e;--accent-soft:#f3e3d5;--atlas-sky-1:#14100c;--atlas-sky-2:#1e1810;--atlas-sky-3:#2b2114;--atlas-lights:#e8b04b">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -283,7 +283,7 @@
     <svg viewBox="0 0 1200 470" role="img" aria-label="The Atlas: a Chicago rail-map world where projects become stations">
       <defs>
         <linearGradient id="atlasSky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#0b0e18"/><stop offset="0.6" stop-color="#131a2c"/><stop offset="1" stop-color="#1d2233"/>
+          <stop offset="0" style="stop-color:var(--atlas-sky-1, #0b0e18)"/><stop offset="0.6" style="stop-color:var(--atlas-sky-2, #131a2c)"/><stop offset="1" style="stop-color:var(--atlas-sky-3, #1d2233)"/>
         </linearGradient>
         <linearGradient id="towerGlass" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="#222b42"/><stop offset="1" stop-color="#141a29"/>
@@ -311,7 +311,7 @@
         <g><title>Tribune Tower: crown with buttresses</title><path d="M752 420 L752 200 L760 180 L768 200 L768 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/></g>
         <g><title>Chicago Board of Trade: statue-topped pyramid</title><path d="M792 420 L792 240 L804 214 L816 240 L816 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/><path d="M802 196 L802 214 L806 214 L806 196 Z" fill="#222b42" stroke="none"/></g>
       </g>
-      <g fill="#e8b04b" opacity="0.75">
+      <g style="fill:var(--atlas-lights, #e8b04b)" opacity="0.75">
         <rect x="126" y="228" width="4" height="6"/>
         <rect x="142" y="228" width="4" height="6"/>
         <rect x="158" y="196" width="4" height="6"/>

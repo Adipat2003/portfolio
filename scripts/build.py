@@ -16,11 +16,13 @@ Usage:  python3 scripts/build.py [--out DIR] [--check]
 from __future__ import annotations
 
 import argparse
+from datetime import date, datetime
 import hashlib
 import html
 import json
 import sys
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 CONTENT = ROOT / "content"
@@ -32,12 +34,51 @@ def load_content() -> dict:
     site = json.loads((CONTENT / "site.json").read_text())
     projects = json.loads((CONTENT / "projects.json").read_text())
     atlas = json.loads((CONTENT / "atlas.json").read_text())
+    seasons = json.loads((CONTENT / "seasons.json").read_text())
     if not projects.get("public_safe_reviewed"):
         sys.exit("content guard: projects.json must set public_safe_reviewed true")
     for p in projects["projects"]:
         if not p.get("public_safe"):
             sys.exit(f"content guard: {p['slug']} is not marked public_safe")
-    return {"site": site, "projects": projects, "atlas": atlas}
+    return {"site": site, "projects": projects, "atlas": atlas, "seasons": seasons}
+
+
+def build_seasons(seasons: dict):
+    """Return the same latest-boundary walk used by the TypeScript renderer."""
+    boundaries = sorted(
+        ((int(item["start"].split("-")[0]), int(item["start"].split("-")[1]), item["name"])
+         for item in seasons["boundaries"]),
+        key=lambda boundary: boundary[0] * 100 + boundary[1],
+    )
+
+    def season_for(day: date) -> str:
+        today = day.month * 100 + day.day
+        current = boundaries[-1][2]
+        for month, boundary_day, name in boundaries:
+            if month * 100 + boundary_day <= today:
+                current = name
+        return current
+
+    return season_for
+
+
+def current_season(seasons: dict) -> str:
+    """Resolve today's season in the content model's timezone."""
+    today = datetime.now(ZoneInfo(seasons["timezone"])).date()
+    return build_seasons(seasons)(today)
+
+
+def season_style(season: str, seasons: dict) -> str:
+    palette = seasons["palettes"][season]
+    properties = [
+        ("--accent", palette["accent"]),
+        ("--accent-soft", palette["accent_soft"]),
+        ("--atlas-sky-1", palette["sky"][0]),
+        ("--atlas-sky-2", palette["sky"][1]),
+        ("--atlas-sky-3", palette["sky"][2]),
+        ("--atlas-lights", palette["lights"]),
+    ]
+    return ";".join(f"{name}:{e(value)}" for name, value in properties)
 
 
 def e(s: object) -> str:
@@ -46,7 +87,7 @@ def e(s: object) -> str:
 
 def content_digest(data: dict) -> str:
     h = hashlib.sha256()
-    for name in ("site.json", "projects.json", "atlas.json"):
+    for name in ("site.json", "projects.json", "atlas.json", "seasons.json"):
         h.update(name.encode())
         h.update((CONTENT / name).read_bytes())
     return h.hexdigest()[:16]
@@ -55,7 +96,7 @@ def content_digest(data: dict) -> str:
 # ---------------------------------------------------------------- index.html
 
 PAGE_SKELETON = """<!doctype html>
-<html lang="en">
+<html lang="en" data-season="__SEASON__" style="__SEASON_STYLE__">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -372,7 +413,10 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
             f'<text x="{s["cx"] + s["dx"]}" y="{s["cy"] + s["dy"]}">{e(s["label"])}</text></g>'
         )
     sky, fill = atlas["sky"], atlas["building_fill"]
-    sky_stops = "".join(f'<stop offset="{s["offset"]}" stop-color="{s["color"]}"/>' for s in sky["stops"])
+    sky_stops = "".join(
+        f'<stop offset="{s["offset"]}" style="stop-color:var(--atlas-sky-{i + 1}, {s["color"]})"/>'
+        for i, s in enumerate(sky["stops"])
+    )
     fill_stops = "".join(f'<stop offset="{s["offset"]}" stop-color="{s["color"]}"/>' for s in fill["stops"])
     return f"""    <svg viewBox="{atlas['viewBox']}" role="img" aria-label="The Atlas: a Chicago rail-map world where projects become stations">
       <defs>
@@ -393,7 +437,7 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
       <g>
 {chr(10).join("        " + b for b in buildings)}
       </g>
-      <g fill="#e8b04b" opacity="0.75">
+      <g style="fill:var(--atlas-lights, #e8b04b)" opacity="0.75">
 {chr(10).join("        " + r for r in light_rects)}
       </g>
       <g>
@@ -408,8 +452,10 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
     </svg>"""
 
 
-def render_index(data: dict) -> str:
+def render_index(data: dict, season: str | None = None) -> str:
     site, projects, atlas = data["site"], data["projects"], data["atlas"]
+    seasons = data["seasons"]
+    season = season or current_season(seasons)
     dispatch_cards = "".join(project_card(p, "pending") for p in projects["projects"])
     body = f"""<div class="concept-bar" id="concept-bar" data-facade="dispatch" role="region" aria-label="Facade switch">
   <div class="concept-bar-inner">
@@ -495,6 +541,8 @@ def render_index(data: dict) -> str:
 </div>
 </main>"""
     page = PAGE_SKELETON
+    page = page.replace("__SEASON__", e(season))
+    page = page.replace("__SEASON_STYLE__", season_style(season, seasons))
     page = page.replace("__DESCRIPTION__", e(site["tagline"] + " " + site["intro"]))
     page = page.replace("__TITLE__", "Aditya Patel: Engineering Portfolio")
     page = page.replace("__CSS__", render_css())
@@ -505,8 +553,9 @@ def render_index(data: dict) -> str:
 
 # ------------------------------------------------------------ detail pages
 
-def render_project_page(project: dict, site: dict) -> str:
+def render_project_page(project: dict, site: dict, seasons: dict, season: str | None = None) -> str:
     """Standalone page for one project: the full record behind the card."""
+    season = season or current_season(seasons)
     course = f'<span class="kicker">{e(project["course"])}</span>' if project.get("course") else ""
     figs = "".join(
         f'<li><b>{e(f["value"])}</b> {e(f["label"])} <i>({e(f["kind"])}, source: {e(f["source"])})</i></li>'
@@ -535,6 +584,8 @@ def render_project_page(project: dict, site: dict) -> str:
     <section aria-labelledby="d-tags"><h2 id="d-tags">Tags</h2><ul class="tags">{tags}</ul></section>
   </main>"""
     page = PAGE_SKELETON
+    page = page.replace("__SEASON__", e(season))
+    page = page.replace("__SEASON_STYLE__", season_style(season, seasons))
     page = page.replace("__DESCRIPTION__", e(project["summary"]))
     page = page.replace("__TITLE__", e(project["title"] + " | Aditya Patel"))
     page = page.replace("__CSS__", render_css() + """
@@ -611,9 +662,10 @@ def render_robots() -> str:
 def build(out: Path) -> list[Path]:
     data = load_content()
     digest = content_digest(data)
+    season = current_season(data["seasons"])
     written = []
     targets = [
-        (out / "index.html", render_index(data)),
+        (out / "index.html", render_index(data, season=season)),
         (out / "api" / "portfolio.json", render_api(data, digest)),
         (out / "llms.txt", render_llms(data, digest)),
         (out / "robots.txt", render_robots()),
@@ -625,7 +677,7 @@ def build(out: Path) -> list[Path]:
     for p in data["projects"]["projects"]:
         page = out / "projects" / p["slug"] / "index.html"
         page.parent.mkdir(parents=True, exist_ok=True)
-        page.write_text(render_project_page(p, data["site"]))
+        page.write_text(render_project_page(p, data["site"], data["seasons"], season=season))
         written.append(page)
     return written
 
@@ -633,8 +685,9 @@ def build(out: Path) -> list[Path]:
 def check(out: Path) -> bool:
     data = load_content()
     digest = content_digest(data)
+    season = current_season(data["seasons"])
     targets = [
-        (out / "index.html", render_index(data)),
+        (out / "index.html", render_index(data, season=season)),
         (out / "api" / "portfolio.json", render_api(data, digest)),
         (out / "llms.txt", render_llms(data, digest)),
         (out / "robots.txt", render_robots()),
@@ -645,7 +698,7 @@ def check(out: Path) -> bool:
         if not page.exists():
             print(f"MISSING: {page.relative_to(ROOT)}")
             ok = False
-        elif page.read_text() != render_project_page(p, data["site"]):
+        elif page.read_text() != render_project_page(p, data["site"], data["seasons"], season=season):
             print(f"STALE:   {page.relative_to(ROOT)}")
             ok = False
     for path, expected in targets:

@@ -17,7 +17,8 @@ const { buildSeasons } = await import(new URL("../src/content/season.ts", import
 const rawSeasons = JSON.parse(
   (await import("node:fs")).readFileSync(new URL("../content/seasons.json", import.meta.url), "utf8"),
 );
-const { seasonFor } = buildSeasons(rawSeasons);
+const engine = buildSeasons(rawSeasons);
+const { seasonFor } = engine;
 
 /** A UTC timestamp is enough because only month and day are read. */
 const at = (month, day) => Date.UTC(2026, month - 1, day, 12);
@@ -56,6 +57,12 @@ function check(description, ok, detail) {
   failures += 1;
   console.error(`  FAIL ${description}`);
   if (detail) console.error(`       ${detail}`);
+}
+
+console.log("season-check: palettes");
+for (const [name, expected] of Object.entries(rawSeasons.palettes)) {
+  const got = engine.paletteFor(name);
+  check(`${name} palette matches content`, JSON.stringify(got) === JSON.stringify(expected));
 }
 
 console.log("season-check: boundary start");

@@ -14,10 +14,19 @@ export const metadata: Metadata = {
  * after hydration when a boundary has passed since the build.
  */
 const season = seasons.seasonFor(new Date());
+const palette = seasons.paletteFor(season);
+const seasonStyle = {
+  "--accent": palette.accent,
+  "--accent-soft": palette.accent_soft,
+  "--atlas-sky-1": palette.sky[0],
+  "--atlas-sky-2": palette.sky[1],
+  "--atlas-sky-3": palette.sky[2],
+  "--atlas-lights": palette.lights,
+} as React.CSSProperties;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-season={season}>
+    <html lang="en" data-season={season} style={seasonStyle}>
       <head>
         <link rel="alternate" type="application/json" href="/portfolio/api/portfolio.json" />
       </head>

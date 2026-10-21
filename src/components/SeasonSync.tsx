@@ -18,9 +18,17 @@ import { seasons } from "@/content/load";
 export default function SeasonSync() {
   useEffect(() => {
     const next = seasons.seasonFor(new Date());
-    if (document.documentElement.dataset.season !== next) {
-      document.documentElement.dataset.season = next;
+    const palette = seasons.paletteFor(next);
+    const root = document.documentElement;
+    if (root.dataset.season !== next) {
+      root.dataset.season = next;
     }
+    root.style.setProperty("--accent", palette.accent);
+    root.style.setProperty("--accent-soft", palette.accent_soft);
+    root.style.setProperty("--atlas-sky-1", palette.sky[0]);
+    root.style.setProperty("--atlas-sky-2", palette.sky[1]);
+    root.style.setProperty("--atlas-sky-3", palette.sky[2]);
+    root.style.setProperty("--atlas-lights", palette.lights);
   }, []);
 
   return null;
