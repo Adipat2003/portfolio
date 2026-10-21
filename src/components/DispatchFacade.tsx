@@ -70,7 +70,6 @@ export default function DispatchFacade() {
         examples={site.ask_examples}
         headingId="f1-ask"
         heading="Questions get sourced answers"
-        facadeLabel="dispatch"
       />
 
       <hr className="rule" />

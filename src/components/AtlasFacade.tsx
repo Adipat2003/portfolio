@@ -47,7 +47,6 @@ export default function AtlasFacade() {
         examples={site.ask_examples}
         headingId="f2-ask"
         heading="The Atlas answers too"
-        facadeLabel="atlas"
       />
 
       <hr className="rule" />
