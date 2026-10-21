@@ -97,7 +97,18 @@ Still a proposal until you approve dependencies:
 
 No dependencies are added without explicit approval, per the standing rule.
 
-## Context for future work
+## Repository
+
+Live at https://github.com/Adipat2003/portfolio (public). GitHub Pages renders
+`main` root at https://adipat2003.github.io/portfolio/ and is the production
+renderer: verify the live URL after any push that changes the site.
+
+Work is tracked as GitHub issues (roadmap items 1 through 6) and lands on `main`
+through branches and pull requests. The initial bootstrap commit is the only
+direct push.
+
+Context for future work
 
 Global codex instructions live at `~/.codex/AGENTS.md` and are loaded for
-implementation work. This directory has no git repository yet.
+implementation work. Repository instructions for agents live in `AGENTS.md`
+in this repository.
