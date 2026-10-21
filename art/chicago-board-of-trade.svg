@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Chicago Board of Trade: statue-topped pyramid. Authored geometry from content/atlas.json, exported by scripts/art-export.mjs. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 470" width="1200" height="470">
+  <defs>
+    <linearGradient id="towerGlass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#222b42"/>
+      <stop offset="1" stop-color="#141a29"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="470" fill="#0b0e18"/>
+  <g>
+    <title>Chicago Board of Trade: statue-topped pyramid</title>
+      <path d="M802 196 L802 214 L806 214 L806 196 Z" fill="#222b42" stroke="none"/>
+      <path d="M792 420 L792 240 L804 214 L816 240 L816 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+  </g>
+</svg>

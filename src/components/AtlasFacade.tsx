@@ -1,5 +1,5 @@
 import { site, publishedProjects, atlas } from "@/content/load";
-import AtlasMap from "./AtlasMap";
+import AtlasMap from "./atlas/AtlasMap";
 import ImpactStrip from "./ImpactStrip";
 import ProjectCard from "./ProjectCard";
 import AskBox from "./AskBox";
@@ -8,9 +8,7 @@ export default function AtlasFacade() {
   return (
     <div className="toggle-view atlas" id="view-atlas" data-active="true" aria-label={site.facades.atlas.name}>
       <header className="atlas-hero">
-        <AtlasMap
-          projects={publishedProjects.map((p) => ({ slug: p.slug, title: p.title, line: p.line }))}
-        />
+        <AtlasMap />
         <ImpactStrip figures={site.impact} />
       </header>
 

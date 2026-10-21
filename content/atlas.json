@@ -1,8 +1,29 @@
 {
-  "note": "Geometry for Facade 2 (The Atlas). Landmark paths are authored abstractions; each names its source building. Stations reference project slugs from projects.json.",
+  "note": "Geometry for Facade 2 (The Atlas). Landmark paths are authored abstractions; each names its source building. Routes carry the line geometry, stations reference project slugs from projects.json, and both renderers (scripts/build.py and the Next components) read from this one file.",
   "viewBox": "0 0 1200 470",
-  "sky": "linearGradient(id=atlasSky): #0b0e18 0%, #131a2c 60%, #1d2233 100%",
-  "building_fill": "linearGradient(id=towerGlass): #222b42 0%, #141a29 100%",
+  "sky": {
+    "id": "atlasSky",
+    "x1": "0",
+    "y1": "0",
+    "x2": "0",
+    "y2": "1",
+    "stops": [
+      { "offset": "0", "color": "#0b0e18" },
+      { "offset": "0.6", "color": "#131a2c" },
+      { "offset": "1", "color": "#1d2233" }
+    ]
+  },
+  "building_fill": {
+    "id": "towerGlass",
+    "x1": "0",
+    "y1": "0",
+    "x2": "0",
+    "y2": "1",
+    "stops": [
+      { "offset": "0", "color": "#222b42" },
+      { "offset": "1", "color": "#141a29" }
+    ]
+  },
   "buildings": [
     {
       "name": "Willis Tower",
@@ -170,6 +191,16 @@
     4,
     6
   ],
+  "routes": [
+    {
+      "line": "red",
+      "d": "M40 300 L1170 120"
+    },
+    {
+      "line": "blue",
+      "d": "M0 340 L1200 268"
+    }
+  ],
   "river": [
     {
       "d": "M0 372 C 200 356, 420 392, 640 372 S 1050 344, 1200 366 L1200 420 L0 420 Z",
@@ -233,13 +264,6 @@
       "cy": 294,
       "dx": 14,
       "dy": -4
-    },
-    "personal-projects": {
-      "label": "Personal projects",
-      "cx": 1080,
-      "cy": 275,
-      "dx": -70,
-      "dy": 26
     },
     "cs411-la-crime": {
       "label": "Crime-data web app",

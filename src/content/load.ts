@@ -1,13 +1,15 @@
 import rawSite from "../../content/site.json";
 import rawProjects from "../../content/projects.json";
 import rawAtlas from "../../content/atlas.json";
+import { z } from "zod";
 import {
-  siteSchema,
-  projectSchema,
   atlasSchema,
-  type Site,
-  type Project,
+  projectSchema,
+  siteSchema,
   type Atlas,
+  type LineName,
+  type Project,
+  type Site,
 } from "./schema";
 
 // Parsed once at build time. A schema failure throws here and fails the build,
@@ -29,8 +31,6 @@ function loadAtlas(): Atlas {
   return atlasSchema.parse(rawAtlas);
 }
 
-import { z } from "zod";
-
 export const site: Site = loadSite();
 export const projects: Project[] = loadProjects().projects;
 export const atlas: Atlas = loadAtlas();
@@ -41,7 +41,43 @@ export function projectBySlug(slug: string): Project | undefined {
   return projects.find((p) => p.slug === slug);
 }
 
-export const LINE_COLORS: Record<string, string> = {
+export const LINE_COLORS: Record<LineName, string> = {
   red: "#c0392b",
   blue: "#2e86c1",
 };
+
+export const LINES: LineName[] = ["red", "blue"];
+
+/** Lines that carry at least one route in atlas.json. */
+const routedLines = new Set(atlas.routes.map((r) => r.line));
+
+/**
+ * Station records joined to the projects they name, sorted by label for a
+ * stable render order.
+ *
+ * The build fails when a station names a project that does not exist, or one
+ * that is unpublished, or a line with no route: a station with no line to sit
+ * on is a dead end on the map.
+ */
+export const stations = Object.entries(atlas.labels)
+  .map(([slug, station]) => {
+    const project = projectBySlug(slug);
+    if (!project) {
+      throw new Error(`atlas.json station '${slug}' has no matching project in projects.json`);
+    }
+    if (project.status === "pending-content") {
+      throw new Error(`atlas.json station '${slug}' points at the unpublished project '${slug}'`);
+    }
+    if (!routedLines.has(project.line)) {
+      throw new Error(
+        `atlas.json station '${slug}' sits on line '${project.line}', which has no route`,
+      );
+    }
+    return { slug, station, project };
+  })
+  .sort((a, b) => a.station.label.localeCompare(b.station.label));
+
+/** Routes for one line, so a component renders a line's full path set. */
+export function routesForLine(line: LineName) {
+  return atlas.routes.filter((r) => r.line === line);
+}

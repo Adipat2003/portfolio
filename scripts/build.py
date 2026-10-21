@@ -343,7 +343,9 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
         buildings.append(f'<g><title>{e(b["name"])}: {e(b["feature"])}</title><path d="{b["d"]}" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>{extra}</g>')
     lights = atlas["window_lights"]
     w, h = atlas["window_size"]
-    light_rects = "".join(f'<rect x="{x}" y="{y}" width="{w}" height="{h}"/>' for x, y in lights)
+    # A list of rect strings, not one joined string: the renderer below joins it
+    # with newlines again, and iterating a string would split it per character.
+    light_rects = [f'<rect x="{x}" y="{y}" width="{w}" height="{h}"/>' for x, y in lights]
     river = []
     for r in atlas["river"]:
         attrs = f'stroke="{r["stroke"]}" stroke-width="{r["width"]}"'
@@ -354,6 +356,12 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
         if "opacity" in r:
             attrs += f' opacity="{r["opacity"]}"'
         river.append(f'<path d="{r["d"]}" {attrs}/>')
+    routes = []
+    for r in atlas.get("routes", []):
+        line = r["line"]
+        routes.append(
+            f'<path d="{r["d"]}" stroke="{LINE_COLORS.get(line, "#c0392b")}" marker-end="url(#arrow{line.capitalize()})"/>'
+        )
     stations = []
     for slug, s in atlas["labels"].items():
         project = next((p for p in projects["projects"] if p["slug"] == slug), None)
@@ -363,13 +371,16 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
             f'<circle cx="{s["cx"]}" cy="{s["cy"]}" r="{atlas["station_style"]["r"]}" fill="{atlas["station_style"]["fill"]}" stroke="{color}" stroke-width="{atlas["station_style"]["stroke_width"]}"/>'
             f'<text x="{s["cx"] + s["dx"]}" y="{s["cy"] + s["dy"]}">{e(s["label"])}</text></g>'
         )
+    sky, fill = atlas["sky"], atlas["building_fill"]
+    sky_stops = "".join(f'<stop offset="{s["offset"]}" stop-color="{s["color"]}"/>' for s in sky["stops"])
+    fill_stops = "".join(f'<stop offset="{s["offset"]}" stop-color="{s["color"]}"/>' for s in fill["stops"])
     return f"""    <svg viewBox="{atlas['viewBox']}" role="img" aria-label="The Atlas: a Chicago rail-map world where projects become stations">
       <defs>
-        <linearGradient id="atlasSky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#0b0e18"/><stop offset="0.6" stop-color="#131a2c"/><stop offset="1" stop-color="#1d2233"/>
+        <linearGradient id="{sky['id']}" x1="{sky['x1']}" y1="{sky['y1']}" x2="{sky['x2']}" y2="{sky['y2']}">
+          {sky_stops}
         </linearGradient>
-        <linearGradient id="towerGlass" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#222b42"/><stop offset="1" stop-color="#141a29"/>
+        <linearGradient id="{fill['id']}" x1="{fill['x1']}" y1="{fill['y1']}" x2="{fill['x2']}" y2="{fill['y2']}">
+          {fill_stops}
         </linearGradient>
         <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M0 0 L10 5 L0 10 z" fill="#c0392b"/>
@@ -378,7 +389,7 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
           <path d="M0 0 L10 5 L0 10 z" fill="#2e86c1"/>
         </marker>
       </defs>
-      <rect width="1200" height="470" fill="url(#atlasSky)"/>
+      <rect width="1200" height="470" fill="url(#{sky['id']})"/>
       <g>
 {chr(10).join("        " + b for b in buildings)}
       </g>
@@ -389,8 +400,7 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
 {chr(10).join("        " + r for r in river)}
       </g>
       <g fill="none" stroke-width="3">
-        <path d="M40 300 L1170 120" stroke="{LINE_COLORS['red']}" marker-end="url(#arrowRed)"/>
-        <path d="M0 340 L1200 268" stroke="{LINE_COLORS['blue']}" marker-end="url(#arrowBlue)"/>
+        {chr(10).join("        " + r for r in routes)}
       </g>
       <g font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#e9e6df" style="paint-order:stroke" stroke="{atlas['station_style']['halo']}" stroke-width="5" stroke-linejoin="round">
 {chr(10).join("        " + s for s in stations)}

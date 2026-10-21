@@ -49,6 +49,28 @@ export const siteSchema = z.object({
   ),
 });
 
+export const lineName = z.enum(["red", "blue"]);
+
+export const routeSchema = z.object({
+  line: lineName,
+  d: z.string().min(1, "route path data is required"),
+});
+
+export const stationSchema = z.object({
+  label: z.string(),
+  cx: z.number(),
+  cy: z.number(),
+  dx: z.number(),
+  dy: z.number(),
+});
+
+export const stationStyleSchema = z.object({
+  r: z.number(),
+  fill: z.string(),
+  stroke_width: z.number(),
+  halo: z.string(),
+});
+
 export const buildingSchema = z.object({
   name: z.string(),
   feature: z.string(),
@@ -59,35 +81,48 @@ export const buildingSchema = z.object({
   extra_fill: z.string().optional(),
 });
 
+export const riverSchema = z.object({
+  d: z.string(),
+  fill: z.string().optional(),
+  stroke: z.string(),
+  width: z.number(),
+  opacity: z.number().optional(),
+});
+
+export const gradientStopSchema = z.object({
+  offset: z.string(),
+  color: z.string(),
+});
+
+export const gradientSchema = z.object({
+  id: z.string(),
+  x1: z.string(),
+  y1: z.string(),
+  x2: z.string(),
+  y2: z.string(),
+  stops: z.array(gradientStopSchema).min(2, "a gradient needs at least two stops"),
+});
+
 export const atlasSchema = z.object({
   viewBox: z.string(),
+  sky: gradientSchema,
+  building_fill: gradientSchema,
   buildings: z.array(buildingSchema),
   window_lights: z.array(z.tuple([z.number(), z.number()])),
   window_size: z.tuple([z.number(), z.number()]),
-  river: z.array(
-    z.object({
-      d: z.string(),
-      fill: z.string().optional(),
-      stroke: z.string(),
-      width: z.number(),
-      opacity: z.number().optional(),
-    }),
-  ),
-  station_style: z.object({
-    r: z.number(),
-    fill: z.string(),
-    stroke_width: z.number(),
-    halo: z.string(),
-  }),
-  labels: z.record(
-    z.string(),
-    z.object({ label: z.string(), cx: z.number(), cy: z.number(), dx: z.number(), dy: z.number() }),
-  ),
+  routes: z.array(routeSchema).min(1, "the Atlas needs at least one route"),
+  river: z.array(riverSchema),
+  station_style: stationStyleSchema,
+  labels: z.record(z.string(), stationSchema),
 });
 
 export type Figure = z.infer<typeof figureSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type Site = z.infer<typeof siteSchema>;
+export type LineName = z.infer<typeof lineName>;
+export type Route = z.infer<typeof routeSchema>;
+export type Station = z.infer<typeof stationSchema>;
+export type StationStyle = z.infer<typeof stationStyleSchema>;
 export type Building = z.infer<typeof buildingSchema>;
+export type Gradient = z.infer<typeof gradientSchema>;
 export type Atlas = z.infer<typeof atlasSchema>;
-export type LineName = "red" | "blue";
