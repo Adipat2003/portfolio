@@ -1,16 +1,20 @@
 import rawSite from "../../content/site.json";
 import rawProjects from "../../content/projects.json";
 import rawAtlas from "../../content/atlas.json";
+import rawSeasons from "../../content/seasons.json";
 import { z } from "zod";
 import {
   atlasSchema,
   projectSchema,
+  seasonsSchema,
   siteSchema,
   type Atlas,
   type LineName,
   type Project,
+  type Seasons,
   type Site,
 } from "./schema";
+import { buildSeasons, type Palette, type SeasonEngine } from "./season";
 
 // Parsed once at build time. A schema failure throws here and fails the build,
 // which is the same guarantee scripts/build.py gave from Python.
@@ -31,11 +35,21 @@ function loadAtlas(): Atlas {
   return atlasSchema.parse(rawAtlas);
 }
 
+function loadSeasons(): Seasons {
+  return seasonsSchema.parse(rawSeasons);
+}
+
 export const site: Site = loadSite();
 export const projects: Project[] = loadProjects().projects;
 export const atlas: Atlas = loadAtlas();
 
 export const publishedProjects = projects.filter((p) => p.status !== "pending-content");
+
+/**
+ * The seasonal theme engine, built over content/seasons.json at build time. A
+ * schema failure here fails the build, the same as every other record.
+ */
+export const seasons: SeasonEngine = buildSeasons(loadSeasons());
 
 export function projectBySlug(slug: string): Project | undefined {
   return projects.find((p) => p.slug === slug);

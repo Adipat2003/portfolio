@@ -103,6 +103,29 @@ export const gradientSchema = z.object({
   stops: z.array(gradientStopSchema).min(2, "a gradient needs at least two stops"),
 });
 
+export const seasonName = z.enum(["winter", "spring", "summer", "fall"]);
+
+export const seasonBoundarySchema = z.object({
+  name: seasonName,
+  /** Month and day the season begins, as MM-DD. */
+  start: z.string().regex(/^\d{2}-\d{2}$/, "start must be MM-DD"),
+});
+
+export const seasonPaletteSchema = z.object({
+  accent: z.string(),
+  accent_soft: z.string(),
+  /** Three sky stops, the first being the deepest. */
+  sky: z.tuple([z.string(), z.string(), z.string()]),
+  lights: z.string(),
+});
+
+export const seasonsSchema = z.object({
+  note: z.string(),
+  timezone: z.string(),
+  boundaries: z.array(seasonBoundarySchema).min(1),
+  palettes: z.record(seasonName, seasonPaletteSchema),
+});
+
 export const atlasSchema = z.object({
   viewBox: z.string(),
   sky: gradientSchema,
@@ -120,6 +143,9 @@ export type Figure = z.infer<typeof figureSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type Site = z.infer<typeof siteSchema>;
 export type LineName = z.infer<typeof lineName>;
+export type SeasonName = z.infer<typeof seasonName>;
+export type SeasonPalette = z.infer<typeof seasonPaletteSchema>;
+export type Seasons = z.infer<typeof seasonsSchema>;
 export type Route = z.infer<typeof routeSchema>;
 export type Station = z.infer<typeof stationSchema>;
 export type StationStyle = z.infer<typeof stationStyleSchema>;

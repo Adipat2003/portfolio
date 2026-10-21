@@ -1,0 +1,36 @@
+{
+  "note": "Seasonal theme definition. Both renderers (scripts/build.py and the Next components) read this file, take Chicago's local date, and emit data-season on the document root. Boundaries are the astronomical equinox and solstice dates, fixed to the day; they drift by at most a day year to year, which is well below the difference anyone would notice on a site. Palettes override the base tokens only. Art and structure never change with the season.",
+  "timezone": "America/Chicago",
+  "boundaries": [
+    { "name": "winter", "start": "12-21" },
+    { "name": "spring", "start": "03-20" },
+    { "name": "summer", "start": "06-21" },
+    { "name": "fall", "start": "09-22" }
+  ],
+  "palettes": {
+    "winter": {
+      "accent": "#2f5d73",
+      "accent_soft": "#dce8ee",
+      "sky": ["#0a0f18", "#101826", "#18202f"],
+      "lights": "#cfe0ee"
+    },
+    "spring": {
+      "accent": "#3f6b4f",
+      "accent_soft": "#e2ecdf",
+      "sky": ["#0a1210", "#10201a", "#16281f"],
+      "lights": "#cfe8c0"
+    },
+    "summer": {
+      "accent": "#c07b16",
+      "accent_soft": "#f6e6c8",
+      "sky": ["#0c0e1c", "#141830", "#1d2440"],
+      "lights": "#ffd98a"
+    },
+    "fall": {
+      "accent": "#b3541e",
+      "accent_soft": "#f3e3d5",
+      "sky": ["#14100c", "#1e1810", "#2b2114"],
+      "lights": "#e8b04b"
+    }
+  }
+}
