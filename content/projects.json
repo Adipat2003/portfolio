@@ -16,9 +16,19 @@
       ],
       "outcome": "Edits and photos stop getting lost. Reports completed offline arrive once, without duplicates or stranded retries.",
       "figures": [
-        {"value": "546", "label": "commits on the mobile monorepo", "kind": "self-reported", "source": "commit and PR breakdown"}
+        {
+          "value": "546",
+          "label": "commits on the mobile monorepo",
+          "kind": "self-reported",
+          "source": "commit and PR breakdown"
+        }
       ],
-      "tags": ["mobile", "offline-first", "sync", "react-native"],
+      "tags": [
+        "mobile",
+        "offline-first",
+        "sync",
+        "react-native"
+      ],
       "line": "red",
       "public_safe": true
     },
@@ -36,10 +46,25 @@
       ],
       "outcome": "Authorization lives in one contract instead of scattered checks, and every access change is attributable.",
       "figures": [
-        {"value": "75", "label": "API paths on the platform", "kind": "self-reported", "source": "BAM OpenAPI contract"},
-        {"value": "214", "label": "commits on the backend service", "kind": "self-reported", "source": "commit and PR breakdown"}
+        {
+          "value": "75",
+          "label": "API paths on the platform",
+          "kind": "self-reported",
+          "source": "BAM OpenAPI contract"
+        },
+        {
+          "value": "214",
+          "label": "commits on the backend service",
+          "kind": "self-reported",
+          "source": "commit and PR breakdown"
+        }
       ],
-      "tags": ["platform", "api", "security", "spring-boot"],
+      "tags": [
+        "platform",
+        "api",
+        "security",
+        "spring-boot"
+      ],
       "line": "red",
       "public_safe": true
     },
@@ -56,10 +81,24 @@
       ],
       "outcome": "One service carries both flows, and the downstream system receives clean, deduplicated reports.",
       "figures": [
-        {"value": "~4,500", "label": "reporting hours saved", "kind": "measured", "source": "SEAL / SIR results section"},
-        {"value": "297", "label": "reports processed in a single month", "kind": "measured", "source": "SEAL / SIR results section"}
+        {
+          "value": "~4,500",
+          "label": "reporting hours saved",
+          "kind": "measured",
+          "source": "SEAL / SIR results section"
+        },
+        {
+          "value": "297",
+          "label": "reports processed in a single month",
+          "kind": "measured",
+          "source": "SEAL / SIR results section"
+        }
       ],
-      "tags": ["integration", "messaging", "backend"],
+      "tags": [
+        "integration",
+        "messaging",
+        "backend"
+      ],
       "line": "red",
       "public_safe": true
     },
@@ -76,7 +115,12 @@
       ],
       "outcome": "The app runs on both platforms on managed devices, with a rollout that never left testers waiting.",
       "figures": [],
-      "tags": ["mobile", "android", "ios", "rollout"],
+      "tags": [
+        "mobile",
+        "android",
+        "ios",
+        "rollout"
+      ],
       "line": "blue",
       "public_safe": true
     },
@@ -94,10 +138,25 @@
       ],
       "outcome": "Two full scenarios ran with zero halts, retries, or unplanned operator interventions, inside the time target for the combo scenario.",
       "figures": [
-        {"value": "68 / 97", "label": "team commits", "kind": "self-reported", "source": "Trackathon contribution log"},
-        {"value": "940+", "label": "passing tests", "kind": "self-reported", "source": "Trackathon quality section"}
+        {
+          "value": "68 / 97",
+          "label": "team commits",
+          "kind": "self-reported",
+          "source": "Trackathon contribution log"
+        },
+        {
+          "value": "940+",
+          "label": "passing tests",
+          "kind": "self-reported",
+          "source": "Trackathon quality section"
+        }
       ],
-      "tags": ["automation", "agents", "mcp", "testing"],
+      "tags": [
+        "automation",
+        "agents",
+        "mcp",
+        "testing"
+      ],
       "line": "blue",
       "public_safe": true
     },
@@ -114,10 +173,25 @@
       ],
       "outcome": "One shared set of standards across the team, with 30-plus rules extracted from real review rounds and 500-plus AI coding sessions on record.",
       "figures": [
-        {"value": "500+", "label": "AI coding sessions", "kind": "self-reported", "source": "AI engineering section"},
-        {"value": "172", "label": "teammate pull requests reviewed", "kind": "self-reported", "source": "review metrics"}
+        {
+          "value": "500+",
+          "label": "AI coding sessions",
+          "kind": "self-reported",
+          "source": "AI engineering section"
+        },
+        {
+          "value": "172",
+          "label": "teammate pull requests reviewed",
+          "kind": "self-reported",
+          "source": "review metrics"
+        }
       ],
-      "tags": ["ai", "process", "tooling", "standards"],
+      "tags": [
+        "ai",
+        "process",
+        "tooling",
+        "standards"
+      ],
       "line": "blue",
       "public_safe": true
     },
@@ -132,13 +206,24 @@
         "Graph class supporting the textbook structures behind lists, trees, and graph search",
         "Dataset ingestion from CSV into the graph model",
         "Traversal and search solving the assignment's computational questions",
-        "CMake build matching the course machine-problem workflow"
+        "CMake build matching the course machine-problem workflow",
+        "Maintained the course's Fall 2022 release repository for the term"
       ],
       "outcome": "Final grade A in the course; the project solved the assigned dataset questions on top of the shared graph library.",
       "figures": [
-        {"value": "A", "label": "final grade in CS 225", "kind": "self-reported", "source": "UIUC unofficial transcript"}
+        {
+          "value": "A",
+          "label": "final grade in CS 225",
+          "kind": "self-reported",
+          "source": "UIUC unofficial transcript"
+        }
       ],
-      "tags": ["c++", "algorithms", "graphs", "school"],
+      "tags": [
+        "c++",
+        "algorithms",
+        "graphs",
+        "school"
+      ],
       "line": "red",
       "public_safe": true
     },
@@ -157,9 +242,19 @@
       ],
       "outcome": "Final grade A in the course; the working app answered the assigned queries over the dataset.",
       "figures": [
-        {"value": "A", "label": "final grade in CS 411", "kind": "self-reported", "source": "UIUC unofficial transcript"}
+        {
+          "value": "A",
+          "label": "final grade in CS 411",
+          "kind": "self-reported",
+          "source": "UIUC unofficial transcript"
+        }
       ],
-      "tags": ["databases", "sql", "web", "school"],
+      "tags": [
+        "databases",
+        "sql",
+        "web",
+        "school"
+      ],
       "line": "red",
       "public_safe": true
     },
@@ -178,9 +273,20 @@
       ],
       "outcome": "Final grade B+ in the course; the repository carries the allocator, file system, and syscall work with documentation.",
       "figures": [
-        {"value": "B+", "label": "final grade in ECE 391", "kind": "self-reported", "source": "UIUC unofficial transcript"}
+        {
+          "value": "B+",
+          "label": "final grade in ECE 391",
+          "kind": "self-reported",
+          "source": "UIUC unofficial transcript"
+        }
       ],
-      "tags": ["c", "operating-systems", "kernels", "systems", "school"],
+      "tags": [
+        "c",
+        "operating-systems",
+        "kernels",
+        "systems",
+        "school"
+      ],
       "line": "blue",
       "public_safe": true
     },
@@ -199,9 +305,21 @@
       ],
       "outcome": "Final grade A+ in the course, the top mark in the term; the repository documents the full co-design.",
       "figures": [
-        {"value": "A+", "label": "final grade in ECE 385", "kind": "self-reported", "source": "UIUC unofficial transcript"}
+        {
+          "value": "A+",
+          "label": "final grade in ECE 385",
+          "kind": "self-reported",
+          "source": "UIUC unofficial transcript"
+        }
       ],
-      "tags": ["systemverilog", "fpga", "c", "hardware", "games", "school"],
+      "tags": [
+        "systemverilog",
+        "fpga",
+        "c",
+        "hardware",
+        "games",
+        "school"
+      ],
       "line": "blue",
       "public_safe": true
     },
@@ -219,9 +337,20 @@
       ],
       "outcome": "Final grades A+ in both courses in the term; the repository documents both parts of the project.",
       "figures": [
-        {"value": "A+", "label": "final grades in CS 441 and CS 444", "kind": "self-reported", "source": "UIUC unofficial transcript"}
+        {
+          "value": "A+",
+          "label": "final grades in CS 441 and CS 444",
+          "kind": "self-reported",
+          "source": "UIUC unofficial transcript"
+        }
       ],
-      "tags": ["python", "pytorch", "deep-learning", "computer-vision", "school"],
+      "tags": [
+        "python",
+        "pytorch",
+        "deep-learning",
+        "computer-vision",
+        "school"
+      ],
       "line": "blue",
       "public_safe": true
     },
@@ -240,7 +369,13 @@
       ],
       "outcome": "Working application with the full stack wired together.",
       "figures": [],
-      "tags": ["typescript", "react", "django", "firebase", "personal"],
+      "tags": [
+        "typescript",
+        "react",
+        "django",
+        "firebase",
+        "personal"
+      ],
       "line": "blue",
       "public_safe": true
     },
@@ -258,7 +393,13 @@
       ],
       "outcome": "Working service and client with a documented, tested API surface.",
       "figures": [],
-      "tags": ["python", "fastapi", "typescript", "api", "personal"],
+      "tags": [
+        "python",
+        "fastapi",
+        "typescript",
+        "api",
+        "personal"
+      ],
       "line": "blue",
       "public_safe": true
     },
@@ -276,7 +417,12 @@
       ],
       "outcome": "A playable vertical slice with the core loop complete.",
       "figures": [],
-      "tags": ["luau", "roblox", "games", "personal"],
+      "tags": [
+        "luau",
+        "roblox",
+        "games",
+        "personal"
+      ],
       "line": "blue",
       "public_safe": true
     }

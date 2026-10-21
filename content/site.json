@@ -62,5 +62,9 @@
       "source": "UIUC unofficial transcript, FA21 through FA24"
     }
   ],
-  "academics_line": "BS Computer Engineering, University of Illinois Urbana-Champaign, GPA 3.88. Dean's List; Edmund J James Scholar."
+  "academics_line": "BS Computer Engineering, University of Illinois Urbana-Champaign, GPA 3.88. Dean's List; Edmund J James Scholar.",
+  "about": "Software engineer in Chicago, building field-inspection and offline-first tooling for a Class I freight railroad, plus personal projects in machine learning and games. University of Illinois Urbana-Champaign Computer Engineering graduate, Dean's List, with a Business minor. Outside work: Chicago food, transit, and the city itself.",
+  "contact": {
+    "github": "https://github.com/Adipat2003"
+  }
 }

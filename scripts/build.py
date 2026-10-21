@@ -59,7 +59,7 @@ PAGE_SKELETON = """<!doctype html>
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Aditya Patel: Engineering Portfolio</title>
+<title>__TITLE__</title>
 <meta name="description" content="__DESCRIPTION__"/>
 <link rel="alternate" type="application/json" href="api/portfolio.json"/>
 <style>
@@ -172,6 +172,9 @@ def render_css() -> str:
   [data-facade="atlas"] .seg{border-color:var(--night-rule);background:var(--night-2)}
   [data-facade="atlas"] .seg button{color:var(--night-soft)}
   [data-facade="atlas"] .seg button[aria-pressed="true"]{background:var(--signal);color:#171208}
+  .filter-bar{display:grid;gap:14px;margin-bottom:28px}
+  .filter-bar input[type="search"]{font:inherit;font-size:15px;min-height:44px;padding:10px 16px;border:1px solid var(--rule);border-radius:10px;background:var(--paper);color:var(--ink);max-width:420px;width:100%}
+  .filter-bar input[type="search"]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
   @media (max-width:860px){
     .grid-3{grid-template-columns:1fr}
@@ -207,6 +210,43 @@ def render_js() -> str:
       btn.setAttribute('aria-pressed','true');
     });
   });
+  var filter = d.getElementById('project-filter');
+  var countEl = d.getElementById('project-count');
+  var chips = d.getElementById('tag-chips');
+  var cards = Array.from(d.querySelectorAll('#view-dispatch article'));
+  if (filter && cards.length) {
+    var tags = [];
+    cards.forEach(function(c){
+      c.querySelectorAll('.tags li').forEach(function(t){
+        var v = t.textContent.trim();
+        if (tags.indexOf(v) === -1) tags.push(v);
+      });
+    });
+    tags.slice(0, 14).forEach(function(t){
+      var b2 = d.createElement('button');
+      b2.type = 'button'; b2.className = 'chip'; b2.textContent = t;
+      b2.addEventListener('click', function(){
+        var on = b2.getAttribute('aria-pressed') === 'true';
+        d.querySelectorAll('#tag-chips .chip').forEach(function(c){c.setAttribute('aria-pressed','false')});
+        b2.setAttribute('aria-pressed', String(!on));
+        filter.value = on ? '' : t;
+        apply();
+      });
+      chips.appendChild(b2);
+    });
+    function apply(){
+      var q = filter.value.trim().toLowerCase();
+      var n = 0;
+      cards.forEach(function(c){
+        var match = c.textContent.toLowerCase().indexOf(q) !== -1;
+        c.style.display = match ? '' : 'none';
+        if (match) n++;
+      });
+      countEl.textContent = n + ' of ' + cards.length + ' projects';
+    }
+    filter.addEventListener('input', apply);
+    apply();
+  }
   var hero = d.querySelector('.atlas-hero svg');
   if(hero && matchMedia('(pointer:fine)').matches){
     var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -259,7 +299,7 @@ def project_card(p: dict, pending_label: str) -> str:
         kicker += f" &middot; {e(p['course'])}"
     return f"""      <article class="{cls}">
         <span class="kicker">{kicker}</span>
-        <h3>{e(p['title'])}</h3>
+        <h3><a href="projects/{e(p['slug'])}/">{e(p['title'])}</a></h3>
         <p>{e(p['summary'])}</p>
         {role}{figblock}
         <ul class="tags">{tags}</ul>
@@ -331,6 +371,12 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
         <linearGradient id="towerGlass" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="#222b42"/><stop offset="1" stop-color="#141a29"/>
         </linearGradient>
+        <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="#c0392b"/>
+        </marker>
+        <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="#2e86c1"/>
+        </marker>
       </defs>
       <rect width="1200" height="470" fill="url(#atlasSky)"/>
       <g>
@@ -342,9 +388,9 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
       <g>
 {chr(10).join("        " + r for r in river)}
       </g>
-      <g fill="none" stroke-width="3" stroke-linecap="round">
-        <path d="M40 300 C 240 250, 520 190, 760 170 S 1060 150, 1170 120" stroke="{LINE_COLORS['red']}"/>
-        <path d="M0 340 C 260 320, 560 300, 900 290 S 1120 280, 1200 268" stroke="{LINE_COLORS['blue']}"/>
+      <g fill="none" stroke-width="3">
+        <path d="M40 300 L1170 120" stroke="{LINE_COLORS['red']}" marker-end="url(#arrowRed)"/>
+        <path d="M0 340 L1200 268" stroke="{LINE_COLORS['blue']}" marker-end="url(#arrowBlue)"/>
       </g>
       <g font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#e9e6df" style="paint-order:stroke" stroke="{atlas['station_style']['halo']}" stroke-width="5" stroke-linejoin="round">
 {chr(10).join("        " + s for s in stations)}
@@ -376,10 +422,29 @@ def render_index(data: dict) -> str:
           <span class="kicker">Selected work</span>
           <h2 id="f1-work">Projects and what changed</h2>
         </div>
-        <span class="concept-title">{len([p for p in projects['projects'] if p.get('status') != 'pending-content'])} engineering projects</span>
+        <span class="concept-title" id="project-count"></span>
+      </div>
+      <div class="filter-bar">
+        <label class="sr-only" for="project-filter">Filter projects</label>
+        <input type="search" id="project-filter" placeholder="Filter by name, tag, or skill" autocomplete="off"/>
+        <div class="ask-row" id="tag-chips" role="group" aria-label="Filter by tag"></div>
       </div>
       <div class="grid-3">
 {dispatch_cards}
+      </div>
+    </div>
+  </section>
+  <section aria-labelledby="f1-about">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="kicker">About</span>
+          <h2 id="f1-about">The short version</h2>
+        </div>
+      </div>
+      <div class="card">
+        <p>{e(site['about'])}</p>
+        <p class="role"><b>GitHub:</b> <a href="{e(site['contact']['github'])}">{e(site['contact']['github'].replace('https://', ''))}</a></p>
       </div>
     </div>
   </section>
@@ -421,9 +486,61 @@ def render_index(data: dict) -> str:
 </main>"""
     page = PAGE_SKELETON
     page = page.replace("__DESCRIPTION__", e(site["tagline"] + " " + site["intro"]))
+    page = page.replace("__TITLE__", "Aditya Patel: Engineering Portfolio")
     page = page.replace("__CSS__", render_css())
     page = page.replace("__BODY__", body)
     page = page.replace("__JS__", render_js())
+    return page
+
+
+# ------------------------------------------------------------ detail pages
+
+def render_project_page(project: dict, site: dict) -> str:
+    """Standalone page for one project: the full record behind the card."""
+    course = f'<span class="kicker">{e(project["course"])}</span>' if project.get("course") else ""
+    figs = "".join(
+        f'<li><b>{e(f["value"])}</b> {e(f["label"])} <i>({e(f["kind"])}, source: {e(f["source"])})</i></li>'
+        for f in project.get("figures", [])
+    )
+    figblock = f'<ul class="figs">{figs}</ul>' if figs else ""
+    steps = "".join(f"<li>{e(a)}</li>" for a in project.get("approach", []))
+    steps_block = f'<h3>Approach</h3><ol class="steps">{steps}</ol>' if steps else ""
+    tags = "".join(f"<li>{e(t)}</li>" for t in project.get("tags", []))
+    back = "".join(f'<li><a href="../../#atlas">Back to the Atlas</a></li>' for _ in [0])
+    body = f"""  <header class="detail-head">
+    <div class="wrap">
+      <p class="back"><a href="../../">&larr; The Dispatch</a> &middot; <a href="../../#atlas">The Atlas</a></p>
+      {course}
+      <span class="kicker">{e(project['line'])} line</span>
+      <h1>{e(project['title'])}</h1>
+      <p class="lede">{e(project['summary'])}</p>
+    </div>
+  </header>
+  <main class="wrap detail-body">
+    <section aria-labelledby="d-problem"><h2 id="d-problem">The problem</h2><p>{e(project['problem'] or 'See the summary above.')}</p></section>
+    <section aria-labelledby="d-role"><h2 id="d-role">What was owned</h2><p>{e(project['role'] or 'See the summary above.')}</p></section>
+    {steps_block}
+    <section aria-labelledby="d-outcome"><h2 id="d-outcome">Outcome</h2><p>{e(project['outcome'] or 'See the summary above.')}</p></section>
+    {f'<section aria-labelledby="d-figures"><h2 id="d-figures">Figures</h2>{figblock}</section>' if figs else ''}
+    <section aria-labelledby="d-tags"><h2 id="d-tags">Tags</h2><ul class="tags">{tags}</ul></section>
+  </main>"""
+    page = PAGE_SKELETON
+    page = page.replace("__DESCRIPTION__", e(project["summary"]))
+    page = page.replace("__TITLE__", e(project["title"] + " | Aditya Patel"))
+    page = page.replace("__CSS__", render_css() + """
+  .detail-head{padding:56px 0 40px;border-bottom:1px solid var(--rule)}
+  .detail-head h1{font-size:clamp(32px,5vw,52px);line-height:1.06;margin:16px 0 0;max-width:20ch}
+  .detail-head .back{font-family:var(--mono);font-size:13px;margin:0 0 20px}
+  .detail-head .back a{color:var(--accent)}
+  .detail-body section{padding:36px 0;border-bottom:1px solid var(--rule);display:grid;gap:14px}
+  .detail-body h2{font-size:24px}
+  .detail-body h3{font-size:20px;margin-top:8px}
+  .detail-body p{color:var(--ink-soft);max-width:70ch}
+  .detail-body .steps{color:var(--ink-soft);display:grid;gap:10px;padding-left:22px;max-width:70ch}
+  .detail-body .figs{list-style:none;padding:0;display:grid;gap:8px;color:var(--ink-soft)}
+  .detail-body .figs b{color:var(--ink);font-family:var(--mono);font-size:13px}""")
+    page = page.replace("__BODY__", body)
+    page = page.replace("__JS__", "")
     return page
 
 
@@ -495,6 +612,11 @@ def build(out: Path) -> list[Path]:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
         written.append(path)
+    for p in data["projects"]["projects"]:
+        page = out / "projects" / p["slug"] / "index.html"
+        page.parent.mkdir(parents=True, exist_ok=True)
+        page.write_text(render_project_page(p, data["site"]))
+        written.append(page)
     return written
 
 
@@ -508,6 +630,14 @@ def check(out: Path) -> bool:
         (out / "robots.txt", render_robots()),
     ]
     ok = True
+    for p in data["projects"]["projects"]:
+        page = out / "projects" / p["slug"] / "index.html"
+        if not page.exists():
+            print(f"MISSING: {page.relative_to(ROOT)}")
+            ok = False
+        elif page.read_text() != render_project_page(p, data["site"]):
+            print(f"STALE:   {page.relative_to(ROOT)}")
+            ok = False
     for path, expected in targets:
         if not path.exists():
             print(f"MISSING: {path.relative_to(ROOT)}")

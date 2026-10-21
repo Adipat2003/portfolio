@@ -102,6 +102,9 @@
   [data-facade="atlas"] .seg{border-color:var(--night-rule);background:var(--night-2)}
   [data-facade="atlas"] .seg button{color:var(--night-soft)}
   [data-facade="atlas"] .seg button[aria-pressed="true"]{background:var(--signal);color:#171208}
+  .filter-bar{display:grid;gap:14px;margin-bottom:28px}
+  .filter-bar input[type="search"]{font:inherit;font-size:15px;min-height:44px;padding:10px 16px;border:1px solid var(--rule);border-radius:10px;background:var(--paper);color:var(--ink);max-width:420px;width:100%}
+  .filter-bar input[type="search"]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
   @media (max-width:860px){
     .grid-3{grid-template-columns:1fr}
@@ -143,94 +146,113 @@
           <span class="kicker">Selected work</span>
           <h2 id="f1-work">Projects and what changed</h2>
         </div>
-        <span class="concept-title">14 engineering projects</span>
+        <span class="concept-title" id="project-count"></span>
+      </div>
+      <div class="filter-bar">
+        <label class="sr-only" for="project-filter">Filter projects</label>
+        <input type="search" id="project-filter" placeholder="Filter by name, tag, or skill" autocomplete="off"/>
+        <div class="ask-row" id="tag-chips" role="group" aria-label="Filter by tag"></div>
       </div>
       <div class="grid-3">
       <article class="card">
         <span class="kicker">red line</span>
-        <h3>Inspection reporting that survives dead zones</h3>
+        <h3><a href="projects/offline-sync-engine/">Inspection reporting that survives dead zones</a></h3>
         <p>Field officers complete rail-yard inspections with no signal, and the reports and photos still land. A single-writer sync framework replaced an edit model that lost work.</p>
         <p class="role"><b>Role:</b> Owned the offline flow end to end: state model, sync engine, photo pipeline, and the recovery paths.</p><ul class="figs"><li><b>546</b> commits on the mobile monorepo <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>mobile</li><li>offline-first</li><li>sync</li><li>react-native</li></ul>
       </article>      <article class="card">
         <span class="kicker">red line</span>
-        <h3>Access control for a 75-endpoint inspection API</h3>
+        <h3><a href="projects/inspection-platform-api/">Access control for a 75-endpoint inspection API</a></h3>
         <p>Role and facility permissions resolved on every request and enforced by one shared gate at every write path, so users only see and edit what their role and ramps allow.</p>
         <p class="role"><b>Role:</b> Designed and built the role and facility access model, the shared request gate, the refusal error surface, and the access-assignment audit trail.</p><ul class="figs"><li><b>75</b> API paths on the platform <i>(self-reported)</i></li><li><b>214</b> commits on the backend service <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>platform</li><li>api</li><li>security</li><li>spring-boot</li></ul>
       </article>      <article class="card">
         <span class="kicker">red line</span>
-        <h3>Connecting mobile reports to a long-lived reporting system</h3>
+        <h3><a href="projects/legacy-report-pipeline/">Connecting mobile reports to a long-lived reporting system</a></h3>
         <p>A mobile inspection app submits reports into a decades-old reporting pipeline through a message queue, serving both automated machine submissions and officers&#x27; manual submissions on separate audience-scoped endpoints.</p>
         <p class="role"><b>Role:</b> Built the integrated submission endpoint, image ingest, queue submission, report editing, and the de-duplication gate.</p><ul class="figs"><li><b>~4,500</b> reporting hours saved <i>(measured)</i></li><li><b>297</b> reports processed in a single month <i>(measured)</i></li></ul>
         <ul class="tags"><li>integration</li><li>messaging</li><li>backend</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line</span>
-        <h3>Taking an inspection app from one phone platform to both</h3>
+        <h3><a href="projects/cross-platform-rollout/">Taking an inspection app from one phone platform to both</a></h3>
         <p>Stood up the second mobile platform from scratch: toolchain, builds, deployment to test devices, and the two failures that only appeared on managed corporate devices.</p>
         <p class="role"><b>Role:</b> Owned the rollout end to end, including build signing, same-day redeploys, and driving the fix with the security and device-management teams.</p>
         <ul class="tags"><li>mobile</li><li>android</li><li>ios</li><li>rollout</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line</span>
-        <h3>Supervised automation that a human still approves</h3>
+        <h3><a href="projects/supervised-automation/">Supervised automation that a human still approves</a></h3>
         <p>A competition runner where an AI agent plans each step, deterministic scripts do all the screen work, and the operator approves every write before it happens.</p>
         <p class="role"><b>Role:</b> Top contributor, 68 of 97 team commits: built the agent run layer, the live operator console, the run journals, and the documentation.</p><ul class="figs"><li><b>68 / 97</b> team commits <i>(self-reported)</i></li><li><b>940+</b> passing tests <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>automation</li><li>agents</li><li>mcp</li><li>testing</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line</span>
-        <h3>Helping a team adopt AI-assisted engineering</h3>
+        <h3><a href="projects/ai-assisted-engineering/">Helping a team adopt AI-assisted engineering</a></h3>
         <p>Authored the shared rules, commands, and review practices that define how AI coding tools are used across the codebase, and turned review findings into permanent team rules.</p>
         <p class="role"><b>Role:</b> Authored the repository-level standards, a skill plugin with 21 agents and skills, and the confirmation gate used before review findings are posted or fixed.</p><ul class="figs"><li><b>500+</b> AI coding sessions <i>(self-reported)</i></li><li><b>172</b> teammate pull requests reviewed <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>ai</li><li>process</li><li>tooling</li><li>standards</li></ul>
       </article>      <article class="card">
         <span class="kicker">red line &middot; CS 225 Data Structures, Fall 2022</span>
-        <h3>Graph search over real-world datasets</h3>
+        <h3><a href="projects/cs225-graph-project/">Graph search over real-world datasets</a></h3>
         <p>Final project for the data structures course: a reusable C++ graph library and a search pipeline run against a real dataset, with the whole thing driven by CMake so it builds like the course projects.</p>
         <p class="role"><b>Role:</b> Team member with Aashish Subramanian, Ved Eti, and Soumil Gupta. Built the graph class and the traversal and search layer.</p><ul class="figs"><li><b>A</b> final grade in CS 225 <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>c++</li><li>algorithms</li><li>graphs</li><li>school</li></ul>
       </article>      <article class="card">
         <span class="kicker">red line &middot; CS 411 Database Systems, Spring 2023</span>
-        <h3>A database-backed app over public crime data</h3>
+        <h3><a href="projects/cs411-la-crime/">A database-backed app over public crime data</a></h3>
         <p>Team final project for the database systems course: a web application over the Los Angeles crime dataset, designed from an entity-relationship model through normalized schema to a working query surface.</p>
         <p class="role"><b>Role:</b> Team member. Worked the data model and query layer for the web application.</p><ul class="figs"><li><b>A</b> final grade in CS 411 <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>databases</li><li>sql</li><li>web</li><li>school</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line &middot; ECE 391 Computer Systems Engineering, Fall 2023</span>
-        <h3>A small operating system kernel in C</h3>
+        <h3><a href="projects/ece391-os-kernel/">A small operating system kernel in C</a></h3>
         <p>The course project, extended into a standing repository: a kernel with a dynamic memory allocator, page-table system calls, a simple file system, and the device drivers the course specifies.</p>
         <p class="role"><b>Role:</b> Sole author of the repository work, following the course&#x27;s OS project specification.</p><ul class="figs"><li><b>B+</b> final grade in ECE 391 <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>c</li><li>operating-systems</li><li>kernels</li><li>systems</li><li>school</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line &middot; ECE 385 Digital Systems Laboratory, Spring 2024</span>
-        <h3>Pac-Man running on an FPGA</h3>
+        <h3><a href="projects/ece385-fpga-pacman/">Pac-Man running on an FPGA</a></h3>
         <p>The classic arcade game implemented on an AMD Spartan-7 FPGA around a MicroBlaze soft-CPU system-on-chip, written in SystemVerilog with the game logic in C.</p>
         <p class="role"><b>Role:</b> Sole author. Owned the SoC platform, the SystemVerilog, and the C game layer.</p><ul class="figs"><li><b>A+</b> final grade in ECE 385 <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>systemverilog</li><li>fpga</li><li>c</li><li>hardware</li><li>games</li><li>school</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line &middot; CS 444 Deep Learning for Computer Vision and CS 441 Applied Machine Learning, Spring 2024</span>
-        <h3>Self-supervised learning and object detection</h3>
+        <h3><a href="projects/cs444-deep-learning-cv/">Self-supervised learning and object detection</a></h3>
         <p>A two-part machine learning project in PyTorch: training a model to predict image rotation with no labels as a self-supervised task on CIFAR-10, then transferring what it learned into object detection.</p>
         <p class="role"><b>Role:</b> Sole author, built during deep learning and applied machine learning coursework.</p><ul class="figs"><li><b>A+</b> final grades in CS 441 and CS 444 <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>python</li><li>pytorch</li><li>deep-learning</li><li>computer-vision</li><li>school</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line &middot; Personal project, 2025</span>
-        <h3>NoteHub, a note-sharing app for students</h3>
+        <h3><a href="projects/notehub/">NoteHub, a note-sharing app for students</a></h3>
         <p>A web app where college students open-source their notes for others: authentication, search, comment threads, and note uploads, with images stored as links rather than blobs to keep the client light.</p>
         <p class="role"><b>Role:</b> Co-built with Lohit Muralidharan. Worked the web application layer.</p>
         <ul class="tags"><li>typescript</li><li>react</li><li>django</li><li>firebase</li><li>personal</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line &middot; Personal project, 2025 to 2026</span>
-        <h3>MetaGlasses, a phone-to-lens assistant</h3>
+        <h3><a href="projects/metaglasses/">MetaGlasses, a phone-to-lens assistant</a></h3>
         <p>A wearable assistant pairing: a backend that handles the assistant&#x27;s requests and a phone-side client, built with a FastAPI service and a TypeScript front end, plus a maintained API test collection.</p>
         <p class="role"><b>Role:</b> Sole author. Owns the backend, the API contract, and the client.</p>
         <ul class="tags"><li>python</li><li>fastapi</li><li>typescript</li><li>api</li><li>personal</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line &middot; Personal project, 2025</span>
-        <h3>Pocket Greenhouse, a Roblox farming slice</h3>
+        <h3><a href="projects/pocket-greenhouse/">Pocket Greenhouse, a Roblox farming slice</a></h3>
         <p>An idle-farming vertical slice on Roblox written in Luau: a tight playable loop of planting, growing, and harvesting, with its own tooling repository.</p>
         <p class="role"><b>Role:</b> Sole author. Owns the game code and the tooling.</p>
         <ul class="tags"><li>luau</li><li>roblox</li><li>games</li><li>personal</li></ul>
       </article>
+      </div>
+    </div>
+  </section>
+  <section aria-labelledby="f1-about">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="kicker">About</span>
+          <h2 id="f1-about">The short version</h2>
+        </div>
+      </div>
+      <div class="card">
+        <p>Software engineer in Chicago, building field-inspection and offline-first tooling for a Class I freight railroad, plus personal projects in machine learning and games. University of Illinois Urbana-Champaign Computer Engineering graduate, Dean&#x27;s List, with a Business minor. Outside work: Chicago food, transit, and the city itself.</p>
+        <p class="role"><b>GitHub:</b> <a href="https://github.com/Adipat2003">github.com/Adipat2003</a></p>
       </div>
     </div>
   </section>
@@ -266,6 +288,12 @@
         <linearGradient id="towerGlass" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="#222b42"/><stop offset="1" stop-color="#141a29"/>
         </linearGradient>
+        <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="#c0392b"/>
+        </marker>
+        <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="#2e86c1"/>
+        </marker>
       </defs>
       <rect width="1200" height="470" fill="url(#atlasSky)"/>
       <g>
@@ -1214,19 +1242,19 @@
         <path d="M120 384 C 320 372, 520 398, 760 380 S 1020 360, 1140 376" fill="none" stroke="#3d5878" stroke-width="1.5" opacity="0.6"/>
         <path d="M80 400 C 300 390, 540 412, 800 396 S 1060 382, 1180 398" fill="none" stroke="#3d5878" stroke-width="1" opacity="0.4"/>
       </g>
-      <g fill="none" stroke-width="3" stroke-linecap="round">
-        <path d="M40 300 C 240 250, 520 190, 760 170 S 1060 150, 1170 120" stroke="#c0392b"/>
-        <path d="M0 340 C 260 320, 560 300, 900 290 S 1120 280, 1200 268" stroke="#2e86c1"/>
+      <g fill="none" stroke-width="3">
+        <path d="M40 300 L1170 120" stroke="#c0392b" marker-end="url(#arrowRed)"/>
+        <path d="M0 340 L1200 268" stroke="#2e86c1" marker-end="url(#arrowBlue)"/>
       </g>
       <g font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#e9e6df" style="paint-order:stroke" stroke="#0b0e18" stroke-width="5" stroke-linejoin="round">
-        <g><title>Offline sync engine</title><circle cx="248" cy="256" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="262" y="252">Offline sync engine</text></g>
-        <g><title>Access control platform</title><circle cx="560" cy="196" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="574" y="192">Access control platform</text></g>
-        <g><title>Inspection reporting</title><circle cx="880" cy="174" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="894" y="170">Inspection reporting</text></g>
-        <g><title>Android rollout</title><circle cx="420" cy="314" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/><text x="434" y="310">Android rollout</text></g>
-        <g><title>Supervised agent runner</title><circle cx="760" cy="302" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/><text x="774" y="298">Supervised agent runner</text></g>
-        <g><title>Personal projects</title><circle cx="1080" cy="286" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="1010" y="312">Personal projects</text></g>
-        <g><title>Crime-data web app</title><circle cx="1080" cy="160" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="1094" y="156">Crime-data web app</text></g>
-        <g><title>Operating system kernel</title><circle cx="620" cy="302" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/><text x="634" y="298">Operating system kernel</text></g>
+        <g><title>Offline sync engine</title><circle cx="248" cy="267" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="262" y="263">Offline sync engine</text></g>
+        <g><title>Access control platform</title><circle cx="560" cy="217" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="574" y="213">Access control platform</text></g>
+        <g><title>Inspection reporting</title><circle cx="880" cy="166" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="894" y="162">Inspection reporting</text></g>
+        <g><title>Android rollout</title><circle cx="420" cy="315" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/><text x="434" y="311">Android rollout</text></g>
+        <g><title>Supervised agent runner</title><circle cx="760" cy="294" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/><text x="774" y="290">Supervised agent runner</text></g>
+        <g><title>Personal projects</title><circle cx="1080" cy="275" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="1010" y="301">Personal projects</text></g>
+        <g><title>Crime-data web app</title><circle cx="1080" cy="134" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="1094" y="130">Crime-data web app</text></g>
+        <g><title>Operating system kernel</title><circle cx="620" cy="303" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/><text x="634" y="299">Operating system kernel</text></g>
       </g>
     </svg>
   <div class="impact-strip" aria-label="Headline impact figures">
@@ -1252,85 +1280,85 @@
       <div class="grid-3">
       <article class="card">
         <span class="kicker">red line</span>
-        <h3>Inspection reporting that survives dead zones</h3>
+        <h3><a href="projects/offline-sync-engine/">Inspection reporting that survives dead zones</a></h3>
         <p>Field officers complete rail-yard inspections with no signal, and the reports and photos still land. A single-writer sync framework replaced an edit model that lost work.</p>
         <p class="role"><b>Role:</b> Owned the offline flow end to end: state model, sync engine, photo pipeline, and the recovery paths.</p><ul class="figs"><li><b>546</b> commits on the mobile monorepo <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>mobile</li><li>offline-first</li><li>sync</li><li>react-native</li></ul>
       </article>      <article class="card">
         <span class="kicker">red line</span>
-        <h3>Access control for a 75-endpoint inspection API</h3>
+        <h3><a href="projects/inspection-platform-api/">Access control for a 75-endpoint inspection API</a></h3>
         <p>Role and facility permissions resolved on every request and enforced by one shared gate at every write path, so users only see and edit what their role and ramps allow.</p>
         <p class="role"><b>Role:</b> Designed and built the role and facility access model, the shared request gate, the refusal error surface, and the access-assignment audit trail.</p><ul class="figs"><li><b>75</b> API paths on the platform <i>(self-reported)</i></li><li><b>214</b> commits on the backend service <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>platform</li><li>api</li><li>security</li><li>spring-boot</li></ul>
       </article>      <article class="card">
         <span class="kicker">red line</span>
-        <h3>Connecting mobile reports to a long-lived reporting system</h3>
+        <h3><a href="projects/legacy-report-pipeline/">Connecting mobile reports to a long-lived reporting system</a></h3>
         <p>A mobile inspection app submits reports into a decades-old reporting pipeline through a message queue, serving both automated machine submissions and officers&#x27; manual submissions on separate audience-scoped endpoints.</p>
         <p class="role"><b>Role:</b> Built the integrated submission endpoint, image ingest, queue submission, report editing, and the de-duplication gate.</p><ul class="figs"><li><b>~4,500</b> reporting hours saved <i>(measured)</i></li><li><b>297</b> reports processed in a single month <i>(measured)</i></li></ul>
         <ul class="tags"><li>integration</li><li>messaging</li><li>backend</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line</span>
-        <h3>Taking an inspection app from one phone platform to both</h3>
+        <h3><a href="projects/cross-platform-rollout/">Taking an inspection app from one phone platform to both</a></h3>
         <p>Stood up the second mobile platform from scratch: toolchain, builds, deployment to test devices, and the two failures that only appeared on managed corporate devices.</p>
         <p class="role"><b>Role:</b> Owned the rollout end to end, including build signing, same-day redeploys, and driving the fix with the security and device-management teams.</p>
         <ul class="tags"><li>mobile</li><li>android</li><li>ios</li><li>rollout</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line</span>
-        <h3>Supervised automation that a human still approves</h3>
+        <h3><a href="projects/supervised-automation/">Supervised automation that a human still approves</a></h3>
         <p>A competition runner where an AI agent plans each step, deterministic scripts do all the screen work, and the operator approves every write before it happens.</p>
         <p class="role"><b>Role:</b> Top contributor, 68 of 97 team commits: built the agent run layer, the live operator console, the run journals, and the documentation.</p><ul class="figs"><li><b>68 / 97</b> team commits <i>(self-reported)</i></li><li><b>940+</b> passing tests <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>automation</li><li>agents</li><li>mcp</li><li>testing</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line</span>
-        <h3>Helping a team adopt AI-assisted engineering</h3>
+        <h3><a href="projects/ai-assisted-engineering/">Helping a team adopt AI-assisted engineering</a></h3>
         <p>Authored the shared rules, commands, and review practices that define how AI coding tools are used across the codebase, and turned review findings into permanent team rules.</p>
         <p class="role"><b>Role:</b> Authored the repository-level standards, a skill plugin with 21 agents and skills, and the confirmation gate used before review findings are posted or fixed.</p><ul class="figs"><li><b>500+</b> AI coding sessions <i>(self-reported)</i></li><li><b>172</b> teammate pull requests reviewed <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>ai</li><li>process</li><li>tooling</li><li>standards</li></ul>
       </article>      <article class="card">
         <span class="kicker">red line &middot; CS 225 Data Structures, Fall 2022</span>
-        <h3>Graph search over real-world datasets</h3>
+        <h3><a href="projects/cs225-graph-project/">Graph search over real-world datasets</a></h3>
         <p>Final project for the data structures course: a reusable C++ graph library and a search pipeline run against a real dataset, with the whole thing driven by CMake so it builds like the course projects.</p>
         <p class="role"><b>Role:</b> Team member with Aashish Subramanian, Ved Eti, and Soumil Gupta. Built the graph class and the traversal and search layer.</p><ul class="figs"><li><b>A</b> final grade in CS 225 <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>c++</li><li>algorithms</li><li>graphs</li><li>school</li></ul>
       </article>      <article class="card">
         <span class="kicker">red line &middot; CS 411 Database Systems, Spring 2023</span>
-        <h3>A database-backed app over public crime data</h3>
+        <h3><a href="projects/cs411-la-crime/">A database-backed app over public crime data</a></h3>
         <p>Team final project for the database systems course: a web application over the Los Angeles crime dataset, designed from an entity-relationship model through normalized schema to a working query surface.</p>
         <p class="role"><b>Role:</b> Team member. Worked the data model and query layer for the web application.</p><ul class="figs"><li><b>A</b> final grade in CS 411 <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>databases</li><li>sql</li><li>web</li><li>school</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line &middot; ECE 391 Computer Systems Engineering, Fall 2023</span>
-        <h3>A small operating system kernel in C</h3>
+        <h3><a href="projects/ece391-os-kernel/">A small operating system kernel in C</a></h3>
         <p>The course project, extended into a standing repository: a kernel with a dynamic memory allocator, page-table system calls, a simple file system, and the device drivers the course specifies.</p>
         <p class="role"><b>Role:</b> Sole author of the repository work, following the course&#x27;s OS project specification.</p><ul class="figs"><li><b>B+</b> final grade in ECE 391 <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>c</li><li>operating-systems</li><li>kernels</li><li>systems</li><li>school</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line &middot; ECE 385 Digital Systems Laboratory, Spring 2024</span>
-        <h3>Pac-Man running on an FPGA</h3>
+        <h3><a href="projects/ece385-fpga-pacman/">Pac-Man running on an FPGA</a></h3>
         <p>The classic arcade game implemented on an AMD Spartan-7 FPGA around a MicroBlaze soft-CPU system-on-chip, written in SystemVerilog with the game logic in C.</p>
         <p class="role"><b>Role:</b> Sole author. Owned the SoC platform, the SystemVerilog, and the C game layer.</p><ul class="figs"><li><b>A+</b> final grade in ECE 385 <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>systemverilog</li><li>fpga</li><li>c</li><li>hardware</li><li>games</li><li>school</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line &middot; CS 444 Deep Learning for Computer Vision and CS 441 Applied Machine Learning, Spring 2024</span>
-        <h3>Self-supervised learning and object detection</h3>
+        <h3><a href="projects/cs444-deep-learning-cv/">Self-supervised learning and object detection</a></h3>
         <p>A two-part machine learning project in PyTorch: training a model to predict image rotation with no labels as a self-supervised task on CIFAR-10, then transferring what it learned into object detection.</p>
         <p class="role"><b>Role:</b> Sole author, built during deep learning and applied machine learning coursework.</p><ul class="figs"><li><b>A+</b> final grades in CS 441 and CS 444 <i>(self-reported)</i></li></ul>
         <ul class="tags"><li>python</li><li>pytorch</li><li>deep-learning</li><li>computer-vision</li><li>school</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line &middot; Personal project, 2025</span>
-        <h3>NoteHub, a note-sharing app for students</h3>
+        <h3><a href="projects/notehub/">NoteHub, a note-sharing app for students</a></h3>
         <p>A web app where college students open-source their notes for others: authentication, search, comment threads, and note uploads, with images stored as links rather than blobs to keep the client light.</p>
         <p class="role"><b>Role:</b> Co-built with Lohit Muralidharan. Worked the web application layer.</p>
         <ul class="tags"><li>typescript</li><li>react</li><li>django</li><li>firebase</li><li>personal</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line &middot; Personal project, 2025 to 2026</span>
-        <h3>MetaGlasses, a phone-to-lens assistant</h3>
+        <h3><a href="projects/metaglasses/">MetaGlasses, a phone-to-lens assistant</a></h3>
         <p>A wearable assistant pairing: a backend that handles the assistant&#x27;s requests and a phone-side client, built with a FastAPI service and a TypeScript front end, plus a maintained API test collection.</p>
         <p class="role"><b>Role:</b> Sole author. Owns the backend, the API contract, and the client.</p>
         <ul class="tags"><li>python</li><li>fastapi</li><li>typescript</li><li>api</li><li>personal</li></ul>
       </article>      <article class="card">
         <span class="kicker">blue line &middot; Personal project, 2025</span>
-        <h3>Pocket Greenhouse, a Roblox farming slice</h3>
+        <h3><a href="projects/pocket-greenhouse/">Pocket Greenhouse, a Roblox farming slice</a></h3>
         <p>An idle-farming vertical slice on Roblox written in Luau: a tight playable loop of planting, growing, and harvesting, with its own tooling repository.</p>
         <p class="role"><b>Role:</b> Sole author. Owns the game code and the tooling.</p>
         <ul class="tags"><li>luau</li><li>roblox</li><li>games</li><li>personal</li></ul>
@@ -1386,6 +1414,43 @@
       btn.setAttribute('aria-pressed','true');
     });
   });
+  var filter = d.getElementById('project-filter');
+  var countEl = d.getElementById('project-count');
+  var chips = d.getElementById('tag-chips');
+  var cards = Array.from(d.querySelectorAll('#view-dispatch article'));
+  if (filter && cards.length) {
+    var tags = [];
+    cards.forEach(function(c){
+      c.querySelectorAll('.tags li').forEach(function(t){
+        var v = t.textContent.trim();
+        if (tags.indexOf(v) === -1) tags.push(v);
+      });
+    });
+    tags.slice(0, 14).forEach(function(t){
+      var b2 = d.createElement('button');
+      b2.type = 'button'; b2.className = 'chip'; b2.textContent = t;
+      b2.addEventListener('click', function(){
+        var on = b2.getAttribute('aria-pressed') === 'true';
+        d.querySelectorAll('#tag-chips .chip').forEach(function(c){c.setAttribute('aria-pressed','false')});
+        b2.setAttribute('aria-pressed', String(!on));
+        filter.value = on ? '' : t;
+        apply();
+      });
+      chips.appendChild(b2);
+    });
+    function apply(){
+      var q = filter.value.trim().toLowerCase();
+      var n = 0;
+      cards.forEach(function(c){
+        var match = c.textContent.toLowerCase().indexOf(q) !== -1;
+        c.style.display = match ? '' : 'none';
+        if (match) n++;
+      });
+      countEl.textContent = n + ' of ' + cards.length + ' projects';
+    }
+    filter.addEventListener('input', apply);
+    apply();
+  }
   var hero = d.querySelector('.atlas-hero svg');
   if(hero && matchMedia('(pointer:fine)').matches){
     var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
