@@ -3,7 +3,7 @@
   "role": "Software engineer",
   "location": "Chicago",
   "tagline": "I build systems that keep working when the network does not.",
-  "content_sha256": "f9bdbfa192d53f24",
+  "content_sha256": "08d86dfb79d23c9c",
   "facades": [
     "dispatch",
     "atlas"
@@ -229,21 +229,234 @@
       "public_safe": true
     },
     {
-      "slug": "personal-projects",
-      "title": "Personal and school projects",
-      "summary": "Coursework and personal builds. This chapter is being assembled from Aditya's own repositories and will fill in as those are provided.",
-      "problem": null,
-      "role": null,
-      "approach": [],
-      "outcome": null,
-      "figures": [],
+      "slug": "cs225-graph-project",
+      "course": "CS 225 Data Structures, Fall 2022",
+      "title": "Graph search over real-world datasets",
+      "summary": "Final project for the data structures course: a reusable C++ graph library and a search pipeline run against a real dataset, with the whole thing driven by CMake so it builds like the course projects.",
+      "problem": "The project had to turn a large real-world dataset into a weighted graph and answer reachability and shortest-path style questions on it efficiently.",
+      "role": "Team member with Aashish Subramanian, Ved Eti, and Soumil Gupta. Built the graph class and the traversal and search layer.",
+      "approach": [
+        "Graph class supporting the textbook structures behind lists, trees, and graph search",
+        "Dataset ingestion from CSV into the graph model",
+        "Traversal and search solving the assignment's computational questions",
+        "CMake build matching the course machine-problem workflow"
+      ],
+      "outcome": "Final grade A in the course; the project solved the assigned dataset questions on top of the shared graph library.",
+      "figures": [
+        {
+          "value": "A",
+          "label": "final grade in CS 225",
+          "kind": "self-reported",
+          "source": "UIUC unofficial transcript"
+        }
+      ],
       "tags": [
-        "personal",
+        "c++",
+        "algorithms",
+        "graphs",
+        "school"
+      ],
+      "line": "red",
+      "public_safe": true
+    },
+    {
+      "slug": "cs411-la-crime",
+      "course": "CS 411 Database Systems, Spring 2023",
+      "title": "A database-backed app over public crime data",
+      "summary": "Team final project for the database systems course: a web application over the Los Angeles crime dataset, designed from an entity-relationship model through normalized schema to a working query surface.",
+      "problem": "The team had to model a large public dataset relationally, normalize it, and serve useful queries from a web front end without exposing raw data dumps.",
+      "role": "Team member. Worked the data model and query layer for the web application.",
+      "approach": [
+        "Entity-relationship modeling of the crime dataset",
+        "Normalized relational schema with functional dependencies respected",
+        "Query design for the search and browse surface",
+        "JavaScript web front end over the database"
+      ],
+      "outcome": "Final grade A in the course; the working app answered the assigned queries over the dataset.",
+      "figures": [
+        {
+          "value": "A",
+          "label": "final grade in CS 411",
+          "kind": "self-reported",
+          "source": "UIUC unofficial transcript"
+        }
+      ],
+      "tags": [
+        "databases",
+        "sql",
+        "web",
+        "school"
+      ],
+      "line": "red",
+      "public_safe": true
+    },
+    {
+      "slug": "ece391-os-kernel",
+      "course": "ECE 391 Computer Systems Engineering, Fall 2023",
+      "title": "A small operating system kernel in C",
+      "summary": "The course project, extended into a standing repository: a kernel with a dynamic memory allocator, page-table system calls, a simple file system, and the device drivers the course specifies.",
+      "problem": "The kernel had to virtualize memory and devices with no modern OS safety net: allocation, paging, file access, and input and output all had to work in C at the system level.",
+      "role": "Sole author of the repository work, following the course's OS project specification.",
+      "approach": [
+        "Dynamic memory allocator tracking free pages, with a malloc system call that adds pages to a program's page table",
+        "File system with an open system call for access",
+        "System call path followed end to end, the way the course's OS project requires",
+        "Demo-able functionality so the memory and file work could be shown, not assumed"
+      ],
+      "outcome": "Final grade B+ in the course; the repository carries the allocator, file system, and syscall work with documentation.",
+      "figures": [
+        {
+          "value": "B+",
+          "label": "final grade in ECE 391",
+          "kind": "self-reported",
+          "source": "UIUC unofficial transcript"
+        }
+      ],
+      "tags": [
+        "c",
+        "operating-systems",
+        "kernels",
+        "systems",
         "school"
       ],
       "line": "blue",
-      "public_safe": true,
-      "status": "pending-content"
+      "public_safe": true
+    },
+    {
+      "slug": "ece385-fpga-pacman",
+      "course": "ECE 385 Digital Systems Laboratory, Spring 2024",
+      "title": "Pac-Man running on an FPGA",
+      "summary": "The classic arcade game implemented on an AMD Spartan-7 FPGA around a MicroBlaze soft-CPU system-on-chip, written in SystemVerilog with the game logic in C.",
+      "problem": "The game had to run as a hardware/software co-design: real peripherals, real timing, and a soft processor coordinating game state, display, and input on one chip.",
+      "role": "Sole author. Owned the SoC platform, the SystemVerilog, and the C game layer.",
+      "approach": [
+        "MicroBlaze soft-CPU system-on-chip built through the platform configurator",
+        "SystemVerilog for the digital hardware layer",
+        "C for the game logic running on the soft CPU",
+        "Peripherals wired through the FPGA development board"
+      ],
+      "outcome": "Final grade A+ in the course, the top mark in the term; the repository documents the full co-design.",
+      "figures": [
+        {
+          "value": "A+",
+          "label": "final grade in ECE 385",
+          "kind": "self-reported",
+          "source": "UIUC unofficial transcript"
+        }
+      ],
+      "tags": [
+        "systemverilog",
+        "fpga",
+        "c",
+        "hardware",
+        "games",
+        "school"
+      ],
+      "line": "blue",
+      "public_safe": true
+    },
+    {
+      "slug": "cs444-deep-learning-cv",
+      "course": "CS 444 Deep Learning for Computer Vision and CS 441 Applied Machine Learning, Spring 2024",
+      "title": "Self-supervised learning and object detection",
+      "summary": "A two-part machine learning project in PyTorch: training a model to predict image rotation with no labels as a self-supervised task on CIFAR-10, then transferring what it learned into object detection.",
+      "problem": "Labels are expensive. The project tested how much supervision a model actually needs by pretraining on a task the data provides for free, then transferring it.",
+      "role": "Sole author, built during deep learning and applied machine learning coursework.",
+      "approach": [
+        "Self-supervised rotation prediction on CIFAR-10 with a ResNet-18 backbone",
+        "Transfer of the pretrained representation into a detection objective",
+        "PyTorch throughout, matching the coursework toolchain"
+      ],
+      "outcome": "Final grades A+ in both courses in the term; the repository documents both parts of the project.",
+      "figures": [
+        {
+          "value": "A+",
+          "label": "final grades in CS 441 and CS 444",
+          "kind": "self-reported",
+          "source": "UIUC unofficial transcript"
+        }
+      ],
+      "tags": [
+        "python",
+        "pytorch",
+        "deep-learning",
+        "computer-vision",
+        "school"
+      ],
+      "line": "blue",
+      "public_safe": true
+    },
+    {
+      "slug": "notehub",
+      "course": "Personal project, 2025",
+      "title": "NoteHub, a note-sharing app for students",
+      "summary": "A web app where college students open-source their notes for others: authentication, search, comment threads, and note uploads, with images stored as links rather than blobs to keep the client light.",
+      "problem": "Course notes are scattered and personal; the app set out to make them a shared resource with real account handling and search.",
+      "role": "Co-built with Lohit Muralidharan. Worked the web application layer.",
+      "approach": [
+        "React and TypeScript front end",
+        "Django REST for authentication and serialization, Node and Express for uploads and comments",
+        "Firebase for free-tier storage tooling, with images referenced as links instead of stored blobs",
+        "SQLite for the relational data"
+      ],
+      "outcome": "Working application with the full stack wired together.",
+      "figures": [],
+      "tags": [
+        "typescript",
+        "react",
+        "django",
+        "firebase",
+        "personal"
+      ],
+      "line": "blue",
+      "public_safe": true
+    },
+    {
+      "slug": "metaglasses",
+      "course": "Personal project, 2025 to 2026",
+      "title": "MetaGlasses, a phone-to-lens assistant",
+      "summary": "A wearable assistant pairing: a backend that handles the assistant's requests and a phone-side client, built with a FastAPI service and a TypeScript front end, plus a maintained API test collection.",
+      "problem": "A glanceable assistant needs a thin client and a careful API boundary: the phone sends, the service reasons and answers, and the contract between them has to stay testable.",
+      "role": "Sole author. Owns the backend, the API contract, and the client.",
+      "approach": [
+        "FastAPI backend in Python with a TypeScript client",
+        "A Postman collection kept as the source of truth for the API contract",
+        "Test and model-response repositories supporting the contract work"
+      ],
+      "outcome": "Working service and client with a documented, tested API surface.",
+      "figures": [],
+      "tags": [
+        "python",
+        "fastapi",
+        "typescript",
+        "api",
+        "personal"
+      ],
+      "line": "blue",
+      "public_safe": true
+    },
+    {
+      "slug": "pocket-greenhouse",
+      "course": "Personal project, 2025",
+      "title": "Pocket Greenhouse, a Roblox farming slice",
+      "summary": "An idle-farming vertical slice on Roblox written in Luau: a tight playable loop of planting, growing, and harvesting, with its own tooling repository.",
+      "problem": "Roblox projects need game feel and iteration speed; the slice is a complete loop rather than a feature demo.",
+      "role": "Sole author. Owns the game code and the tooling.",
+      "approach": [
+        "Luau game code implementing the full idle-farming loop",
+        "A separate tooling repository for the build and iteration workflow",
+        "Kept private during development"
+      ],
+      "outcome": "A playable vertical slice with the core loop complete.",
+      "figures": [],
+      "tags": [
+        "luau",
+        "roblox",
+        "games",
+        "personal"
+      ],
+      "line": "blue",
+      "public_safe": true
     }
   ]
 }

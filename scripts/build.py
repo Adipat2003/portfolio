@@ -231,6 +231,7 @@ def render_hero(site: dict) -> str:
       <h1>{e(site['tagline'])}</h1>
       <p class="lede">{e(site['intro'])}</p>
       <p class="hero-meta">{''.join(f'<span><b>{e(i["value"])}</b> {e(i["label"].split(",")[0])}</span>' for i in site['impact'][:3])}</p>
+      {f'<p class="lede" style="margin-top:18px">{e(site["academics_line"])}</p>' if site.get("academics_line") else ''}
     </div>
   </header>"""
 
@@ -253,8 +254,11 @@ def project_card(p: dict, pending_label: str) -> str:
     tags = "".join(f"<li>{e(t)}</li>" for t in p.get("tags", []))
     approach = "".join(f"<li>{e(a)}</li>" for a in p.get("approach", []))
     role = f'<p class="role"><b>Role:</b> {e(p["role"])}</p>' if p.get("role") else ""
+    kicker = f"{e(p['line'])} line"
+    if p.get("course"):
+        kicker += f" &middot; {e(p['course'])}"
     return f"""      <article class="{cls}">
-        <span class="kicker">{e(p['line'])} line</span>
+        <span class="kicker">{kicker}</span>
         <h3>{e(p['title'])}</h3>
         <p>{e(p['summary'])}</p>
         {role}{figblock}

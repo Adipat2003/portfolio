@@ -15,10 +15,30 @@
     }
   },
   "impact": [
-    {"value": "~4,500", "label": "reporting hours saved", "kind": "measured", "source": "SEAL / SIR results section"},
-    {"value": "297", "label": "reports processed in a single month", "kind": "measured", "source": "SEAL / SIR results section"},
-    {"value": "$4-10M", "label": "projected annual savings, an estimate rather than a realized figure", "kind": "projected", "source": "BAM program projection"},
-    {"value": "75", "label": "API paths on the inspection platform", "kind": "self-reported", "source": "BAM OpenAPI contract"}
+    {
+      "value": "~4,500",
+      "label": "reporting hours saved",
+      "kind": "measured",
+      "source": "SEAL / SIR results section"
+    },
+    {
+      "value": "297",
+      "label": "reports processed in a single month",
+      "kind": "measured",
+      "source": "SEAL / SIR results section"
+    },
+    {
+      "value": "$4-10M",
+      "label": "projected annual savings, an estimate rather than a realized figure",
+      "kind": "projected",
+      "source": "BAM program projection"
+    },
+    {
+      "value": "75",
+      "label": "API paths on the inspection platform",
+      "kind": "self-reported",
+      "source": "BAM OpenAPI contract"
+    }
   ],
   "ask_examples": [
     {
@@ -32,14 +52,15 @@
       "source": "SEAL / SIR results section"
     },
     {
-      "question": "How do you raise the quality bar for a team?",
-      "answer": "172 teammate pull requests reviewed across 6 engineers, with findings turned into 30-plus standing team rules so the same defect class does not repeat.",
-      "source": "Review practice section"
-    },
-    {
       "question": "What did you build at the hackathon?",
       "answer": "Top contributor, 68 of 97 team commits, on a guarded agent runner where an agent plans each step, deterministic scripts do the screen work, and the operator approves every write. Test suite reached 940-plus passing tests.",
       "source": "Trackathon contribution log"
+    },
+    {
+      "question": "What did you study in school?",
+      "answer": "BS in Computer Engineering at the University of Illinois Urbana-Champaign, GPA 3.88, with a Business minor. Coursework spanned operating systems, databases, digital systems on FPGA, deep learning for computer vision, and algorithms.",
+      "source": "UIUC unofficial transcript, FA21 through FA24"
     }
-  ]
+  ],
+  "academics_line": "BS Computer Engineering, University of Illinois Urbana-Champaign, GPA 3.88. Dean's List; Edmund J James Scholar."
 }
