@@ -2,6 +2,9 @@ import { site, publishedProjects } from "@/content/load";
 import ImpactStrip from "./ImpactStrip";
 import FilterBar from "./FilterBar";
 import AskBox from "./AskBox";
+import ChicagoSpots from "./chicago/ChicagoSpots";
+import RotatingEvents from "./chicago/RotatingEvents";
+import LandmarksList from "./chicago/LandmarksList";
 
 export default function DispatchFacade() {
   const meta = site.impact.slice(0, 3);
@@ -66,11 +69,20 @@ export default function DispatchFacade() {
         </section>
       ) : null}
 
+      <ChicagoSpots
+        id="f1-chicago"
+        kicker="Aditya in Chicago"
+        heading="Places that are his, in his own city"
+      />
+
+      <RotatingEvents />
+
+      <LandmarksList id="f1-landmarks" />
+
       <AskBox
         examples={site.ask_examples}
         headingId="f1-ask"
         heading="Questions get sourced answers"
-        facadeLabel="dispatch"
       />
 
       <hr className="rule" />

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-season="fall" style="--accent:#b3541e;--accent-soft:#f3e3d5;--atlas-sky-1:#14100c;--atlas-sky-2:#1e1810;--atlas-sky-3:#2b2114;--atlas-lights:#e8b04b">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -112,6 +112,39 @@
     .hero{padding:64px 0 56px}
     section{padding:56px 0}
   }
+/* Chicago layer: personal spots, the rotating city slot, and the landmark card. */
+.chi-list{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.chi-item{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;border-bottom:1px solid var(--rule);padding-bottom:10px}
+.chi-name{font-family:var(--mono);font-size:13px;color:var(--ink)}
+.chi-star{color:var(--accent);font-size:11px}
+.chi-kind{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.chi-hood{font-size:13px;color:var(--ink-soft)}
+.chi-note{flex-basis:100%;font-size:14px;color:var(--ink-soft);max-width:70ch}
+.chi-events{border:1px dashed var(--rule);border-radius:12px;padding:18px 22px;margin:32px auto 0;max-width:1120px;display:grid;gap:8px}
+.chi-event{display:grid;gap:4px;font-size:15px;color:var(--ink-soft)}
+.chi-when{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.chi-explorer{position:relative}
+.chi-card{margin:18px auto 0;max-width:760px;border:1px solid var(--rule);border-radius:12px;padding:18px 22px;background:var(--paper-2);display:grid;gap:6px}
+.chi-card h3{font-size:19px}
+.chi-feature{font-size:15px;color:var(--ink-soft)}
+.chi-hint{font-size:14px;color:var(--ink-soft)}
+.chi-landmarks{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 28px;margin:0}
+.chi-landmarks dt{font-family:var(--mono);font-size:13px;color:var(--ink)}
+.chi-landmarks dd{margin:3px 0 0;font-size:14px;color:var(--ink-soft)}
+.atlas .chi-landmarks dt{color:var(--night-ink)}
+.atlas .chi-landmarks dd{color:var(--night-soft)}
+  @media (max-width:860px){.chi-landmarks{grid-template-columns:1fr}}
+.chi-map g[role="button"]{cursor:pointer}
+.chi-map g[role="button"]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.atlas .chi-item{border-color:var(--night-rule)}
+.atlas .chi-name{color:var(--night-ink)}
+.atlas .chi-star{color:var(--signal)}
+.atlas .chi-kind{color:var(--signal)}
+.atlas .chi-hood,.atlas .chi-note,.atlas .chi-feature,.atlas .chi-hint{color:var(--night-soft)}
+.atlas .chi-events{border-color:var(--night-rule);color:var(--night-ink)}
+.atlas .chi-when{color:var(--signal)}
+.atlas .chi-card{background:var(--night-2);border-color:var(--night-rule);color:var(--night-ink)}
+.atlas .chi-map g[role="button"]:focus-visible{outline-color:var(--signal)}
 </style>
 </head>
 <body>
@@ -256,6 +289,33 @@
       </div>
     </div>
   </section>
+
+
+  <section aria-labelledby="f1-landmarks">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="kicker">Landmarks</span>
+          <h2 id="f1-landmarks">What the skyline is made of</h2>
+        </div>
+      </div>
+      <dl class="chi-landmarks">
+        <dt class="chi-name">Willis Tower</dt><dd class="chi-feature">bundled setback tubes with twin antennas</dd>
+        <dt class="chi-name">Hancock Center</dt><dd class="chi-feature">tapered body with visible cross-bracing</dd>
+        <dt class="chi-name">Aon Center</dt><dd class="chi-feature">slim rectangular column</dd>
+        <dt class="chi-name">Two Prudential Plaza</dt><dd class="chi-feature">slanted top</dd>
+        <dt class="chi-name">Marina City (west)</dt><dd class="chi-feature">corncob cylinder</dd>
+        <dt class="chi-name">Marina City (east)</dt><dd class="chi-feature">corncob cylinder</dd>
+        <dt class="chi-name">Trump International Hotel and Tower</dt><dd class="chi-feature">spire</dd>
+        <dt class="chi-name">CNA Center</dt><dd class="chi-feature">red-banded block</dd>
+        <dt class="chi-name">One Eleven (former Wolf Point)</dt><dd class="chi-feature">stepped crown</dd>
+        <dt class="chi-name">Wrigley Building (south tower)</dt><dd class="chi-feature">clock-tower crown</dd>
+        <dt class="chi-name">Wrigley Building (north tower)</dt><dd class="chi-feature">clock-tower crown</dd>
+        <dt class="chi-name">Tribune Tower</dt><dd class="chi-feature">crown with buttresses</dd>
+        <dt class="chi-name">Chicago Board of Trade</dt><dd class="chi-feature">statue-topped pyramid</dd>
+      </dl>
+    </div>
+  </section>
   <section aria-labelledby="f1-ask" style="background:var(--paper-2)">
     <div class="wrap">
       <div class="sec-head">
@@ -283,7 +343,7 @@
     <svg viewBox="0 0 1200 470" role="img" aria-label="The Atlas: a Chicago rail-map world where projects become stations">
       <defs>
         <linearGradient id="atlasSky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#0b0e18"/><stop offset="0.6" stop-color="#131a2c"/><stop offset="1" stop-color="#1d2233"/>
+          <stop offset="0" style="stop-color:var(--atlas-sky-1, #0b0e18)"/><stop offset="0.6" style="stop-color:var(--atlas-sky-2, #131a2c)"/><stop offset="1" style="stop-color:var(--atlas-sky-3, #1d2233)"/>
         </linearGradient>
         <linearGradient id="towerGlass" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="#222b42"/><stop offset="1" stop-color="#141a29"/>
@@ -311,931 +371,28 @@
         <g><title>Tribune Tower: crown with buttresses</title><path d="M752 420 L752 200 L760 180 L768 200 L768 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/></g>
         <g><title>Chicago Board of Trade: statue-topped pyramid</title><path d="M792 420 L792 240 L804 214 L816 240 L816 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/><path d="M802 196 L802 214 L806 214 L806 196 Z" fill="#222b42" stroke="none"/></g>
       </g>
-      <g fill="#e8b04b" opacity="0.75">
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        1
-        2
-        6
-        "
-         
-        y
-        =
-        "
-        2
-        2
-        8
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        1
-        4
-        2
-        "
-         
-        y
-        =
-        "
-        2
-        2
-        8
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        1
-        5
-        8
-        "
-         
-        y
-        =
-        "
-        1
-        9
-        6
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        1
-        7
-        4
-        "
-         
-        y
-        =
-        "
-        1
-        9
-        6
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        1
-        2
-        6
-        "
-         
-        y
-        =
-        "
-        2
-        6
-        8
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        1
-        5
-        8
-        "
-         
-        y
-        =
-        "
-        2
-        6
-        8
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        2
-        5
-        8
-        "
-         
-        y
-        =
-        "
-        1
-        7
-        6
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        2
-        7
-        2
-        "
-         
-        y
-        =
-        "
-        2
-        1
-        2
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        2
-        5
-        8
-        "
-         
-        y
-        =
-        "
-        2
-        4
-        8
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        3
-        0
-        6
-        "
-         
-        y
-        =
-        "
-        1
-        9
-        6
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        3
-        2
-        4
-        "
-         
-        y
-        =
-        "
-        2
-        3
-        0
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        3
-        0
-        6
-        "
-         
-        y
-        =
-        "
-        2
-        6
-        4
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        4
-        2
-        0
-        "
-         
-        y
-        =
-        "
-        2
-        3
-        2
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        4
-        3
-        2
-        "
-         
-        y
-        =
-        "
-        2
-        6
-        8
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        4
-        6
-        0
-        "
-         
-        y
-        =
-        "
-        2
-        3
-        2
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        5
-        6
-        0
-        "
-         
-        y
-        =
-        "
-        2
-        3
-        8
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        5
-        8
-        8
-        "
-         
-        y
-        =
-        "
-        2
-        3
-        8
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        5
-        6
-        0
-        "
-         
-        y
-        =
-        "
-        2
-        7
-        2
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        6
-        8
-        2
-        "
-         
-        y
-        =
-        "
-        2
-        4
-        6
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        7
-        1
-        2
-        "
-         
-        y
-        =
-        "
-        2
-        5
-        4
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
-        <
-        r
-        e
-        c
-        t
-         
-        x
-        =
-        "
-        8
-        0
-        0
-        "
-         
-        y
-        =
-        "
-        2
-        2
-        8
-        "
-         
-        w
-        i
-        d
-        t
-        h
-        =
-        "
-        4
-        "
-         
-        h
-        e
-        i
-        g
-        h
-        t
-        =
-        "
-        6
-        "
-        /
-        >
+      <g style="fill:var(--atlas-lights, #e8b04b)" opacity="0.75">
+        <rect x="126" y="228" width="4" height="6"/>
+        <rect x="142" y="228" width="4" height="6"/>
+        <rect x="158" y="196" width="4" height="6"/>
+        <rect x="174" y="196" width="4" height="6"/>
+        <rect x="126" y="268" width="4" height="6"/>
+        <rect x="158" y="268" width="4" height="6"/>
+        <rect x="258" y="176" width="4" height="6"/>
+        <rect x="272" y="212" width="4" height="6"/>
+        <rect x="258" y="248" width="4" height="6"/>
+        <rect x="306" y="196" width="4" height="6"/>
+        <rect x="324" y="230" width="4" height="6"/>
+        <rect x="306" y="264" width="4" height="6"/>
+        <rect x="420" y="232" width="4" height="6"/>
+        <rect x="432" y="268" width="4" height="6"/>
+        <rect x="460" y="232" width="4" height="6"/>
+        <rect x="560" y="238" width="4" height="6"/>
+        <rect x="588" y="238" width="4" height="6"/>
+        <rect x="560" y="272" width="4" height="6"/>
+        <rect x="682" y="246" width="4" height="6"/>
+        <rect x="712" y="254" width="4" height="6"/>
+        <rect x="800" y="228" width="4" height="6"/>
       </g>
       <g>
         <path d="M0 372 C 200 356, 420 392, 640 372 S 1050 344, 1200 366 L1200 420 L0 420 Z" fill="#0e1626" stroke="#24344f" stroke-width="1"/>
@@ -1243,7 +400,7 @@
         <path d="M80 400 C 300 390, 540 412, 800 396 S 1060 382, 1180 398" fill="none" stroke="#3d5878" stroke-width="1" opacity="0.4"/>
       </g>
       <g fill="none" stroke-width="3">
-        <path d="M40 300 L1170 120" stroke="#c0392b" marker-end="url(#arrowRed)"/>
+                <path d="M40 300 L1170 120" stroke="#c0392b" marker-end="url(#arrowRed)"/>
         <path d="M0 340 L1200 268" stroke="#2e86c1" marker-end="url(#arrowBlue)"/>
       </g>
       <g font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#e9e6df" style="paint-order:stroke" stroke="#0b0e18" stroke-width="5" stroke-linejoin="round">
@@ -1252,7 +409,6 @@
         <g><title>Inspection reporting</title><circle cx="880" cy="166" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="894" y="162">Inspection reporting</text></g>
         <g><title>Android rollout</title><circle cx="420" cy="315" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/><text x="434" y="311">Android rollout</text></g>
         <g><title>Supervised agent runner</title><circle cx="760" cy="294" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/><text x="774" y="290">Supervised agent runner</text></g>
-        <g><title>Personal projects</title><circle cx="1080" cy="275" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="1010" y="301">Personal projects</text></g>
         <g><title>Crime-data web app</title><circle cx="1080" cy="134" r="6" fill="#f7f4ee" stroke="#c0392b" stroke-width="2.5"/><text x="1094" y="130">Crime-data web app</text></g>
         <g><title>Operating system kernel</title><circle cx="620" cy="303" r="6" fill="#f7f4ee" stroke="#2e86c1" stroke-width="2.5"/><text x="634" y="299">Operating system kernel</text></g>
       </g>
@@ -1269,6 +425,33 @@
       <p class="atelier-note"><b>Art pipeline:</b> 13 named landmarks as authored SVG. <span>Routes and stations render from data, so the map is diffable source.</span></p>
     </div>
   </div>
+
+
+  <section aria-labelledby="f2-landmarks">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="kicker">Landmarks</span>
+          <h2 id="f2-landmarks">What the skyline is made of</h2>
+        </div>
+      </div>
+      <dl class="chi-landmarks">
+        <dt class="chi-name">Willis Tower</dt><dd class="chi-feature">bundled setback tubes with twin antennas</dd>
+        <dt class="chi-name">Hancock Center</dt><dd class="chi-feature">tapered body with visible cross-bracing</dd>
+        <dt class="chi-name">Aon Center</dt><dd class="chi-feature">slim rectangular column</dd>
+        <dt class="chi-name">Two Prudential Plaza</dt><dd class="chi-feature">slanted top</dd>
+        <dt class="chi-name">Marina City (west)</dt><dd class="chi-feature">corncob cylinder</dd>
+        <dt class="chi-name">Marina City (east)</dt><dd class="chi-feature">corncob cylinder</dd>
+        <dt class="chi-name">Trump International Hotel and Tower</dt><dd class="chi-feature">spire</dd>
+        <dt class="chi-name">CNA Center</dt><dd class="chi-feature">red-banded block</dd>
+        <dt class="chi-name">One Eleven (former Wolf Point)</dt><dd class="chi-feature">stepped crown</dd>
+        <dt class="chi-name">Wrigley Building (south tower)</dt><dd class="chi-feature">clock-tower crown</dd>
+        <dt class="chi-name">Wrigley Building (north tower)</dt><dd class="chi-feature">clock-tower crown</dd>
+        <dt class="chi-name">Tribune Tower</dt><dd class="chi-feature">crown with buttresses</dd>
+        <dt class="chi-name">Chicago Board of Trade</dt><dd class="chi-feature">statue-topped pyramid</dd>
+      </dl>
+    </div>
+  </section>
   <section aria-labelledby="f2-work">
     <div class="wrap">
       <div class="sec-head">

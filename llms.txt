@@ -18,4 +18,4 @@ Field inspection apps, offline-first sync engines, access control, and supervise
 
 Figures keep their source hedging. A projection is labeled a projection; nothing on this site should be quoted as a realized saving when it is an estimate.
 
-Content hash: 5f624cf3646782db
+Content hash: bbd3e6ea45a3f440

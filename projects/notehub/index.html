@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-season="fall" style="--accent:#b3541e;--accent-soft:#f3e3d5;--atlas-sky-1:#14100c;--atlas-sky-2:#1e1810;--atlas-sky-3:#2b2114;--atlas-lights:#e8b04b">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -112,6 +112,39 @@
     .hero{padding:64px 0 56px}
     section{padding:56px 0}
   }
+/* Chicago layer: personal spots, the rotating city slot, and the landmark card. */
+.chi-list{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.chi-item{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;border-bottom:1px solid var(--rule);padding-bottom:10px}
+.chi-name{font-family:var(--mono);font-size:13px;color:var(--ink)}
+.chi-star{color:var(--accent);font-size:11px}
+.chi-kind{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.chi-hood{font-size:13px;color:var(--ink-soft)}
+.chi-note{flex-basis:100%;font-size:14px;color:var(--ink-soft);max-width:70ch}
+.chi-events{border:1px dashed var(--rule);border-radius:12px;padding:18px 22px;margin:32px auto 0;max-width:1120px;display:grid;gap:8px}
+.chi-event{display:grid;gap:4px;font-size:15px;color:var(--ink-soft)}
+.chi-when{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.chi-explorer{position:relative}
+.chi-card{margin:18px auto 0;max-width:760px;border:1px solid var(--rule);border-radius:12px;padding:18px 22px;background:var(--paper-2);display:grid;gap:6px}
+.chi-card h3{font-size:19px}
+.chi-feature{font-size:15px;color:var(--ink-soft)}
+.chi-hint{font-size:14px;color:var(--ink-soft)}
+.chi-landmarks{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 28px;margin:0}
+.chi-landmarks dt{font-family:var(--mono);font-size:13px;color:var(--ink)}
+.chi-landmarks dd{margin:3px 0 0;font-size:14px;color:var(--ink-soft)}
+.atlas .chi-landmarks dt{color:var(--night-ink)}
+.atlas .chi-landmarks dd{color:var(--night-soft)}
+  @media (max-width:860px){.chi-landmarks{grid-template-columns:1fr}}
+.chi-map g[role="button"]{cursor:pointer}
+.chi-map g[role="button"]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.atlas .chi-item{border-color:var(--night-rule)}
+.atlas .chi-name{color:var(--night-ink)}
+.atlas .chi-star{color:var(--signal)}
+.atlas .chi-kind{color:var(--signal)}
+.atlas .chi-hood,.atlas .chi-note,.atlas .chi-feature,.atlas .chi-hint{color:var(--night-soft)}
+.atlas .chi-events{border-color:var(--night-rule);color:var(--night-ink)}
+.atlas .chi-when{color:var(--signal)}
+.atlas .chi-card{background:var(--night-2);border-color:var(--night-rule);color:var(--night-ink)}
+.atlas .chi-map g[role="button"]:focus-visible{outline-color:var(--signal)}
   .detail-head{padding:56px 0 40px;border-bottom:1px solid var(--rule)}
   .detail-head h1{font-size:clamp(32px,5vw,52px);line-height:1.06;margin:16px 0 0;max-width:20ch}
   .detail-head .back{font-family:var(--mono);font-size:13px;margin:0 0 20px}

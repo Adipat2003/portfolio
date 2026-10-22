@@ -16,11 +16,13 @@ Usage:  python3 scripts/build.py [--out DIR] [--check]
 from __future__ import annotations
 
 import argparse
+from datetime import date, datetime
 import hashlib
 import html
 import json
 import sys
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 CONTENT = ROOT / "content"
@@ -32,12 +34,88 @@ def load_content() -> dict:
     site = json.loads((CONTENT / "site.json").read_text())
     projects = json.loads((CONTENT / "projects.json").read_text())
     atlas = json.loads((CONTENT / "atlas.json").read_text())
+    seasons = json.loads((CONTENT / "seasons.json").read_text())
+    chicago = json.loads((CONTENT / "chicago.json").read_text())
     if not projects.get("public_safe_reviewed"):
         sys.exit("content guard: projects.json must set public_safe_reviewed true")
     for p in projects["projects"]:
         if not p.get("public_safe"):
             sys.exit(f"content guard: {p['slug']} is not marked public_safe")
-    return {"site": site, "projects": projects, "atlas": atlas}
+    if not chicago.get("public_safe_reviewed"):
+        sys.exit("content guard: chicago.json must set public_safe_reviewed true")
+    for spot in chicago.get("spots", []):
+        if not spot.get("public_safe"):
+            sys.exit(f"content guard: chicago spot '{spot.get('slug')}' is not marked public_safe")
+    for event in chicago.get("events", []):
+        if not event.get("public_safe"):
+            sys.exit(f"content guard: chicago event '{event.get('slug')}' is not marked public_safe")
+    building_names = {b["name"] for b in atlas["buildings"]}
+    for name in chicago.get("landmark_notes", {}):
+        if name not in building_names:
+            sys.exit(f"content guard: chicago landmark note '{name}' names no building in atlas.json")
+    # The station cross-checks from src/content/load.ts, so the production
+    # renderer fails on the same defects the Next build fails on: a station
+    # must name a published project that sits on a line with a route. The
+    # Next side also rejects an unknown route line through the LineName
+    # schema; here the color table is the authority.
+    published = {p["slug"]: p for p in projects["projects"] if p.get("status") != "pending-content"}
+    routed_lines = {r["line"] for r in atlas.get("routes", [])}
+    all_slugs = {p["slug"] for p in projects["projects"]}
+    for slug in atlas.get("labels", {}):
+        if slug not in published:
+            if slug in all_slugs:
+                sys.exit(f"content guard: atlas.json station '{slug}' points at the unpublished project '{slug}'")
+            sys.exit(f"content guard: atlas.json station '{slug}' has no matching project in projects.json")
+        if published[slug]["line"] not in routed_lines:
+            sys.exit(f"content guard: atlas.json station '{slug}' sits on line '{published[slug]['line']}', which has no route")
+    for r in atlas.get("routes", []):
+        if r["line"] not in LINE_COLORS:
+            sys.exit(f"content guard: atlas.json route names line '{r['line']}', which has no color")
+    return {
+        "site": site,
+        "projects": projects,
+        "atlas": atlas,
+        "seasons": seasons,
+        "chicago": chicago,
+    }
+
+
+def build_seasons(seasons: dict):
+    """Return the same latest-boundary walk used by the TypeScript renderer."""
+    boundaries = sorted(
+        ((int(item["start"].split("-")[0]), int(item["start"].split("-")[1]), item["name"])
+         for item in seasons["boundaries"]),
+        key=lambda boundary: boundary[0] * 100 + boundary[1],
+    )
+
+    def season_for(day: date) -> str:
+        today = day.month * 100 + day.day
+        current = boundaries[-1][2]
+        for month, boundary_day, name in boundaries:
+            if month * 100 + boundary_day <= today:
+                current = name
+        return current
+
+    return season_for
+
+
+def current_season(seasons: dict) -> str:
+    """Resolve today's season in the content model's timezone."""
+    today = datetime.now(ZoneInfo(seasons["timezone"])).date()
+    return build_seasons(seasons)(today)
+
+
+def season_style(season: str, seasons: dict) -> str:
+    palette = seasons["palettes"][season]
+    properties = [
+        ("--accent", palette["accent"]),
+        ("--accent-soft", palette["accent_soft"]),
+        ("--atlas-sky-1", palette["sky"][0]),
+        ("--atlas-sky-2", palette["sky"][1]),
+        ("--atlas-sky-3", palette["sky"][2]),
+        ("--atlas-lights", palette["lights"]),
+    ]
+    return ";".join(f"{name}:{e(value)}" for name, value in properties)
 
 
 def e(s: object) -> str:
@@ -46,7 +124,7 @@ def e(s: object) -> str:
 
 def content_digest(data: dict) -> str:
     h = hashlib.sha256()
-    for name in ("site.json", "projects.json", "atlas.json"):
+    for name in ("site.json", "projects.json", "atlas.json", "seasons.json", "chicago.json"):
         h.update(name.encode())
         h.update((CONTENT / name).read_bytes())
     return h.hexdigest()[:16]
@@ -55,7 +133,7 @@ def content_digest(data: dict) -> str:
 # ---------------------------------------------------------------- index.html
 
 PAGE_SKELETON = """<!doctype html>
-<html lang="en">
+<html lang="en" data-season="__SEASON__" style="__SEASON_STYLE__">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -181,7 +259,40 @@ def render_css() -> str:
     .impact-strip{grid-template-columns:repeat(2,1fr)}
     .hero{padding:64px 0 56px}
     section{padding:56px 0}
-  }"""
+  }
+/* Chicago layer: personal spots, the rotating city slot, and the landmark card. */
+.chi-list{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.chi-item{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;border-bottom:1px solid var(--rule);padding-bottom:10px}
+.chi-name{font-family:var(--mono);font-size:13px;color:var(--ink)}
+.chi-star{color:var(--accent);font-size:11px}
+.chi-kind{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.chi-hood{font-size:13px;color:var(--ink-soft)}
+.chi-note{flex-basis:100%;font-size:14px;color:var(--ink-soft);max-width:70ch}
+.chi-events{border:1px dashed var(--rule);border-radius:12px;padding:18px 22px;margin:32px auto 0;max-width:1120px;display:grid;gap:8px}
+.chi-event{display:grid;gap:4px;font-size:15px;color:var(--ink-soft)}
+.chi-when{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.chi-explorer{position:relative}
+.chi-card{margin:18px auto 0;max-width:760px;border:1px solid var(--rule);border-radius:12px;padding:18px 22px;background:var(--paper-2);display:grid;gap:6px}
+.chi-card h3{font-size:19px}
+.chi-feature{font-size:15px;color:var(--ink-soft)}
+.chi-hint{font-size:14px;color:var(--ink-soft)}
+.chi-landmarks{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 28px;margin:0}
+.chi-landmarks dt{font-family:var(--mono);font-size:13px;color:var(--ink)}
+.chi-landmarks dd{margin:3px 0 0;font-size:14px;color:var(--ink-soft)}
+.atlas .chi-landmarks dt{color:var(--night-ink)}
+.atlas .chi-landmarks dd{color:var(--night-soft)}
+  @media (max-width:860px){.chi-landmarks{grid-template-columns:1fr}}
+.chi-map g[role="button"]{cursor:pointer}
+.chi-map g[role="button"]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.atlas .chi-item{border-color:var(--night-rule)}
+.atlas .chi-name{color:var(--night-ink)}
+.atlas .chi-star{color:var(--signal)}
+.atlas .chi-kind{color:var(--signal)}
+.atlas .chi-hood,.atlas .chi-note,.atlas .chi-feature,.atlas .chi-hint{color:var(--night-soft)}
+.atlas .chi-events{border-color:var(--night-rule);color:var(--night-ink)}
+.atlas .chi-when{color:var(--signal)}
+.atlas .chi-card{background:var(--night-2);border-color:var(--night-rule);color:var(--night-ink)}
+.atlas .chi-map g[role="button"]:focus-visible{outline-color:var(--signal)}"""
 
 
 def render_js() -> str:
@@ -331,6 +442,84 @@ def render_ask(site: dict, facade_id: str) -> str:
   </section>"""
 
 
+def chicago_spot_rows(chicago: dict) -> list[str]:
+    """The curated order, matching src/content/chicago.ts: favorites first, then neighborhood, then name."""
+    spots = chicago.get("spots", [])
+    ordered = sorted(
+        spots,
+        key=lambda s: (0 if s.get("favorite") else 1, s["neighborhood"], s["name"]),
+    )
+    rows = []
+    for s in ordered:
+        star = '<b class="chi-star" title="Absolute favorite">&#9733; </b>' if s.get("favorite") else ""
+        note = f'<span class="chi-note">{e(s["note"])}</span>' if s.get("note") else ""
+        rows.append(
+            f'<li class="chi-item"><span class="chi-name">{star}{e(s["name"])}</span>'
+            f'<span class="chi-kind">{e(s["kind"])}</span>'
+            f'<span class="chi-hood">{e(s["neighborhood"])}</span>{note}</li>'
+        )
+    return rows
+
+
+def render_chicago_spots(chicago: dict, facade_id: str) -> str:
+    """The personal Chicago strip. Empty when nothing is approved for publication."""
+    rows = chicago_spot_rows(chicago)
+    if not rows:
+        return ""
+    return f"""  <section aria-labelledby="{facade_id}-chicago">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="kicker">Aditya in Chicago</span>
+          <h2 id="{facade_id}-chicago">Places that are his, in his own city</h2>
+        </div>
+        <span class="concept-title">{len(rows)} places</span>
+      </div>
+      <ul class="chi-list">
+{chr(10).join("        " + r for r in rows)}
+      </ul>
+    </div>
+  </section>"""
+
+
+def render_chicago_events(chicago: dict) -> str:
+    """The city-events slot. Static output carries the first event, the same fact a reduced-motion reader gets."""
+    events = chicago.get("events", [])
+    if not events:
+        return ""
+    first = events[0]
+    note = f'<span class="chi-note">{e(first["note"])}</span>' if first.get("note") else ""
+    return f"""  <aside class="chi-events" aria-label="Happening in the city">
+    <span class="kicker">In the city</span>
+    <p class="chi-event"><b>{e(first["title"])}</b> <span class="chi-when">{e(first["when"])}</span>{note}</p>
+  </aside>"""
+
+
+def render_landmarks(atlas: dict, chicago: dict, facade_id: str) -> str:
+    """The skyline as text, so the landmark facts read without the interactive map.
+    Emitted on both facades, so a fact never lives only in the world view."""
+    notes = chicago.get("landmark_notes", {})
+    rows = []
+    for b in atlas["buildings"]:
+        note = f' <span class="chi-note">{e(notes[b["name"]])}</span>' if b["name"] in notes else ""
+        rows.append(
+            f'<dt class="chi-name">{e(b["name"])}</dt><dd class="chi-feature">{e(b["feature"])}{note}</dd>'
+        )
+    return f"""  <section aria-labelledby="{facade_id}-landmarks">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="kicker">Landmarks</span>
+          <h2 id="{facade_id}-landmarks">What the skyline is made of</h2>
+        </div>
+      </div>
+      <dl class="chi-landmarks">
+{chr(10).join("        " + r for r in rows)}
+      </dl>
+    </div>
+  </section>"""
+
+
 def render_atlas_svg(atlas: dict, projects: dict) -> str:
     buildings = []
     for b in atlas["buildings"]:
@@ -343,7 +532,9 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
         buildings.append(f'<g><title>{e(b["name"])}: {e(b["feature"])}</title><path d="{b["d"]}" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>{extra}</g>')
     lights = atlas["window_lights"]
     w, h = atlas["window_size"]
-    light_rects = "".join(f'<rect x="{x}" y="{y}" width="{w}" height="{h}"/>' for x, y in lights)
+    # A list of rect strings, not one joined string: the renderer below joins it
+    # with newlines again, and iterating a string would split it per character.
+    light_rects = [f'<rect x="{x}" y="{y}" width="{w}" height="{h}"/>' for x, y in lights]
     river = []
     for r in atlas["river"]:
         attrs = f'stroke="{r["stroke"]}" stroke-width="{r["width"]}"'
@@ -354,6 +545,12 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
         if "opacity" in r:
             attrs += f' opacity="{r["opacity"]}"'
         river.append(f'<path d="{r["d"]}" {attrs}/>')
+    routes = []
+    for r in atlas.get("routes", []):
+        line = r["line"]
+        routes.append(
+            f'<path d="{r["d"]}" stroke="{LINE_COLORS.get(line, "#c0392b")}" marker-end="url(#arrow{line.capitalize()})"/>'
+        )
     stations = []
     for slug, s in atlas["labels"].items():
         project = next((p for p in projects["projects"] if p["slug"] == slug), None)
@@ -363,13 +560,19 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
             f'<circle cx="{s["cx"]}" cy="{s["cy"]}" r="{atlas["station_style"]["r"]}" fill="{atlas["station_style"]["fill"]}" stroke="{color}" stroke-width="{atlas["station_style"]["stroke_width"]}"/>'
             f'<text x="{s["cx"] + s["dx"]}" y="{s["cy"] + s["dy"]}">{e(s["label"])}</text></g>'
         )
+    sky, fill = atlas["sky"], atlas["building_fill"]
+    sky_stops = "".join(
+        f'<stop offset="{s["offset"]}" style="stop-color:var(--atlas-sky-{i + 1}, {s["color"]})"/>'
+        for i, s in enumerate(sky["stops"])
+    )
+    fill_stops = "".join(f'<stop offset="{s["offset"]}" stop-color="{s["color"]}"/>' for s in fill["stops"])
     return f"""    <svg viewBox="{atlas['viewBox']}" role="img" aria-label="The Atlas: a Chicago rail-map world where projects become stations">
       <defs>
-        <linearGradient id="atlasSky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#0b0e18"/><stop offset="0.6" stop-color="#131a2c"/><stop offset="1" stop-color="#1d2233"/>
+        <linearGradient id="{sky['id']}" x1="{sky['x1']}" y1="{sky['y1']}" x2="{sky['x2']}" y2="{sky['y2']}">
+          {sky_stops}
         </linearGradient>
-        <linearGradient id="towerGlass" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#222b42"/><stop offset="1" stop-color="#141a29"/>
+        <linearGradient id="{fill['id']}" x1="{fill['x1']}" y1="{fill['y1']}" x2="{fill['x2']}" y2="{fill['y2']}">
+          {fill_stops}
         </linearGradient>
         <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M0 0 L10 5 L0 10 z" fill="#c0392b"/>
@@ -378,19 +581,18 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
           <path d="M0 0 L10 5 L0 10 z" fill="#2e86c1"/>
         </marker>
       </defs>
-      <rect width="1200" height="470" fill="url(#atlasSky)"/>
+      <rect width="1200" height="470" fill="url(#{sky['id']})"/>
       <g>
 {chr(10).join("        " + b for b in buildings)}
       </g>
-      <g fill="#e8b04b" opacity="0.75">
+      <g style="fill:var(--atlas-lights, #e8b04b)" opacity="0.75">
 {chr(10).join("        " + r for r in light_rects)}
       </g>
       <g>
 {chr(10).join("        " + r for r in river)}
       </g>
       <g fill="none" stroke-width="3">
-        <path d="M40 300 L1170 120" stroke="{LINE_COLORS['red']}" marker-end="url(#arrowRed)"/>
-        <path d="M0 340 L1200 268" stroke="{LINE_COLORS['blue']}" marker-end="url(#arrowBlue)"/>
+        {chr(10).join("        " + r for r in routes)}
       </g>
       <g font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#e9e6df" style="paint-order:stroke" stroke="{atlas['station_style']['halo']}" stroke-width="5" stroke-linejoin="round">
 {chr(10).join("        " + s for s in stations)}
@@ -398,8 +600,11 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
     </svg>"""
 
 
-def render_index(data: dict) -> str:
+def render_index(data: dict, season: str | None = None) -> str:
     site, projects, atlas = data["site"], data["projects"], data["atlas"]
+    seasons = data["seasons"]
+    chicago = data["chicago"]
+    season = season or current_season(seasons)
     dispatch_cards = "".join(project_card(p, "pending") for p in projects["projects"])
     body = f"""<div class="concept-bar" id="concept-bar" data-facade="dispatch" role="region" aria-label="Facade switch">
   <div class="concept-bar-inner">
@@ -448,6 +653,9 @@ def render_index(data: dict) -> str:
       </div>
     </div>
   </section>
+{render_chicago_spots(chicago, "f1")}
+{render_chicago_events(chicago)}
+{render_landmarks(atlas, chicago, "f1")}
 {render_ask(site, "f1")}
   <hr class="rule"/>
   <footer class="wrap site-foot"><span>{e(site['facades']['dispatch']['description'])}</span><span>Machine-readable content: <a href="api/portfolio.json">portfolio.json</a></span></footer>
@@ -466,6 +674,9 @@ def render_index(data: dict) -> str:
       <p class="atelier-note"><b>Art pipeline:</b> {len(atlas['buildings'])} named landmarks as authored SVG. <span>Routes and stations render from data, so the map is diffable source.</span></p>
     </div>
   </div>
+{render_chicago_spots(chicago, "f2")}
+{render_chicago_events(chicago)}
+{render_landmarks(atlas, chicago, "f2")}
   <section aria-labelledby="f2-work">
     <div class="wrap">
       <div class="sec-head">
@@ -485,6 +696,8 @@ def render_index(data: dict) -> str:
 </div>
 </main>"""
     page = PAGE_SKELETON
+    page = page.replace("__SEASON__", e(season))
+    page = page.replace("__SEASON_STYLE__", season_style(season, seasons))
     page = page.replace("__DESCRIPTION__", e(site["tagline"] + " " + site["intro"]))
     page = page.replace("__TITLE__", "Aditya Patel: Engineering Portfolio")
     page = page.replace("__CSS__", render_css())
@@ -495,8 +708,9 @@ def render_index(data: dict) -> str:
 
 # ------------------------------------------------------------ detail pages
 
-def render_project_page(project: dict, site: dict) -> str:
+def render_project_page(project: dict, site: dict, seasons: dict, season: str | None = None) -> str:
     """Standalone page for one project: the full record behind the card."""
+    season = season or current_season(seasons)
     course = f'<span class="kicker">{e(project["course"])}</span>' if project.get("course") else ""
     figs = "".join(
         f'<li><b>{e(f["value"])}</b> {e(f["label"])} <i>({e(f["kind"])}, source: {e(f["source"])})</i></li>'
@@ -525,6 +739,8 @@ def render_project_page(project: dict, site: dict) -> str:
     <section aria-labelledby="d-tags"><h2 id="d-tags">Tags</h2><ul class="tags">{tags}</ul></section>
   </main>"""
     page = PAGE_SKELETON
+    page = page.replace("__SEASON__", e(season))
+    page = page.replace("__SEASON_STYLE__", season_style(season, seasons))
     page = page.replace("__DESCRIPTION__", e(project["summary"]))
     page = page.replace("__TITLE__", e(project["title"] + " | Aditya Patel"))
     page = page.replace("__CSS__", render_css() + """
@@ -558,6 +774,11 @@ def render_api(data: dict, digest: str) -> str:
             "facades": list(site["facades"].keys()),
             "impact": site["impact"],
             "projects": projects["projects"],
+            "chicago": {
+                "spots": data["chicago"].get("spots", []),
+                "events": data["chicago"].get("events", []),
+                "landmark_notes": data["chicago"].get("landmark_notes", {}),
+            },
         },
         indent=2,
     )
@@ -601,9 +822,10 @@ def render_robots() -> str:
 def build(out: Path) -> list[Path]:
     data = load_content()
     digest = content_digest(data)
+    season = current_season(data["seasons"])
     written = []
     targets = [
-        (out / "index.html", render_index(data)),
+        (out / "index.html", render_index(data, season=season)),
         (out / "api" / "portfolio.json", render_api(data, digest)),
         (out / "llms.txt", render_llms(data, digest)),
         (out / "robots.txt", render_robots()),
@@ -615,7 +837,7 @@ def build(out: Path) -> list[Path]:
     for p in data["projects"]["projects"]:
         page = out / "projects" / p["slug"] / "index.html"
         page.parent.mkdir(parents=True, exist_ok=True)
-        page.write_text(render_project_page(p, data["site"]))
+        page.write_text(render_project_page(p, data["site"], data["seasons"], season=season))
         written.append(page)
     return written
 
@@ -623,8 +845,9 @@ def build(out: Path) -> list[Path]:
 def check(out: Path) -> bool:
     data = load_content()
     digest = content_digest(data)
+    season = current_season(data["seasons"])
     targets = [
-        (out / "index.html", render_index(data)),
+        (out / "index.html", render_index(data, season=season)),
         (out / "api" / "portfolio.json", render_api(data, digest)),
         (out / "llms.txt", render_llms(data, digest)),
         (out / "robots.txt", render_robots()),
@@ -635,7 +858,7 @@ def check(out: Path) -> bool:
         if not page.exists():
             print(f"MISSING: {page.relative_to(ROOT)}")
             ok = False
-        elif page.read_text() != render_project_page(p, data["site"]):
+        elif page.read_text() != render_project_page(p, data["site"], data["seasons"], season=season):
             print(f"STALE:   {page.relative_to(ROOT)}")
             ok = False
     for path, expected in targets:
@@ -644,6 +867,21 @@ def check(out: Path) -> bool:
             ok = False
         elif path.read_text() != expected:
             print(f"STALE:   {path.relative_to(ROOT)}")
+            ok = False
+    # The Dispatch-primary rule, asserted on the shipped artifact: every
+    # Chicago surface that renders at all must render on both facades, so a
+    # fact can never exist only in the world view.
+    html = (out / "index.html").read_text() if (out / "index.html").exists() else ""
+    chicago = data["chicago"]
+    for marker, renders in (
+        ('class="chi-list"', bool(chicago.get("spots"))),
+        ('class="chi-events"', bool(chicago.get("events"))),
+        ('class="chi-landmarks"', True),
+    ):
+        expected_count = 2 if renders else 0
+        found = html.count(marker)
+        if found != expected_count:
+            print(f"PLACEMENT: {marker} appears {found} times in index.html, expected {expected_count} (both facades or neither)")
             ok = False
     print("check: PASS" if ok else "check: FAIL")
     return ok
