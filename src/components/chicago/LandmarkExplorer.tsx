@@ -7,9 +7,8 @@ import { atlas, landmarkNote } from "@/content/load";
 /**
  * The clickable landmarks of the Atlas. Selecting a building opens an info
  * card with what it is, which renders from atlas.json plus the author's note
- * when one exists. The same facts are already published as the standalone
- * landmark SVGs, so the card reveals nothing the Dispatch rule reserves for
- * the map.
+ * when one exists. The same facts render on the Dispatch landmarks list, so
+ * the card reveals nothing the Dispatch rule reserves for the map.
  *
  * The map is keyboard operable: each building is a focusable group, Enter and
  * Space toggle the card, and Escape closes it. The card below is the live

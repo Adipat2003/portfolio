@@ -11,8 +11,8 @@ const INTERVAL_MS = 6000;
  * can replace the array later without changing this component.
  *
  * Motion is an enhancement, never a gate: the first event is always readable,
- * the rotation stops on hover and on focus, and a reduced-motion reader gets
- * the static list with no timer at all.
+ * the rotation stops on hover and on focus, and a reduced-motion reader keeps
+ * the first event with no timer at all, matching the static output.
  */
 export default function RotatingEvents() {
   const events = chicagoEvents;

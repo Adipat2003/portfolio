@@ -154,6 +154,7 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 @media (max-width:860px){
   .grid-3{grid-template-columns:1fr}
   .impact-strip{grid-template-columns:repeat(2,1fr)}
+  .chi-landmarks{grid-template-columns:1fr}
   .hero{padding:64px 0 56px}
   section{padding:56px 0}
 }

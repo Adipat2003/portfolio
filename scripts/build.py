@@ -53,6 +53,24 @@ def load_content() -> dict:
     for name in chicago.get("landmark_notes", {}):
         if name not in building_names:
             sys.exit(f"content guard: chicago landmark note '{name}' names no building in atlas.json")
+    # The station cross-checks from src/content/load.ts, so the production
+    # renderer fails on the same defects the Next build fails on: a station
+    # must name a published project that sits on a line with a route. The
+    # Next side also rejects an unknown route line through the LineName
+    # schema; here the color table is the authority.
+    published = {p["slug"]: p for p in projects["projects"] if p.get("status") != "pending-content"}
+    routed_lines = {r["line"] for r in atlas.get("routes", [])}
+    all_slugs = {p["slug"] for p in projects["projects"]}
+    for slug in atlas.get("labels", {}):
+        if slug not in published:
+            if slug in all_slugs:
+                sys.exit(f"content guard: atlas.json station '{slug}' points at the unpublished project '{slug}'")
+            sys.exit(f"content guard: atlas.json station '{slug}' has no matching project in projects.json")
+        if published[slug]["line"] not in routed_lines:
+            sys.exit(f"content guard: atlas.json station '{slug}' sits on line '{published[slug]['line']}', which has no route")
+    for r in atlas.get("routes", []):
+        if r["line"] not in LINE_COLORS:
+            sys.exit(f"content guard: atlas.json route names line '{r['line']}', which has no color")
     return {
         "site": site,
         "projects": projects,
@@ -263,6 +281,7 @@ def render_css() -> str:
 .chi-landmarks dd{margin:3px 0 0;font-size:14px;color:var(--ink-soft)}
 .atlas .chi-landmarks dt{color:var(--night-ink)}
 .atlas .chi-landmarks dd{color:var(--night-soft)}
+  @media (max-width:860px){.chi-landmarks{grid-template-columns:1fr}}
 .chi-map g[role="button"]{cursor:pointer}
 .chi-map g[role="button"]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .atlas .chi-item{border-color:var(--night-rule)}
@@ -476,8 +495,9 @@ def render_chicago_events(chicago: dict) -> str:
   </aside>"""
 
 
-def render_landmarks(atlas: dict, chicago: dict) -> str:
-    """The skyline as text, so the landmark facts read without the interactive map."""
+def render_landmarks(atlas: dict, chicago: dict, facade_id: str) -> str:
+    """The skyline as text, so the landmark facts read without the interactive map.
+    Emitted on both facades, so a fact never lives only in the world view."""
     notes = chicago.get("landmark_notes", {})
     rows = []
     for b in atlas["buildings"]:
@@ -485,12 +505,12 @@ def render_landmarks(atlas: dict, chicago: dict) -> str:
         rows.append(
             f'<dt class="chi-name">{e(b["name"])}</dt><dd class="chi-feature">{e(b["feature"])}{note}</dd>'
         )
-    return f"""  <section aria-labelledby="f2-landmarks">
+    return f"""  <section aria-labelledby="{facade_id}-landmarks">
     <div class="wrap">
       <div class="sec-head">
         <div>
           <span class="kicker">Landmarks</span>
-          <h2 id="f2-landmarks">What the skyline is made of</h2>
+          <h2 id="{facade_id}-landmarks">What the skyline is made of</h2>
         </div>
       </div>
       <dl class="chi-landmarks">
@@ -634,6 +654,8 @@ def render_index(data: dict, season: str | None = None) -> str:
     </div>
   </section>
 {render_chicago_spots(chicago, "f1")}
+{render_chicago_events(chicago)}
+{render_landmarks(atlas, chicago, "f1")}
 {render_ask(site, "f1")}
   <hr class="rule"/>
   <footer class="wrap site-foot"><span>{e(site['facades']['dispatch']['description'])}</span><span>Machine-readable content: <a href="api/portfolio.json">portfolio.json</a></span></footer>
@@ -654,7 +676,7 @@ def render_index(data: dict, season: str | None = None) -> str:
   </div>
 {render_chicago_spots(chicago, "f2")}
 {render_chicago_events(chicago)}
-{render_landmarks(atlas, chicago)}
+{render_landmarks(atlas, chicago, "f2")}
   <section aria-labelledby="f2-work">
     <div class="wrap">
       <div class="sec-head">
@@ -845,6 +867,21 @@ def check(out: Path) -> bool:
             ok = False
         elif path.read_text() != expected:
             print(f"STALE:   {path.relative_to(ROOT)}")
+            ok = False
+    # The Dispatch-primary rule, asserted on the shipped artifact: every
+    # Chicago surface that renders at all must render on both facades, so a
+    # fact can never exist only in the world view.
+    html = (out / "index.html").read_text() if (out / "index.html").exists() else ""
+    chicago = data["chicago"]
+    for marker, renders in (
+        ('class="chi-list"', bool(chicago.get("spots"))),
+        ('class="chi-events"', bool(chicago.get("events"))),
+        ('class="chi-landmarks"', True),
+    ):
+        expected_count = 2 if renders else 0
+        found = html.count(marker)
+        if found != expected_count:
+            print(f"PLACEMENT: {marker} appears {found} times in index.html, expected {expected_count} (both facades or neither)")
             ok = False
     print("check: PASS" if ok else "check: FAIL")
     return ok

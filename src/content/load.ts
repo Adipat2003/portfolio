@@ -119,11 +119,6 @@ export const stations = Object.entries(atlas.labels)
   })
   .sort((a, b) => a.station.label.localeCompare(b.station.label));
 
-/** Routes for one line, so a component renders a line's full path set. */
-export function routesForLine(line: LineName) {
-  return atlas.routes.filter((r) => r.line === line);
-}
-
 const chicagoBuildingNames = new Set(atlas.buildings.map((b) => b.name));
 
 /**

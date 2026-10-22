@@ -31,7 +31,7 @@ node scripts/season-check.mjs      # 14 boundary and palette checks, expect PASS
 python3 scripts/season-check-python.py  # Python date and renderer parity, expect PASS
 node scripts/ask-check.mjs         # 20 retrieval assertions across 14 questions, expect PASS
 node scripts/chicago-check.mjs    # 14 assertions over the Chicago shaping rules, expect PASS
-python3 scripts/build.py --check   # verifies committed static artifacts match content
+python3 scripts/build.py --check   # verifies committed static artifacts match content and Chicago surfaces sit on both facades
 node scripts/art-export.mjs --check  # verifies art/*.svg match atlas.json
 ```
 
@@ -123,7 +123,11 @@ only, reduced-motion aware.
 
 The toggle sits in the sticky bar, is deep-linkable via #atlas, and updates
 document.title. On the Python side it is plain JS in index.html; on the Next
-side it is `src/components/FacadeSwitch.tsx` with client state.
+side it is `src/components/FacadeSwitch.tsx` with client state. The Next title
+effect re-asserts the title on a short timer ladder: React restores the static
+`<title>` after hydration settles, which runs after the mount effects and wipes
+their assignment, so a deep-linked #atlas load used to keep the generic title.
+Do not remove the ladder without retesting a fresh #atlas load.
 
 ## Seasonal theming
 
@@ -197,10 +201,10 @@ phased plan. `docs/ai-exposure.md` carries the AI layer design.
 - **Phase 1, scaffold and parity.** MERGED, PR #12, commit 9a57676. Next.js App
   Router, React 19, TypeScript, Zod. Static export with basePath /portfolio.
   Typed content loaders. 14 SSG detail pages. Parity verified in a browser.
-- **Phase 2, artwork as components.** OPEN, PR #14 on branch
-  feat/atlas-artwork-components (closes #13). Route geometry moved to
-  atlas.json; AtlasMap decomposed into per-layer typed components; gradients
-  typed; station cross-checks added; art/*.svg export added.
+- **Phase 2, artwork as components.** MERGED, PR #14 (closed #13). Route
+  geometry moved to atlas.json; AtlasMap decomposed into per-layer typed
+  components; gradients typed; station cross-checks added on both renderers;
+  art/*.svg export added.
 - **Grounded ask retrieval.** DONE on PR #14, browser-verified. AskBox takes free
   text, ranks the records, and cites the record behind each answer. This is the
   retrieval half of the RAG feature; the NVIDIA step rephrases what it returns
@@ -215,13 +219,15 @@ phased plan. `docs/ai-exposure.md` carries the AI layer design.
   Zod schema and content guards on both sides: per-record `public_safe`, a
   landmark note must name a real atlas building, and no slug repeats.
   LandmarkExplorer (clickable, keyboard-operable landmarks with an info card),
-  ChicagoSpots (the personal strip, on both facades), and RotatingEvents
-  (pauses on hover and focus, no timer under reduced motion) all render
-  nothing until records arrive, which is the committed state: the Chicago
-  Masterlist stays private and a record enters only when Aditya approves its
-  fields for publication. `scripts/chicago-check.mjs` covers the ordering,
-  wrap, and note rules, and build.py renders the same layer from the same
-  file.
+  ChicagoSpots (the personal strip), and RotatingEvents (pauses on hover and
+  focus, no timer under reduced motion) all render nothing until records
+  arrive, which is the committed state: the Chicago Masterlist stays private
+  and a record enters only when Aditya approves its fields for publication.
+  Spots, events, and the landmark facts render on both facades, so a fact can
+  never exist only in the world view; build.py's check mode asserts every
+  Chicago surface appears on both facades or neither. `scripts/chicago-check.mjs`
+  covers the ordering, wrap, and note rules, and build.py renders the same
+  layer from the same file.
 - **Phase 3, detail pages and filtering as routes and components.** Mostly
   delivered inside Phase 1 (generateStaticParams and FilterBar already exist).
   Remaining work is to confirm nothing is missing and close it.
@@ -284,6 +290,7 @@ built. Verify with `hermes config get model` before touching it.
 - **An orphan Atlas station shipped to the live site.** The 'personal-projects'
   station named no project, and the Python renderer silently defaulted its line
   colour, so it rendered as a station with no card. Fixed in PR #14 by retiring
-  it, and by the new station cross-check that would now fail the build.
+  it, and by the station cross-check that now fails the build on both
+  renderers (src/content/load.ts and scripts/build.py).
 - **Both renderers once hardcoded route geometry.** Routes lived as literal path
   strings in AtlasMap.tsx and build.py. Moved to atlas.json in PR #14.
