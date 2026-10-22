@@ -1,0 +1,7 @@
+{
+  "note": "Chicago layer definition. Personal spots, curated city events, and landmark notes live here, and both renderers (scripts/build.py and the Next components) read this one file. The Chicago Masterlist is the source of record for the full list, and it stays private: a record enters this file only once its fields are approved for publication. Empty spot and event arrays are the correct committed state, and every component renders nothing until records arrive.",
+  "public_safe_reviewed": true,
+  "spots": [],
+  "events": [],
+  "landmark_notes": {}
+}

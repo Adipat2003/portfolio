@@ -2,6 +2,7 @@ import { site, publishedProjects } from "@/content/load";
 import ImpactStrip from "./ImpactStrip";
 import FilterBar from "./FilterBar";
 import AskBox from "./AskBox";
+import ChicagoSpots from "./chicago/ChicagoSpots";
 
 export default function DispatchFacade() {
   const meta = site.impact.slice(0, 3);
@@ -65,6 +66,12 @@ export default function DispatchFacade() {
           </div>
         </section>
       ) : null}
+
+      <ChicagoSpots
+        id="f1-chicago"
+        kicker="Aditya in Chicago"
+        heading="Places that are his, in his own city"
+      />
 
       <AskBox
         examples={site.ask_examples}

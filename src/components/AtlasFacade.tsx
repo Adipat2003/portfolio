@@ -1,5 +1,7 @@
 import { site, publishedProjects, atlas } from "@/content/load";
-import AtlasMap from "./atlas/AtlasMap";
+import LandmarkExplorer from "./chicago/LandmarkExplorer";
+import ChicagoSpots from "./chicago/ChicagoSpots";
+import RotatingEvents from "./chicago/RotatingEvents";
 import ImpactStrip from "./ImpactStrip";
 import ProjectCard from "./ProjectCard";
 import AskBox from "./AskBox";
@@ -8,7 +10,7 @@ export default function AtlasFacade() {
   return (
     <div className="toggle-view atlas" id="view-atlas" data-active="true" aria-label={site.facades.atlas.name}>
       <header className="atlas-hero">
-        <AtlasMap />
+        <LandmarkExplorer />
         <ImpactStrip figures={site.impact} />
       </header>
 
@@ -26,6 +28,13 @@ export default function AtlasFacade() {
           </p>
         </div>
       </div>
+
+      <ChicagoSpots
+        id="f2-chicago"
+        kicker="Aditya in Chicago"
+        heading="Places that are his, in his own city"
+      />
+      <RotatingEvents />
 
       <section aria-labelledby="f2-work">
         <div className="wrap">

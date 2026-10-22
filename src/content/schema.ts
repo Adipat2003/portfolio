@@ -126,6 +126,48 @@ export const seasonsSchema = z.object({
   palettes: z.record(seasonName, seasonPaletteSchema),
 });
 
+export const chicagoSpotKind = z.enum([
+  "bar",
+  "coffee",
+  "food",
+  "music",
+  "shop",
+  "other",
+]);
+
+export const chicagoSpotSchema = z.object({
+  slug: z.string().regex(/^[a-z0-9-]+$/, "slug must be lowercase with hyphens"),
+  name: z.string(),
+  neighborhood: z.string(),
+  kind: chicagoSpotKind,
+  /** Marks an absolute favorite, which sorts the spot to the top of the strip. */
+  favorite: z.boolean(),
+  note: z.string().optional(),
+  public_safe: z.literal(true, {
+    errorMap: () => ({ message: "record must be marked public_safe: true" }),
+  }),
+});
+
+export const chicagoEventSchema = z.object({
+  slug: z.string().regex(/^[a-z0-9-]+$/, "slug must be lowercase with hyphens"),
+  title: z.string(),
+  kind: z.string(),
+  when: z.string(),
+  note: z.string().optional(),
+  public_safe: z.literal(true, {
+    errorMap: () => ({ message: "record must be marked public_safe: true" }),
+  }),
+});
+
+export const chicagoSchema = z.object({
+  note: z.string(),
+  public_safe_reviewed: z.literal(true),
+  spots: z.array(chicagoSpotSchema),
+  events: z.array(chicagoEventSchema),
+  /** A note per landmark, keyed by the building name in atlas.json. */
+  landmark_notes: z.record(z.string(), z.string()),
+});
+
 export const atlasSchema = z.object({
   viewBox: z.string(),
   sky: gradientSchema,
@@ -152,3 +194,6 @@ export type StationStyle = z.infer<typeof stationStyleSchema>;
 export type Building = z.infer<typeof buildingSchema>;
 export type Gradient = z.infer<typeof gradientSchema>;
 export type Atlas = z.infer<typeof atlasSchema>;
+export type ChicagoSpot = z.infer<typeof chicagoSpotSchema>;
+export type ChicagoEvent = z.infer<typeof chicagoEventSchema>;
+export type Chicago = z.infer<typeof chicagoSchema>;

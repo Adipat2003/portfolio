@@ -35,12 +35,31 @@ def load_content() -> dict:
     projects = json.loads((CONTENT / "projects.json").read_text())
     atlas = json.loads((CONTENT / "atlas.json").read_text())
     seasons = json.loads((CONTENT / "seasons.json").read_text())
+    chicago = json.loads((CONTENT / "chicago.json").read_text())
     if not projects.get("public_safe_reviewed"):
         sys.exit("content guard: projects.json must set public_safe_reviewed true")
     for p in projects["projects"]:
         if not p.get("public_safe"):
             sys.exit(f"content guard: {p['slug']} is not marked public_safe")
-    return {"site": site, "projects": projects, "atlas": atlas, "seasons": seasons}
+    if not chicago.get("public_safe_reviewed"):
+        sys.exit("content guard: chicago.json must set public_safe_reviewed true")
+    for spot in chicago.get("spots", []):
+        if not spot.get("public_safe"):
+            sys.exit(f"content guard: chicago spot '{spot.get('slug')}' is not marked public_safe")
+    for event in chicago.get("events", []):
+        if not event.get("public_safe"):
+            sys.exit(f"content guard: chicago event '{event.get('slug')}' is not marked public_safe")
+    building_names = {b["name"] for b in atlas["buildings"]}
+    for name in chicago.get("landmark_notes", {}):
+        if name not in building_names:
+            sys.exit(f"content guard: chicago landmark note '{name}' names no building in atlas.json")
+    return {
+        "site": site,
+        "projects": projects,
+        "atlas": atlas,
+        "seasons": seasons,
+        "chicago": chicago,
+    }
 
 
 def build_seasons(seasons: dict):
@@ -87,7 +106,7 @@ def e(s: object) -> str:
 
 def content_digest(data: dict) -> str:
     h = hashlib.sha256()
-    for name in ("site.json", "projects.json", "atlas.json", "seasons.json"):
+    for name in ("site.json", "projects.json", "atlas.json", "seasons.json", "chicago.json"):
         h.update(name.encode())
         h.update((CONTENT / name).read_bytes())
     return h.hexdigest()[:16]
@@ -222,7 +241,34 @@ def render_css() -> str:
     .impact-strip{grid-template-columns:repeat(2,1fr)}
     .hero{padding:64px 0 56px}
     section{padding:56px 0}
-  }"""
+  }
+/* Chicago layer: personal spots, the rotating city slot, and the landmark card. */
+.chi-list{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.chi-item{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;border-bottom:1px solid var(--rule);padding-bottom:10px}
+.chi-name{font-family:var(--mono);font-size:13px;color:var(--ink)}
+.chi-star{color:var(--accent);font-size:11px}
+.chi-kind{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.chi-hood{font-size:13px;color:var(--ink-soft)}
+.chi-note{flex-basis:100%;font-size:14px;color:var(--ink-soft);max-width:70ch}
+.chi-events{border:1px dashed var(--rule);border-radius:12px;padding:18px 22px;margin:32px auto 0;max-width:1120px;display:grid;gap:8px}
+.chi-event{display:grid;gap:4px;font-size:15px;color:var(--ink-soft)}
+.chi-when{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.chi-explorer{position:relative}
+.chi-card{margin:18px auto 0;max-width:760px;border:1px solid var(--rule);border-radius:12px;padding:18px 22px;background:var(--paper-2);display:grid;gap:6px}
+.chi-card h3{font-size:19px}
+.chi-feature{font-size:15px;color:var(--ink-soft)}
+.chi-hint{font-size:14px;color:var(--ink-soft)}
+.chi-map g[role="button"]{cursor:pointer}
+.chi-map g[role="button"]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.atlas .chi-item{border-color:var(--night-rule)}
+.atlas .chi-name{color:var(--night-ink)}
+.atlas .chi-star{color:var(--signal)}
+.atlas .chi-kind{color:var(--signal)}
+.atlas .chi-hood,.atlas .chi-note,.atlas .chi-feature,.atlas .chi-hint{color:var(--night-soft)}
+.atlas .chi-events{border-color:var(--night-rule);color:var(--night-ink)}
+.atlas .chi-when{color:var(--signal)}
+.atlas .chi-card{background:var(--night-2);border-color:var(--night-rule);color:var(--night-ink)}
+.atlas .chi-map g[role="button"]:focus-visible{outline-color:var(--signal)}"""
 
 
 def render_js() -> str:
@@ -372,6 +418,83 @@ def render_ask(site: dict, facade_id: str) -> str:
   </section>"""
 
 
+def chicago_spot_rows(chicago: dict) -> list[str]:
+    """The curated order, matching src/content/chicago.ts: favorites first, then neighborhood, then name."""
+    spots = chicago.get("spots", [])
+    ordered = sorted(
+        spots,
+        key=lambda s: (0 if s.get("favorite") else 1, s["neighborhood"], s["name"]),
+    )
+    rows = []
+    for s in ordered:
+        star = '<b class="chi-star" title="Absolute favorite">&#9733; </b>' if s.get("favorite") else ""
+        note = f'<span class="chi-note">{e(s["note"])}</span>' if s.get("note") else ""
+        rows.append(
+            f'<li class="chi-item"><span class="chi-name">{star}{e(s["name"])}</span>'
+            f'<span class="chi-kind">{e(s["kind"])}</span>'
+            f'<span class="chi-hood">{e(s["neighborhood"])}</span>{note}</li>'
+        )
+    return rows
+
+
+def render_chicago_spots(chicago: dict, facade_id: str) -> str:
+    """The personal Chicago strip. Empty when nothing is approved for publication."""
+    rows = chicago_spot_rows(chicago)
+    if not rows:
+        return ""
+    return f"""  <section aria-labelledby="{facade_id}-chicago">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="kicker">Aditya in Chicago</span>
+          <h2 id="{facade_id}-chicago">Places that are his, in his own city</h2>
+        </div>
+        <span class="concept-title">{len(rows)} places</span>
+      </div>
+      <ul class="chi-list">
+{chr(10).join("        " + r for r in rows)}
+      </ul>
+    </div>
+  </section>"""
+
+
+def render_chicago_events(chicago: dict) -> str:
+    """The city-events slot. Static output carries the first event, the same fact a reduced-motion reader gets."""
+    events = chicago.get("events", [])
+    if not events:
+        return ""
+    first = events[0]
+    note = f'<span class="chi-note">{e(first["note"])}</span>' if first.get("note") else ""
+    return f"""  <aside class="chi-events" aria-label="Happening in the city">
+    <span class="kicker">In the city</span>
+    <p class="chi-event"><b>{e(first["title"])}</b> <span class="chi-when">{e(first["when"])}</span>{note}</p>
+  </aside>"""
+
+
+def render_landmarks(atlas: dict, chicago: dict) -> str:
+    """The skyline as text, so the landmark facts read without the interactive map."""
+    notes = chicago.get("landmark_notes", {})
+    rows = []
+    for b in atlas["buildings"]:
+        note = f' <span class="chi-note">{e(notes[b["name"]])}</span>' if b["name"] in notes else ""
+        rows.append(
+            f'<dt class="chi-name">{e(b["name"])}</dt><dd class="chi-feature">{e(b["feature"])}{note}</dd>'
+        )
+    return f"""  <section aria-labelledby="f2-landmarks">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="kicker">Landmarks</span>
+          <h2 id="f2-landmarks">What the skyline is made of</h2>
+        </div>
+      </div>
+      <dl class="chi-landmarks">
+{chr(10).join("        " + r for r in rows)}
+      </dl>
+    </div>
+  </section>"""
+
+
 def render_atlas_svg(atlas: dict, projects: dict) -> str:
     buildings = []
     for b in atlas["buildings"]:
@@ -455,6 +578,7 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
 def render_index(data: dict, season: str | None = None) -> str:
     site, projects, atlas = data["site"], data["projects"], data["atlas"]
     seasons = data["seasons"]
+    chicago = data["chicago"]
     season = season or current_season(seasons)
     dispatch_cards = "".join(project_card(p, "pending") for p in projects["projects"])
     body = f"""<div class="concept-bar" id="concept-bar" data-facade="dispatch" role="region" aria-label="Facade switch">
@@ -504,6 +628,7 @@ def render_index(data: dict, season: str | None = None) -> str:
       </div>
     </div>
   </section>
+{render_chicago_spots(chicago, "f1")}
 {render_ask(site, "f1")}
   <hr class="rule"/>
   <footer class="wrap site-foot"><span>{e(site['facades']['dispatch']['description'])}</span><span>Machine-readable content: <a href="api/portfolio.json">portfolio.json</a></span></footer>
@@ -522,6 +647,9 @@ def render_index(data: dict, season: str | None = None) -> str:
       <p class="atelier-note"><b>Art pipeline:</b> {len(atlas['buildings'])} named landmarks as authored SVG. <span>Routes and stations render from data, so the map is diffable source.</span></p>
     </div>
   </div>
+{render_chicago_spots(chicago, "f2")}
+{render_chicago_events(chicago)}
+{render_landmarks(atlas, chicago)}
   <section aria-labelledby="f2-work">
     <div class="wrap">
       <div class="sec-head">
@@ -619,6 +747,11 @@ def render_api(data: dict, digest: str) -> str:
             "facades": list(site["facades"].keys()),
             "impact": site["impact"],
             "projects": projects["projects"],
+            "chicago": {
+                "spots": data["chicago"].get("spots", []),
+                "events": data["chicago"].get("events", []),
+                "landmark_notes": data["chicago"].get("landmark_notes", {}),
+            },
         },
         indent=2,
     )

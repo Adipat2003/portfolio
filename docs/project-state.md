@@ -4,7 +4,7 @@ Picking this up fresh? Read this file top to bottom, then `AGENTS.md`, then the
 `docs/` linked below. This is the standing handoff for the portfolio repo. It is
 updated whenever a change lands, so it is never a stale description of the code.
 
-Last updated: 2026-10-21.
+Last updated: 2026-10-22.
 
 ## What this is
 
@@ -30,6 +30,7 @@ npm run build                      # next build + postbuild, exports to out/
 node scripts/season-check.mjs      # 14 boundary and palette checks, expect PASS
 python3 scripts/season-check-python.py  # Python date and renderer parity, expect PASS
 node scripts/ask-check.mjs         # 20 retrieval assertions across 14 questions, expect PASS
+node scripts/chicago-check.mjs    # 14 assertions over the Chicago shaping rules, expect PASS
 python3 scripts/build.py --check   # verifies committed static artifacts match content
 node scripts/art-export.mjs --check  # verifies art/*.svg match atlas.json
 ```
@@ -69,6 +70,8 @@ content/            single source of truth (JSON, hand-authored)
   atlas.json        Chicago map geometry: 13 buildings, 21 window lights,
                     river, 2 routes, 7 stations, gradients
   seasons.json      four season boundaries, timezone, and palettes
+  chicago.json      personal spots, curated events, landmark notes. Spots and
+                    events stay empty until records are approved for publication
 scripts/
   build.py          zero-dependency Python generator. Owns index.html, all
                     project pages, api/portfolio.json, llms.txt. --check mode.
@@ -78,12 +81,15 @@ scripts/
   season-check.mjs  14 boundary dates and four palette checks against seasons.json
   season-check-python.py  Python resolution and renderer parity checks for seasons
   ask-check.mjs     20 retrieval assertions across 14 questions
+  chicago-check.mjs 14 assertions over the Chicago shaping rules
 src/
   content/          Zod schemas (schema.ts) + validated loaders (load.ts)
     retrieval.ts    grounded ask retrieval. No runtime imports.
     season.ts       season resolution and palettes. No runtime imports.
+    chicago.ts      spot ordering, event wrap, landmark notes. No runtime imports.
   components/       React components for both facades
     atlas/          one component per Atlas layer (Phase 2)
+    chicago/        LandmarkExplorer, ChicagoSpots, RotatingEvents
     SeasonSync.tsx  corrects data-season after hydration
   app/              Next.js App Router, static export, basePath /portfolio
 art/                13 standalone landmark SVGs, generated from atlas.json
@@ -205,6 +211,17 @@ phased plan. `docs/ai-exposure.md` carries the AI layer design.
   content-driven palette at build time; SeasonSync updates the attribute and
   CSS variables after hydration. The Python renderer emits the same season and
   palette from `seasons.json`. Browser-verified for all four seasons.
+- **Chicago layer foundation.** DONE on PR #14. `content/chicago.json` carries a
+  Zod schema and content guards on both sides: per-record `public_safe`, a
+  landmark note must name a real atlas building, and no slug repeats.
+  LandmarkExplorer (clickable, keyboard-operable landmarks with an info card),
+  ChicagoSpots (the personal strip, on both facades), and RotatingEvents
+  (pauses on hover and focus, no timer under reduced motion) all render
+  nothing until records arrive, which is the committed state: the Chicago
+  Masterlist stays private and a record enters only when Aditya approves its
+  fields for publication. `scripts/chicago-check.mjs` covers the ordering,
+  wrap, and note rules, and build.py renders the same layer from the same
+  file.
 - **Phase 3, detail pages and filtering as routes and components.** Mostly
   delivered inside Phase 1 (generateStaticParams and FilterBar already exist).
   Remaining work is to confirm nothing is missing and close it.
@@ -244,10 +261,10 @@ These block work and belong to Aditya:
   rule. A model may rephrase what retrieval returns; it may never be the source
   of a claim.
 - **Chicago interactivity**, requested by Aditya: bars and food spots, and a
-  rotating list of city events such as sports. Public venue content is blocked
-  on a user-approved scope and source review. Do not copy private inventory or
-  personal reviews into `content/chicago.json` or a public view without explicit
-  approval. Live feeds still require the terms review above.
+  rotating list of city events such as sports. The foundation is now on PR #14.
+  What remains is the records themselves, which need Aditya to approve each
+  venue's fields for publication (the Masterlist stays private), and the live
+  feeds, which still require the terms review above.
 
 ## Work started outside this repo and not lost
 
