@@ -15,10 +15,21 @@ export default function FacadeSwitch() {
   }, []);
 
   useEffect(() => {
-    document.title =
+    const next =
       facade === "dispatch"
         ? "Aditya Patel: The Dispatch"
         : "Aditya Patel: The Atlas";
+    // On a deep-linked #atlas load the mount-time assignment is wiped: React
+    // restores the static <title> after hydration settles, which runs after
+    // the effects. Re-assert on later macrotasks so the restore never keeps
+    // the last word. Toggling later works without the ladder, but the first
+    // paint after a deep link needs it.
+    const timers = [0, 60, 250, 600].map((ms) =>
+      window.setTimeout(() => {
+        document.title = next;
+      }, ms)
+    );
+    return () => timers.forEach((t) => window.clearTimeout(t));
   }, [facade]);
 
   return (
