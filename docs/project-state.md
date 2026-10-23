@@ -197,6 +197,8 @@ From AGENTS.md, plus ~/.codex/AGENTS.md which applies globally:
 
 From `docs/typescript-plan.md`, which carries the full reasoning and the
 phased plan. `docs/ai-exposure.md` carries the AI layer design.
+`docs/live-data-terms.md` carries the cited Chicago live-data terms review
+(issue #6).
 
 - **Phase 1, scaffold and parity.** MERGED, PR #12, commit 9a57676. Next.js App
   Router, React 19, TypeScript, Zod. Static export with basePath /portfolio.
@@ -239,8 +241,10 @@ phased plan. `docs/ai-exposure.md` carries the AI layer design.
   `robots.txt` all copy into the export via postbuild. All eight verification
   scripts pass on the audited tree. Issue #1 closed with the same evidence.
 - **Phase 4, the Node service.** Not started. MCP endpoint ported to
-  TypeScript, Chicago data proxy with caching and freshness, terms review
-  recorded in docs/ai-exposure.md.
+  TypeScript, Chicago data proxy with caching and freshness. The terms
+  review that gated the live data is done: docs/live-data-terms.md, with
+  one Divvy probe still open (read the GBFS feed's license fields from an
+  allowed network before using Divvy data).
 - **Phase 5, the NVIDIA layer.** Not started. Server-side proxy for the ask
   tool and the Chicago Scout, keys server-side only.
 - **Phase 6, food features.** Not started. Bite Radar list and the
@@ -263,8 +267,12 @@ These block work and belong to Aditya:
 - **Deployment of the Next build.** Merging the scaffold and artwork PRs to
   main does not change the Pages source; switching pages_source to out/ is a
   separate decision.
-- **Chicago live-data terms review**, issue #6, covering CTA, Divvy GBFS, and
-  NWS. Research can start now and needs no host.
+- **Chicago live-data terms review**, issue #6, CLOSED 2026-10-23. The
+  reviewed verdicts and integration requirements live in
+  `docs/live-data-terms.md`: NWS ready now, CTA ready after key
+  registration, city datasets ready with the mandatory disclaimer, Divvy
+  blocked on one probe (the GBFS feed denies requests from this network;
+  read its license fields from an allowed network before use).
 - **Phase 2 adjustments**, requested by Aditya and not yet specified.
 - **An NVIDIA model on the site itself**, requested by Aditya: a RAG-style
   model fed on a corpus about him, to answer visitors about him. The retrieval
