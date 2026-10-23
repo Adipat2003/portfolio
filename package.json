@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build && node scripts/postbuild.mjs",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:service": "tsc -p server/tsconfig.json",
+    "start:service": "node server/dist/server/index.js",
+    "check:service": "npm run build:service && node scripts/service-check.mjs"
   },
   "dependencies": {
     "next": "^15.5.0",
