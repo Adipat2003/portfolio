@@ -1,9 +1,15 @@
+import { LINE_COLORS } from "@/content/load";
 import type { Project } from "@/content/schema";
 
 export default function ProjectCard({ project }: { project: Project }) {
   const cls = project.status === "pending-content" ? "card pending" : "card";
   return (
     <article className={cls}>
+      <span
+        className="line-band"
+        aria-hidden="true"
+        style={{ background: LINE_COLORS[project.line] }}
+      />
       <span className="kicker">
         {project.line} line{project.course ? ` · ${project.course}` : ""}
       </span>
