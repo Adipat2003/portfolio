@@ -5,23 +5,30 @@ import RotatingEvents from "./chicago/RotatingEvents";
 import ImpactStrip from "./ImpactStrip";
 import ProjectCard from "./ProjectCard";
 import AskBox from "./AskBox";
+import AtlasScene from "./atlas/AtlasScene";
 
 export default function AtlasFacade() {
   return (
     <div className="toggle-view atlas" id="view-atlas" data-active="true" aria-label={site.facades.atlas.name}>
       <header className="atlas-hero">
-        <LandmarkExplorer />
-        <ImpactStrip figures={site.impact} />
+        <AtlasScene>
+          <LandmarkExplorer />
+          <div className="atlas-hero-copy wrap">
+            <span className="kicker">Facade 2: The Atlas</span>
+            <h1>The city is the navigation.</h1>
+            <p className="lede">
+              Same portfolio, different facade: the skyline is authored SVG, the river and elevated
+              lines are routes, and each project is a station on the map.
+            </p>
+            <p className="atlas-hero-hint">Select a landmark on the skyline to see what it is.</p>
+          </div>
+        </AtlasScene>
       </header>
+
+      <ImpactStrip figures={site.impact} />
 
       <div className="atlas-copy">
         <div className="wrap">
-          <span className="kicker">Facade 2: The Atlas</span>
-          <h1>The city is the navigation.</h1>
-          <p className="lede">
-            Same portfolio, different facade: the skyline is authored SVG, the river and elevated
-            lines are routes, and each project is a station on the map.
-          </p>
           <p className="atelier-note">
             <b>Art pipeline:</b> {atlas.buildings.length} named landmarks as authored SVG.{" "}
             <span>Routes and stations render from data, so the map is diffable source.</span>
@@ -58,7 +65,7 @@ export default function AtlasFacade() {
         heading="The Atlas answers too"
       />
 
-      <hr className="rule" />
+      <hr className="flag-rule" aria-hidden="true" />
       <footer className="wrap site-foot">
         <span>{site.facades.atlas.description}</span>
         <span>

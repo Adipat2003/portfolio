@@ -31,7 +31,7 @@ export default function ChicagoSpots({
               <span className="chi-name">
                 {spot.favorite ? (
                   <b className="chi-star" title="Absolute favorite">
-                    &#9733;{" "}
+                    <span className="sr-only">Absolute favorite. </span>
                   </b>
                 ) : null}
                 {spot.name}

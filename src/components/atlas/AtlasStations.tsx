@@ -18,7 +18,7 @@ export default function AtlasStations() {
       strokeLinejoin="round"
     >
       {stations.map(({ slug, station, project }) => (
-        <g key={slug}>
+        <g key={slug} className="station">
           <title>{station.label}</title>
           <circle
             cx={station.cx}
