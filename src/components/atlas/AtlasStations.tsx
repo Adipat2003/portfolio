@@ -1,12 +1,26 @@
+"use client";
+
 import { atlas, LINE_COLORS, stations } from "@/content/load";
 
 /**
- * The stations, one per project. The circle is stroked in the line color of
- * the project it belongs to, and the label carries a dark halo (paint-order)
- * so text stays legible over the artwork.
+ * The stations, one per project, now interactive: click or Enter to select a
+ * station, which glides the scene camera onto it and opens its project card.
+ * The circle keeps the line color of its project and the label keeps its
+ * dark halo, so the artwork rules hold while the layer becomes operable.
  */
-export default function AtlasStations() {
+export default function AtlasStations({
+  selected = null,
+  onSelect,
+}: {
+  selected?: string | null;
+  onSelect?: (slug: string | null) => void;
+}) {
   const style = atlas.station_style;
+
+  function activate(slug: string, alreadySelected: boolean) {
+    onSelect?.(alreadySelected ? null : slug);
+  }
+
   return (
     <g
       fontFamily="ui-monospace, Menlo, monospace"
@@ -18,7 +32,24 @@ export default function AtlasStations() {
       strokeLinejoin="round"
     >
       {stations.map(({ slug, station, project }) => (
-        <g key={slug} className="station">
+        <g
+          key={slug}
+          className={`station${selected === slug ? " station-active" : ""}`}
+          role="button"
+          tabIndex={0}
+          aria-pressed={selected === slug}
+          aria-label={`${station.label} station: open the ${project.title} project`}
+          onClick={() => activate(slug, selected === slug)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              activate(slug, selected === slug);
+            }
+            if (event.key === "Escape") {
+              onSelect?.(null);
+            }
+          }}
+        >
           <title>{station.label}</title>
           <circle
             cx={station.cx}
