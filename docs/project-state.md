@@ -14,7 +14,11 @@ the portfolio as well as a person does.
 
 - Repo: https://github.com/Adipat2003/portfolio (public)
 - Local clone: /home/hermes/portfolio
-- Live site: https://adipat2003.github.io/portfolio (GitHub Pages, `main` root)
+- Live site: https://adipat2003.github.io/portfolio. Deployed by the
+  `Deploy site` GitHub Actions workflow (Pages build_type: workflow) from the
+  Next static export in out/. The committed Python-rendered files in the repo
+  root remain the documented rollback path: flip build_type back to legacy
+  and Pages serves them again.
 - Agent-facing artifacts: /portfolio/api/portfolio.json, /portfolio/llms.txt,
   /portfolio/robots.txt
 
@@ -33,6 +37,8 @@ node scripts/ask-check.mjs         # 20 retrieval assertions across 14 questions
 node scripts/chicago-check.mjs    # 14 assertions over the Chicago shaping rules, expect PASS
 python3 scripts/build.py --check   # verifies committed static artifacts match content and Chicago surfaces sit on both facades
 node scripts/art-export.mjs --check  # verifies art/*.svg match atlas.json
+npm run check:service               # builds server/ and runs scripts/service-check.mjs
+                                    # (16 probes: MCP protocol, weather cache, ask-model), expect PASS
 ```
 
 `scripts/ask-check.mjs` and `scripts/season-check.mjs` import the modules the
@@ -75,13 +81,22 @@ content/            single source of truth (JSON, hand-authored)
 scripts/
   build.py          zero-dependency Python generator. Owns index.html, all
                     project pages, api/portfolio.json, llms.txt. --check mode.
-  mcp-server.mjs    read-only MCP endpoint, Node stdlib only. Not deployed.
+                    Its committed output is the Pages rollback path.
   postbuild.mjs     copies api/llms.txt/robots.txt into the Next export
   art-export.mjs    writes art/<landmark>.svg from atlas.json, --check mode
   season-check.mjs  14 boundary dates and four palette checks against seasons.json
   season-check-python.py  Python resolution and renderer parity checks for seasons
   ask-check.mjs     20 retrieval assertions across 14 questions
   chicago-check.mjs 14 assertions over the Chicago shaping rules
+  service-check.mjs 16 end-to-end probes over the Node service
+.github/workflows/deploy.yml   builds and deploys the export to Pages on push to main
+server/             the Node service (TypeScript, compiled by server/tsconfig.json
+                    to server/dist, gitignored). Not yet hosted publicly.
+  index.ts          stdlib HTTP: routing, per-route rate limits, CORS, health
+  content.ts        fs-loads content/ and validates with the shared Zod schemas
+  mcp.ts            the five MCP tools, ask backed by the shared retriever
+  weather.ts        NWS proxy with upstream-honoring cache and stale fallback
+  ask-model.ts      NVIDIA rephrase layer, env-gated, retrieval stays the source
 src/
   content/          Zod schemas (schema.ts) + validated loaders (load.ts)
     retrieval.ts    grounded ask retrieval. No runtime imports.
@@ -95,9 +110,10 @@ src/
 art/                13 standalone landmark SVGs, generated from atlas.json
 ```
 
-Two renderers over one content model. `scripts/build.py` renders the site that
-is live on Pages today. The Next.js components render the export that will
-replace it. Both read `content/`, so neither can hold content the other lacks.
+Two renderers over one content model. `scripts/build.py` renders the committed
+static artifacts that are the Pages rollback path. The Next.js components render
+the export the Actions workflow deploys. Both read `content/`, so neither can
+hold content the other lacks.
 
 ### The content guard
 
@@ -240,13 +256,24 @@ phased plan. `docs/ai-exposure.md` carries the AI layer design.
   `<!-- -->` text-node separators). `api/portfolio.json`, `llms.txt`, and
   `robots.txt` all copy into the export via postbuild. All eight verification
   scripts pass on the audited tree. Issue #1 closed with the same evidence.
-- **Phase 4, the Node service.** Not started. MCP endpoint ported to
-  TypeScript, Chicago data proxy with caching and freshness. The terms
-  review that gated the live data is done: docs/live-data-terms.md, with
-  one Divvy probe still open (read the GBFS feed's license fields from an
-  allowed network before using Divvy data).
-- **Phase 5, the NVIDIA layer.** Not started. Server-side proxy for the ask
-  tool and the Chicago Scout, keys server-side only.
+- **Phase 4, the Node service.** BUILT and verified locally 2026-10-23, PR
+  pending or merged (see git log); hosting still pending the host decision
+  below. `server/` is a TypeScript, Node-stdlib service: the MCP endpoint
+  ported from mcp-server.mjs with the ask tool now backed by the shared
+  retriever, the NWS weather proxy with upstream-honoring cache and stale
+  fallback, per-route rate limits, CORS for the site origin, and a health
+  endpoint. `scripts/service-check.mjs` probes all 16 cases end to end,
+  including a real api.weather.gov call. The old scripts/mcp-server.mjs was
+  removed once the port passed every probe; git history keeps it. Terms
+  posture for every feed lives in docs/live-data-terms.md.
+- **Phase 5, the NVIDIA layer.** IMPLEMENTED, disabled by default. The
+  `/ask-model` route rephrases the grounded retrieval through the NVIDIA
+  chat completions API when NVIDIA_API_KEY is set, with the contract from
+  docs/ai-exposure.md enforced in the system prompt: answer only from the
+  records, keep figures with hedging and sources, never add claims. With no
+  key, or on any model failure, it serves the grounded retrieval answer and
+  reports model_polish: false. The key is environment-only; it is never
+  logged, committed, or returned.
 - **Phase 6, food features.** Not started. Bite Radar list and the
   emerging-restaurant algorithm.
 
@@ -259,14 +286,20 @@ next, react, react-dom, zod, typescript, @types/node, @types/react,
 
 These block work and belong to Aditya:
 
-- **Node service host.** Pages serves static files only, so the MCP endpoint,
-  the Chicago data proxy, and the NVIDIA proxy all need a Node host. No host
-  chosen, so Phase 4 cannot start.
-- **Whether the MCP endpoint shares the site deploy or runs independently.**
+- **Node service host.** The service is built and verified (see Phase 4 above);
+  it needs a public https Node host. This Oracle box cannot serve it: only a
+  Tailscale interface listens, and there is no domain or sudo. Any free
+  Node-capable platform works (Render, Fly, Cloudflare Workers with a fetch
+  adapter). The signup is Aditya's step; the service needs only
+  `npm ci && npm run build:service && npm run start:service`, and the env
+  vars listed at the top of server/index.ts. NVIDIA_API_KEY is optional and
+  only enables model polish.
 - **Beli API access** for the food features, still unverified.
-- **Deployment of the Next build.** Merging the scaffold and artwork PRs to
-  main does not change the Pages source; switching pages_source to out/ is a
-  separate decision.
+- **Deployment of the Next build.** DONE 2026-10-23: Pages build_type is
+  `workflow`, the `Deploy site` Actions workflow ships out/ on every push to
+  main, and the live URL was verified in a browser (facade switch, detail
+  pages, assets, deep link). Rollback: set build_type back to `legacy` and
+  Pages serves the committed Python-rendered files from the repo root again.
 - **Chicago live-data terms review**, issue #6, CLOSED 2026-10-23. The
   reviewed verdicts and integration requirements live in
   `docs/live-data-terms.md`: NWS ready now, CTA ready after key

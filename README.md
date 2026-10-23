@@ -2,7 +2,10 @@
 
 Personal portfolio site: two facades over one content model.
 
-Live at https://adipat2003.github.io/portfolio/ (GitHub Pages renders `main`).
+Live at https://adipat2003.github.io/portfolio/. The `Deploy site` GitHub
+Actions workflow builds and publishes the Next.js static export on every push
+to `main`; the committed Python-rendered files in the repo root are the
+documented rollback path (flip the Pages build type back to `legacy`).
 Repository: https://github.com/Adipat2003/portfolio (public).
 
 ## Architecture: two facades, one portfolio
@@ -34,22 +37,30 @@ content/     the content model (single source of truth)
   site.json      owner, hero copy, impact figures with hedging, ask examples
   projects.json  sanitized project records; build refuses unsafe ones
   atlas.json     Atlas geometry: landmarks, routes, stations, river, lights
-scripts/
-  build.py          renders the site from content; --check verifies committed output
-  mcp-server.mjs    read-only MCP endpoint (Node stdlib), see docs/ai-exposure.md
-index.html    generated: both facades in one page (do not edit by hand)
+  seasons.json   season boundaries and palettes
+  chicago.json   Chicago spots, events, landmark notes
+src/          Next.js App Router + TypeScript: typed loaders, both facades,
+  detail pages, filter, Atlas components, retrieval, season engine
+server/       the Node service: MCP endpoint, NWS weather proxy, ask-model
+scripts/      build.py (rollback renderer + --check), verification checks,
+  service-check.mjs, art-export.mjs, postbuild.mjs
+.github/workflows/deploy.yml   builds and deploys the export to Pages
 api/          generated: portfolio.json for agents
 llms.txt, robots.txt   generated discovery files
-art/          artwork documentation (geometry lives in content/atlas.json)
-docs/          ai-exposure.md design
+art/          13 authored landmark SVGs (geometry lives in content/atlas.json)
+docs/         project-state.md (standing handoff), ai-exposure.md,
+  live-data-terms.md, typescript-plan.md
 previews/     verification captures (gitignored, local only)
 ```
 
-Build and verify:
+Build and verify (full list and explanations in docs/project-state.md):
 
 ```bash
-python3 scripts/build.py
-python3 scripts/build.py --check   # proves committed output matches content
+npm run typecheck
+npm run build                 # next build + postbuild, exports to out/
+npm run check:service         # builds server/ and runs the 16-probe service check
+node scripts/ask-check.mjs
+python3 scripts/build.py --check
 ```
 
 Never hand-edit generated files; change content and rebuild.
@@ -93,12 +104,14 @@ Three layers, in the order they matter:
 2. **A machine-readable content API.** `api/portfolio.json` returns the same
    project records the page renders with a content hash, so any agent can read
    the portfolio without a browser.
-3. **A read-only MCP endpoint.** `scripts/mcp-server.mjs` exposes the portfolio
-   as structured tools (`list_projects`, `get_project`, `get_impact_figures`,
-   `get_artwork_provenance`, `ask`). Streamable HTTP transport per the MCP
-   specification revision 2026-07-28, Node standard library only, Origin
-   validation, rate limiting. Implementation and verification status live in
-   `docs/ai-exposure.md`.
+3. **A read-only MCP endpoint.** The `server/` TypeScript service exposes the
+   portfolio as structured tools (`list_projects`, `get_project`,
+   `get_impact_figures`, `get_artwork_provenance`, `ask`). Streamable HTTP
+   transport per the MCP specification revision 2026-07-28, Node standard
+   library only, Origin validation, per-route rate limiting, plus an NWS
+   weather proxy for the Chicago layer and an optional, env-gated model
+   polish layer. Implementation and verification status live in
+   `docs/ai-exposure.md`; it runs locally until a public host is chosen.
 
 The `ask` tool is grounded: it answers from the portfolio records and cites the
 source for each claim. It does not invent figures, and it declines when the
@@ -106,16 +119,15 @@ records do not support a claim.
 
 ## Stack
 
-Deliberately zero-dependency today, because dependency additions require
-explicit approval:
+Dependencies are pinned to the approved set (next, react, react-dom, zod,
+typescript, @types/*); anything else needs explicit approval:
 
-- Static HTML/CSS/JS rendered by a stdlib Python generator; GitHub Pages serves it
-- Node standard library only for the MCP endpoint
+- Next.js App Router + React + TypeScript, statically exported; the Actions
+  workflow publishes the export to GitHub Pages
+- The `server/` Node service uses the Node standard library plus zod only
 - Hand-authored SVG artwork; no image model output, no stock imagery
-
-Next.js + TypeScript remains an option if the site outgrows the static render
-(for project pages, search, or the Chicago data features), and would be proposed
-with its dependency list before installation.
+- `scripts/build.py` stays as the zero-dependency rollback renderer and the
+  committed-artifact check
 
 ## Workflow
 

@@ -40,23 +40,30 @@ Shape:
 
 ## Layer 3: MCP endpoint
 
-Implemented in `scripts/mcp-server.mjs` (Node standard library only, zero
-dependencies). Streamable HTTP transport per the MCP specification revision
-2026-07-28: a single POST endpoint at `/mcp` answering each JSON-RPC request with
-one JSON object. No SSE, no sessions. Backed by `api/portfolio.json`, the same
-records the page renders, so the two surfaces cannot drift.
+Implemented in `server/` (the TypeScript Node service; see docs/project-state.md),
+compiled by `server/tsconfig.json` and probed end to end by
+`scripts/service-check.mjs`. Streamable HTTP transport per the MCP
+specification revision 2026-07-28: a single POST endpoint at `/mcp` answering
+each JSON-RPC request with one JSON object. No SSE, no sessions. Backed by the
+same content files the page renders, through the same Zod schemas, and the
+`ask` tool is backed by the same retriever the site's AskBox uses, so the two
+surfaces cannot drift.
 
-Verified by protocol probe:
+Verified by the 16-probe service check:
 
 - `initialize` returns protocol version, capabilities, and read-only instructions
 - `tools/list` returns the five tools
 - `tools/call` on `get_project` returns the full record
-- `ask` grounds portfolio questions to matching projects with figures
+- `ask` grounds portfolio questions through the shared retriever, with the
+  curated example first and its cited source
 - `ask` declines questions the records do not cover (`grounded: false`, no guess)
 - unknown tool returns `isError: true`
-- invalid Origin gets 403 (DNS-rebinding protection, mandatory in the spec)
+- invalid Origin gets 403
 - notifications get 202 with no body
-- rate limiting per IP is active
+- rate limiting per IP is active per route
+
+Until a public host is chosen, the service runs and is verified locally, and
+`api/portfolio.json` on Pages remains the machine-readable source.
 
 Tools exposed, all read-only:
 
@@ -79,13 +86,19 @@ Tools exposed, all read-only:
 
 ## Security posture
 
-- Read-only. No tool mutates anything, and the server has no credentials in scope.
-- Any future model key for the `ask` tool lives server-side only, never in client
-  bundles and never in tool responses.
-- Rate limiting on `/mcp` (60 requests per minute per IP), so a misbehaving agent
-  cannot walk off with the corpus at speed. The corpus is public; the politeness
-  is not optional.
+- Read-only. No tool mutates anything, and the server has no credentials in scope
+  beyond the optional model key.
+- The model key for `ask` polish lives in the `NVIDIA_API_KEY` environment
+  variable on the service host only, never in client bundles, commits, logs,
+  or tool responses. Without it, `/ask-model` serves the grounded retrieval
+  answer and reports `model_polish: false`.
+- Rate limiting per route per IP (60/min on /mcp, 30/min on /weather,
+  10/min on /ask-model), so a misbehaving agent cannot walk off with the
+  corpus at speed. The corpus is public; the politeness is not optional.
 - Origin validation on every request, per the transport specification.
+- The weather proxy honors NWS cache expiry, identifies itself by User-Agent,
+  and serves a stale cached answer with a clear flag rather than an error
+  when the upstream is unavailable.
 - No user data is collected, no sensor data is transmitted from the Atlas.
 
 ## Discovery
@@ -97,9 +110,10 @@ Tools exposed, all read-only:
 
 ## Open decisions
 
-- Host decision: GitHub Pages serves static files only, so the MCP endpoint needs
-  a Node-capable host. Until one is chosen, `api/portfolio.json` is the
-  machine-readable source and the MCP server is run and verified locally.
-- Optional model polish for `ask`: a server-side model call can rephrase the
-  grounded retrieval into prose when a key is configured. It must stay
-  server-side, must keep the citations, and must never change a figure.
+- Host decision: GitHub Pages serves static files only, so the Node service
+  (MCP endpoint, weather proxy, ask-model) needs a Node-capable host. Until
+  one is chosen, `api/portfolio.json` is the machine-readable source and the
+  service is run and verified locally plus by `scripts/service-check.mjs`.
+- Model polish for `ask` is implemented and disabled by default; enabling it
+  means setting `NVIDIA_API_KEY` in the service host environment. It stays
+  server-side, keeps the citations, and must never change a figure.
