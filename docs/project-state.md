@@ -4,7 +4,7 @@ Picking this up fresh? Read this file top to bottom, then `AGENTS.md`, then the
 `docs/` linked below. This is the standing handoff for the portfolio repo. It is
 updated whenever a change lands, so it is never a stale description of the code.
 
-Last updated: 2026-10-22.
+Last updated: 2026-10-23.
 
 ## What this is
 
@@ -228,9 +228,16 @@ phased plan. `docs/ai-exposure.md` carries the AI layer design.
   Chicago surface appears on both facades or neither. `scripts/chicago-check.mjs`
   covers the ordering, wrap, and note rules, and build.py renders the same
   layer from the same file.
-- **Phase 3, detail pages and filtering as routes and components.** Mostly
-  delivered inside Phase 1 (generateStaticParams and FilterBar already exist).
-  Remaining work is to confirm nothing is missing and close it.
+- **Phase 3, detail pages and filtering as routes and components.** CLOSED,
+  2026-10-23, audit only, no code change. Delivered inside Phase 1 and audited:
+  the export contains exactly 14 `projects/<slug>/` SSG routes matching the
+  content slugs (plus a 404 route); `FilterBar.tsx` filters through typed
+  `useState`/`useMemo` component state over typed records; and all 14 detail
+  pages have full normalized-text parity with the Python-rendered pages that
+  are live today (differences before normalization were only React's
+  `<!-- -->` text-node separators). `api/portfolio.json`, `llms.txt`, and
+  `robots.txt` all copy into the export via postbuild. All eight verification
+  scripts pass on the audited tree. Issue #1 closed with the same evidence.
 - **Phase 4, the Node service.** Not started. MCP endpoint ported to
   TypeScript, Chicago data proxy with caching and freshness, terms review
   recorded in docs/ai-exposure.md.
@@ -294,3 +301,9 @@ built. Verify with `hermes config get model` before touching it.
   renderers (src/content/load.ts and scripts/build.py).
 - **Both renderers once hardcoded route geometry.** Routes lived as literal path
   strings in AtlasMap.tsx and build.py. Moved to atlas.json in PR #14.
+- **Cross-renderer text diffs are misleading by default.** React emits
+  `<!-- -->` comment separators between adjacent text nodes; a naive
+  HTML-text extractor treats them as element boundaries and reports phantom
+  whitespace differences (figure hedges showed as `( self-reported ,`).
+  Strip `<!-- -->` before comparing rendered text between the Python pages
+  and the Next export, or normalize whitespace and compare full strings.
