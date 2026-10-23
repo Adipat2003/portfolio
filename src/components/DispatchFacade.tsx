@@ -85,7 +85,7 @@ export default function DispatchFacade() {
         heading="Questions get sourced answers"
       />
 
-      <hr className="rule" />
+      <hr className="flag-rule" aria-hidden="true" />
       <footer className="wrap site-foot">
         <span>{site.facades.dispatch.description}</span>
         <span>

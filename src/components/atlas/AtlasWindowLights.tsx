@@ -6,7 +6,7 @@ export default function AtlasWindowLights() {
   return (
     /* The season's light colour, with the authored amber as the fallback so an
        unthemed render still draws warm windows. */
-    <g style={{ fill: "var(--atlas-lights, #e8b04b)" }} opacity={0.75}>
+    <g className="window-lights" style={{ fill: "var(--atlas-lights, #e8b04b)" }} opacity={0.75}>
       {atlas.window_lights.map(([x, y], i) => (
         <rect key={i} x={x} y={y} width={ww} height={wh} />
       ))}
