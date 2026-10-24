@@ -191,24 +191,9 @@ section{padding:76px 0}
 .cursor-light{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(320px circle at var(--mx,50%) var(--my,32%),rgba(232,176,75,.13),transparent 72%);opacity:0;transition:opacity .45s}
 .atlas-scene:hover .cursor-light{opacity:1}
 .atlas-copy{position:relative;padding:40px 0 0}
-/* The "Chicago right now" badge: glass on the Atlas scene, a text line on
-   the Dispatch hero, both from the same baked NWS snapshot. */
-.atlas-weather{position:absolute;top:88px;right:24px;z-index:5;margin:0;font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--night-ink);background:rgba(13,15,22,.55);border:1px solid var(--night-rule);border-radius:10px;padding:10px 14px;pointer-events:none;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-.atlas-weather b{color:var(--signal);font-size:15px}
-.weather-src{display:block;margin-top:5px;font-size:10px;letter-spacing:.04em;color:var(--night-soft)}
-.weather-line{margin:16px 0 0;font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
-.weather-line b{color:var(--ink);font-size:16px}
-.weather-line .weather-src{color:var(--ink-soft);font-size:11px}
 /* The sky tells the truth: condition-driven overlays from the baked snapshot.
    Decorative only; the badge carries the facts. */
-.weather-fx{position:absolute;inset:0;z-index:2;pointer-events:none}
-.weather-fx.clear{background:radial-gradient(70% 42% at 72% 6%,rgba(232,176,75,.14),transparent 65%)}
-.weather-fx.cloudy{background:radial-gradient(120% 55% at 50% -8%,rgba(140,150,170,.16),transparent 62%)}
-.weather-fx.fog{background:radial-gradient(130% 60% at 50% 108%,rgba(190,200,210,.2),transparent 60%)}
-.weather-fx.rain{background-image:repeating-linear-gradient(112deg,transparent 0 12px,rgba(178,198,226,.14) 12px 14px);animation:rain-fall .9s linear infinite}
-.weather-fx.storm{background-image:repeating-linear-gradient(112deg,transparent 0 10px,rgba(178,198,226,.17) 10px 12px);animation:rain-fall .7s linear infinite}
 @keyframes rain-fall{to{background-position:-48px 96px}}
-.weather-fx.snow{background-image:radial-gradient(circle,rgba(255,255,255,.55) 0 1.1px,transparent 1.7px),radial-gradient(circle,rgba(255,255,255,.38) 0 1.5px,transparent 2px);background-size:170px 170px,110px 110px;background-position:0 0,55px 28px;animation:snow-drift 11s linear infinite}
 @keyframes snow-drift{to{background-position:64px 170px,-46px 110px}}
 /* The March dye window: the whole river turns green while it lasts. */
 [data-river-dye="true"] .chi-map .river-body path{stroke:#3a9a68}
@@ -304,7 +289,6 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 @media (prefers-reduced-motion: reduce){
   *{animation:none !important;transition:none !important}
   .cursor-light{display:none !important}
-  .weather-fx{display:none !important}
 }
 @media (max-width:860px){
   .grid-3{grid-template-columns:1fr}
@@ -326,5 +310,4 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
   .ride-overlay .chi-card{background:rgba(21,26,40,.92);backdrop-filter:none}
   .terminal-overlay{left:12px;right:12px;bottom:14px;max-width:none}
   .terminal-card .booth-panel .answer{max-height:34vh}
-  .atlas-weather{position:static;margin:14px 24px 0;display:inline-block;background:rgba(13,15,22,.8);backdrop-filter:none}
 }

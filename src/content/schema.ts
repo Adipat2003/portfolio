@@ -127,28 +127,14 @@ export const seasonsSchema = z.object({
   palettes: z.record(seasonName, seasonPaletteSchema),
 });
 
-export const weatherKind = z.enum(["clear", "cloudy", "rain", "snow", "storm", "fog"]);
-
 export const mosaicSchema = z.object({
-	figure_index: z.number().int().nonnegative(),
-	x: z.number(),
-	y: z.number(),
+  figure_index: z.number().int().nonnegative(),
+  x: z.number(),
+  y: z.number(),
 });
 
 export const mosaicsSchema = z.object({
-	figures: z.array(mosaicSchema),
-});
-
-export const weatherSchema = z.object({
-	source: z.string(),
-	license: z.string(),
-	fetched_at: z.string(),
-	observed_at: z.string().nullable(),
-	temperature: z.number(),
-	unit: z.literal("F"),
-	condition: z.string(),
-	condition_kind: weatherKind,
-	wind: z.string().nullable(),
+  figures: z.array(mosaicSchema),
 });
 
 export const chicagoSpotKind = z.enum([
@@ -213,7 +199,6 @@ export type LineName = z.infer<typeof lineName>;
 export type SeasonName = z.infer<typeof seasonName>;
 export type SeasonPalette = z.infer<typeof seasonPaletteSchema>;
 export type Seasons = z.infer<typeof seasonsSchema>;
-export type Weather = z.infer<typeof weatherSchema>;
 export type Mosaic = z.infer<typeof mosaicSchema>;
 export type Route = z.infer<typeof routeSchema>;
 export type Station = z.infer<typeof stationSchema>;

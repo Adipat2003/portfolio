@@ -92,13 +92,10 @@ Tools exposed, all read-only:
   variable on the service host only, never in client bundles, commits, logs,
   or tool responses. Without it, `/ask-model` serves the grounded retrieval
   answer and reports `model_polish: false`.
-- Rate limiting per route per IP (60/min on /mcp, 30/min on /weather,
-  10/min on /ask-model), so a misbehaving agent cannot walk off with the
-  corpus at speed. The corpus is public; the politeness is not optional.
+- Rate limiting per route per IP (60/min on /mcp, 10/min on /ask-model), so a
+  misbehaving agent cannot walk off with the corpus at speed. The corpus is
+  public; the politeness is not optional.
 - Origin validation on every request, per the transport specification.
-- The weather proxy honors NWS cache expiry, identifies itself by User-Agent,
-  and serves a stale cached answer with a clear flag rather than an error
-  when the upstream is unavailable.
 - No user data is collected, no sensor data is transmitted from the Atlas.
 
 ## Discovery
@@ -111,7 +108,7 @@ Tools exposed, all read-only:
 ## Open decisions
 
 - Host decision: GitHub Pages serves static files only, so the Node service
-  (MCP endpoint, weather proxy, ask-model) needs a Node-capable host. Until
+  (MCP endpoint, ask-model) needs a Node-capable host. Until
   one is chosen, `api/portfolio.json` is the machine-readable source and the
   service is run and verified locally plus by `scripts/service-check.mjs`.
 - Model polish for `ask` is implemented and disabled by default; enabling it

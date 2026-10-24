@@ -16,5 +16,5 @@
 		"types": ["node"]
 	},
 	"include": ["**/*.ts", "../src/content/**/*.ts"],
-	"exclude": ["dist", "../src/content/load.ts"]
+	"exclude": ["dist", "../src/content/load.ts", "../src/content/mosaics.ts"]
 }
