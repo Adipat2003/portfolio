@@ -91,10 +91,12 @@ export default function AskBox({
   examples,
   headingId,
   heading,
+  variant = "section",
 }: {
   examples: AskExample[];
   headingId: string;
   heading: string;
+  variant?: "section" | "panel";
 }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Match[] | null>(null);
@@ -107,6 +109,78 @@ export default function AskBox({
   const answered = results !== null;
   const declined = answered && results.length === 0;
 
+  const body = (
+    <>
+      <form
+        className="ask-row"
+        role="search"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const trimmed = query.trim();
+          if (trimmed) ask(trimmed);
+        }}
+      >
+        <label className="sr-only" htmlFor={`ask-${headingId}`}>
+          Ask a question about Aditya's work
+        </label>
+        <input
+          type="search"
+          id={`ask-${headingId}`}
+          className="ask-input"
+          placeholder="Ask about his work, a technology, or a number"
+          autoComplete="off"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <button type="submit" className="chip ask-submit">
+          Ask
+        </button>
+      </form>
+
+      <div className="ask-row" role="group" aria-label="Example questions">
+        {examples.map((ex) => (
+          <button
+            key={ex.question}
+            type="button"
+            className="chip"
+            aria-pressed={query === ex.question}
+            onClick={() => ask(ex.question)}
+          >
+            {ex.question}
+          </button>
+        ))}
+      </div>
+
+      <div className="answer" role="status" aria-live="polite">
+        {" "}
+        {!answered
+          ? "Ask a question, and the answer comes from the portfolio records with its source attached."
+          : null}
+        {declined ? NO_ANSWER : null}
+        {answered && !declined
+          ? results.map((match, i) => (
+              <div key={`${match.kind}-${i}`}>
+                <MatchBody match={match} />
+                <span className="src">{matchSource(match)}</span>
+              </div>
+            ))
+          : null}
+        {!answered ? <span className="src">No answer yet</span> : null}
+      </div>
+    </>
+  );
+
+  if (variant === "panel") {
+    return (
+      <div className="ask-box booth-panel" aria-labelledby={headingId}>
+        <p className="sign" id={headingId}>
+          {heading}
+        </p>
+        {body}
+      </div>
+    );
+  }
+
   return (
     <section aria-labelledby={headingId}>
       <div className="wrap">
@@ -116,64 +190,7 @@ export default function AskBox({
             <h2 id={headingId}>{heading}</h2>
           </div>
         </div>
-        <div className="ask-box">
-          <form
-            className="ask-row"
-            role="search"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const trimmed = query.trim();
-              if (trimmed) ask(trimmed);
-            }}
-          >
-            <label className="sr-only" htmlFor={`ask-${headingId}`}>
-              Ask a question about Aditya&apos;s work
-            </label>
-            <input
-              type="search"
-              id={`ask-${headingId}`}
-              className="ask-input"
-              placeholder="Ask about his work, a technology, or a number"
-              autoComplete="off"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <button type="submit" className="chip ask-submit">
-              Ask
-            </button>
-          </form>
-
-          <div className="ask-row" role="group" aria-label="Example questions">
-            {examples.map((ex) => (
-              <button
-                key={ex.question}
-                type="button"
-                className="chip"
-                aria-pressed={query === ex.question}
-                onClick={() => ask(ex.question)}
-              >
-                {ex.question}
-              </button>
-            ))}
-          </div>
-
-          <div className="answer" role="status" aria-live="polite">
-            {" "}
-            {!answered
-              ? "Ask a question, and the answer comes from the portfolio records with its source attached."
-              : null}
-            {declined ? NO_ANSWER : null}
-            {answered && !declined
-              ? results.map((match, i) => (
-                  <div key={`${match.kind}-${i}`}>
-                    <MatchBody match={match} />
-                    <span className="src">{matchSource(match)}</span>
-                  </div>
-                ))
-              : null}
-            {!answered ? <span className="src">No answer yet</span> : null}
-          </div>
-        </div>
+        <div className="ask-box">{body}</div>
       </div>
     </section>
   );
