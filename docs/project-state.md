@@ -37,9 +37,8 @@ node scripts/ask-check.mjs         # 20 retrieval assertions across 14 questions
 node scripts/chicago-check.mjs    # 14 assertions over the Chicago shaping rules, expect PASS
 python3 scripts/build.py --check   # verifies committed static artifacts match content and Chicago surfaces sit on both facades
 node scripts/art-export.mjs --check  # verifies art/*.svg match atlas.json
-node scripts/weather-snapshot.mjs    # rebakes content/weather.json from NWS (the workflow does this daily)
 npm run check:service               # builds server/ and runs scripts/service-check.mjs
-                                    # (16 probes: MCP protocol, weather cache, ask-model), expect PASS
+                                    # (14 probes: MCP protocol, ask-model), expect PASS
 ```
 
 `season-check.mjs` also pins the March river-dye window (March 14 through 20)
@@ -94,14 +93,15 @@ scripts/
   season-check-python.py  Python resolution and renderer parity checks for seasons
   ask-check.mjs     20 retrieval assertions across 14 questions
   chicago-check.mjs 14 assertions over the Chicago shaping rules
-  service-check.mjs 16 end-to-end probes over the Node service
+  service-check.mjs 14 end-to-end probes over the Node service
 .github/workflows/deploy.yml   builds and deploys the export to Pages on push to main
 server/             the Node service (TypeScript, compiled by server/tsconfig.json
                     to server/dist, gitignored). Not yet hosted publicly.
   index.ts          stdlib HTTP: routing, per-route rate limits, CORS, health
   content.ts        fs-loads content/ and validates with the shared Zod schemas
   mcp.ts            the five MCP tools, ask backed by the shared retriever
-  weather.ts        NWS proxy with upstream-honoring cache and stale fallback
+  weather.ts        REMOVED Oct 2026: the NWS proxy was removed with the
+                    weather feature; git history keeps it
   ask-model.ts      NVIDIA rephrase layer, env-gated, retrieval stays the source
 src/
   content/          Zod schemas (schema.ts) + validated loaders (load.ts)
@@ -262,15 +262,14 @@ phased plan. `docs/ai-exposure.md` carries the AI layer design.
   `<!-- -->` text-node separators). `api/portfolio.json`, `llms.txt`, and
   `robots.txt` all copy into the export via postbuild. All eight verification
   scripts pass on the audited tree. Issue #1 closed with the same evidence.
-- **Phase 4, the Node service.** BUILT and verified locally 2026-10-23, PR
-  pending or merged (see git log); hosting still pending the host decision
-  below. `server/` is a TypeScript, Node-stdlib service: the MCP endpoint
-  ported from mcp-server.mjs with the ask tool now backed by the shared
-  retriever, the NWS weather proxy with upstream-honoring cache and stale
-  fallback, per-route rate limits, CORS for the site origin, and a health
-  endpoint. `scripts/service-check.mjs` probes all 16 cases end to end,
-  including a real api.weather.gov call. The old scripts/mcp-server.mjs was
-  removed once the port passed every probe; git history keeps it. Terms
+- **Phase 4, the Node service.** BUILT and verified locally 2026-10-23; hosting
+  still pending the host decision below. `server/` is a TypeScript,
+  Node-stdlib service: the MCP endpoint ported from mcp-server.mjs with the
+  ask tool backed by the shared retriever, per-route rate limits, CORS for
+  the site origin, and a health endpoint. `scripts/service-check.mjs`
+  probes all 14 cases end to end. The old scripts/mcp-server.mjs was
+  removed once the port passed every probe; git history keeps it. The NWS
+  weather proxy was removed with the weather feature (Oct 2026). Terms
   posture for every feed lives in docs/live-data-terms.md.
 - **Phase 5, the NVIDIA layer.** IMPLEMENTED, disabled by default. The
   `/ask-model` route rephrases the grounded retrieval through the NVIDIA
@@ -291,14 +290,11 @@ phased plan. `docs/ai-exposure.md` carries the AI layer design.
   facades (kicker stars, favorite-star hexagrams, flag-blue closing rules,
   line-color bands on project cards). All of it is reduced-motion safe and
   keyboard operable.
-- **Live weather.** `scripts/weather-snapshot.mjs` bakes
-  `content/weather.json` from the latest NWS observation (Midway, KMDW);
-  the `weather-bake` workflow runs daily at 08:00 UTC (3 AM Chicago in
-  daylight time) and pushes only when the snapshot changed, which triggers
-  the deploy. The badge carries the source and observation time, so
-  freshness is visible. weather.json is content consumed by the Next
-  renderer only; the Python rollback renders no weather line, which is a
-  documented divergence, and build.py --check ignores the file.
+- **Live weather.** REMOVED Oct 2026 at Aditya's direction (redundant): the
+  badge, condition overlays, weather-bake workflow, content/weather.json,
+  and the service /weather route are gone; git history keeps them. The NWS
+  terms review stays in docs/live-data-terms.md if live weather is ever
+  wanted again.
 - **The Night Ride, October 2026, PRs #23 #24 #25.** The Atlas hero is now a
   13-phase scroll-driven scene: a sticky stage, a rAF loop lerping the camera
   and the you-are-here train, stops that weave the 7 project stations and the

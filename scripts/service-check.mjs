@@ -98,23 +98,6 @@ async function main() {
 		const badOrigin = await post("/mcp", rpc("initialize", {}), { Origin: "https://evil.example" });
 		ok("disallowed origin gets 403", badOrigin.status === 403);
 
-		// Weather proxy: live NWS call, then cache
-		const weather1 = await get("/weather");
-		ok(
-			"weather proxies NWS with freshness",
-			weather1.status === 200 &&
-				weather1.json.fresh === true &&
-				Array.isArray(weather1.json.periods) &&
-				weather1.json.periods.length > 0 &&
-				typeof weather1.json.expires_at === "string",
-			`periods=${(weather1.json.periods ?? []).length}`,
-		);
-		const weather2 = await get("/weather");
-		ok(
-			"weather serves cache with the same fetch time",
-			weather2.json.fetched_at === weather1.json.fetched_at,
-		);
-
 		// Ask-model degradation path
 		const askModel = await post("/ask-model", { question: "What was the measurable impact?" });
 		ok(
@@ -130,7 +113,7 @@ async function main() {
 		ok("ask-model rejects a non-string question", askModelBad.status === 400);
 
 		// CORS preflight for the site origin
-		const preflight = await fetch(`${BASE}/weather`, {
+		const preflight = await fetch(`${BASE}/health`, {
 			method: "OPTIONS",
 			headers: { Origin: "https://adipat2003.github.io" },
 		});

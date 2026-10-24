@@ -1,5 +1,5 @@
 /**
- * The Node service entry point: MCP endpoint, Chicago weather proxy, and the
+ * The Node service entry point: MCP endpoint and the
  * NVIDIA ask layer behind one Node-stdlib HTTP server. Zero runtime
  * dependencies beyond zod.
  *
@@ -18,7 +18,6 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { resolve } from "node:path";
 import { loadContent } from "./content";
 import { handleMessage } from "./mcp";
-import { createWeatherProxy } from "./weather";
 import { createAskModel } from "./ask-model";
 
 const PORT = Number(process.env.SERVICE_PORT ?? 8788);
@@ -36,7 +35,6 @@ const NVIDIA_ENDPOINT =
 	process.env.NVIDIA_ENDPOINT ?? "https://integrate.api.nvidia.com/v1/chat/completions";
 
 const content = loadContent(ROOT);
-const weather = createWeatherProxy({ minTtlMs: 300_000, maxTtlMs: 3_600_000 });
 const askModel = createAskModel(content, {
 	apiKey: NVIDIA_API_KEY,
 	model: NVIDIA_MODEL,
@@ -47,7 +45,6 @@ const askModel = createAskModel(content, {
 
 const RATE_LIMITS: Record<string, number> = {
 	"/mcp": 60,
-	"/weather": 30,
 	"/ask-model": 10,
 };
 const buckets = new Map<string, { count: number; reset: number }>();
@@ -138,16 +135,9 @@ const server = createServer(async (req, res) => {
 				uptime_s: Math.floor((Date.now() - startedAt) / 1000),
 				model_polish: Boolean(NVIDIA_API_KEY),
 				model: NVIDIA_API_KEY ? NVIDIA_MODEL : null,
-				weather_cache: weather.cacheState().cached,
 			},
 			corsHeaders(origin),
 		);
-		return;
-	}
-
-	if (route === "/weather" && req.method === "GET") {
-		const result = await weather.get();
-		sendJson(res, result.status, result.body, corsHeaders(origin));
 		return;
 	}
 
@@ -195,7 +185,7 @@ const server = createServer(async (req, res) => {
 
 server.listen(PORT, HOST, () => {
 	process.stdout.write(
-		`portfolio-service on http://${HOST}:${PORT} (mcp, weather, ask-model; polish ${
+		`portfolio-service on http://${HOST}:${PORT} (mcp, ask-model; polish ${
 			NVIDIA_API_KEY ? "enabled" : "disabled"
 		})\n`,
 	);

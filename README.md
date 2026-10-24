@@ -41,7 +41,7 @@ content/     the content model (single source of truth)
   chicago.json   Chicago spots, events, landmark notes
 src/          Next.js App Router + TypeScript: typed loaders, both facades,
   detail pages, filter, Atlas components, retrieval, season engine
-server/       the Node service: MCP endpoint, NWS weather proxy, ask-model
+server/       the Node service: MCP endpoint, ask-model
 scripts/      build.py (rollback renderer + --check), verification checks,
   service-check.mjs, art-export.mjs, postbuild.mjs
 .github/workflows/deploy.yml   builds and deploys the export to Pages

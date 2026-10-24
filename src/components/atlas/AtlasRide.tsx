@@ -4,10 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AtlasMap from "@/components/atlas/AtlasMap";
 import AtlasScene from "@/components/atlas/AtlasScene";
 import AskBox from "@/components/AskBox";
-import WeatherBadge from "@/components/WeatherBadge";
 import { atlas, landmarkNote, LINE_COLORS, stations, site } from "@/content/load";
 import { mosaics } from "@/content/mosaics";
-import { weather } from "@/content/weather";
 import { MOSAIC_CELL, mosaicWidth } from "@/content/windowfont";
 
 /**
@@ -317,7 +315,6 @@ export default function AtlasRide() {
 		<div className="ride" ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount }}>
 			<div className="ride-stage atlas-hero" ref={stageRef}>
 				<AtlasScene>
-					<WeatherBadge className="atlas-weather" />
 					<div className="atlas-scroll">
 						<AtlasMap
 							svgRef={svgRef}
@@ -388,7 +385,6 @@ export default function AtlasRide() {
 					</div>
 
 					<div className="dawn-glow" aria-hidden="true" />
-					<div className={`weather-fx ${weather.condition_kind}`} aria-hidden="true" />
 				</AtlasScene>
 			</div>
 		</div>
