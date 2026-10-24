@@ -1,34 +1,15 @@
 import { site, publishedProjects, atlas } from "@/content/load";
-import { weather } from "@/content/weather";
-import WeatherBadge from "./WeatherBadge";
-import LandmarkExplorer from "./chicago/LandmarkExplorer";
+import AtlasRide from "./atlas/AtlasRide";
 import ChicagoSpots from "./chicago/ChicagoSpots";
 import RotatingEvents from "./chicago/RotatingEvents";
 import ImpactStrip from "./ImpactStrip";
 import ProjectCard from "./ProjectCard";
 import AskBox from "./AskBox";
-import AtlasScene from "./atlas/AtlasScene";
 
 export default function AtlasFacade() {
   return (
     <div className="toggle-view atlas" id="view-atlas" data-active="true" aria-label={site.facades.atlas.name}>
-      <header className="atlas-hero">
-        <AtlasScene>
-          <WeatherBadge className="atlas-weather" />
-          <LandmarkExplorer />
-          <p className="swipe-cue">Swipe the skyline to explore the whole map.</p>
-          <div className="atlas-hero-copy wrap">
-            <span className="kicker">Facade 2: The Atlas</span>
-            <h1>The city is the navigation.</h1>
-            <p className="lede">
-              Same portfolio, different facade: the skyline is authored SVG, the river and elevated
-              lines are routes, and each project is a station on the map.
-            </p>
-            <p className="dye-note">River dye week: Chicago runs the river green ahead of St. Patrick's Day.</p>
-          </div>
-          <div className={`weather-fx ${weather.condition_kind}`} aria-hidden="true" />
-        </AtlasScene>
-      </header>
+      <AtlasRide />
 
       <ImpactStrip figures={site.impact} />
 
