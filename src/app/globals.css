@@ -297,17 +297,19 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
   .hero{padding:64px 0 56px}
   section{padding:56px 0}
   /* One ride on every screen: shorter phases, dynamic heights, gentler zoom,
-     bigger dots. The sticky stage uses dvh so the address bar never janks.
-     The city renders larger so the tall stage does not read as empty sky. */
+     bigger dots. The city is TOP-anchored and large so a focused stop lands
+     in the upper third, with the card as a bottom sheet below it. */
   .ride{--phase-h:62dvh}
   .atlas-hero{min-height:0}
-  .ride-stage .atlas-scroll svg.chi-map{width:175%}
+  .ride-stage .atlas-scroll svg.chi-map{top:-1px;bottom:auto;width:300%}
   .trip-strip{top:64px;padding:7px 12px;gap:9px;font-size:10px;max-width:calc(100vw - 20px)}
   .trip-dots{gap:8px}
   .trip-dot{width:13px;height:13px}
-  .ride-copy{padding:60px 0 0;text-shadow:none}
-  .ride-overlay{left:12px;right:12px;bottom:14px;max-width:none}
-  .ride-overlay .chi-card{background:rgba(21,26,40,.92);backdrop-filter:none}
+  .ride-copy{padding:56px 20px 0;text-shadow:none}
+  .ride-overlay{left:12px;right:12px;bottom:12px;max-width:none}
+  .ride-overlay .chi-card{background:rgba(21,26,40,.94);backdrop-filter:none;padding:14px 16px}
+  .ride-overlay .chi-card h3{font-size:17px}
+  .ride-overlay .chi-card .chi-feature{font-size:13px}
   .terminal-overlay{left:12px;right:12px;bottom:14px;max-width:none}
   .terminal-card .booth-panel .answer{max-height:34vh}
 }
