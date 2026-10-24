@@ -23,7 +23,7 @@ export default function LandmarkExplorer() {
   const [, , vw, vh] = atlas.viewBox.split(/\s+/).map(Number);
   const focusStyle: React.CSSProperties = stationRecord
     ? ({
-        "--zoom": "1.55",
+        "--zoom": "2.05",
         "--fox": `${(stationRecord.station.cx / vw) * 100}%`,
         "--foy": `${(stationRecord.station.cy / vh) * 100}%`,
       } as React.CSSProperties)
@@ -41,13 +41,18 @@ export default function LandmarkExplorer() {
 
   return (
     <div className="chi-explorer">
-      <AtlasMap
-        selected={selected}
-        onSelect={selectBuilding}
-        stationSelected={stationSlug}
-        onSelectStation={selectStation}
-        style={focusStyle}
-      />
+      <div className="atlas-scroll">
+        <AtlasMap
+          selected={selected}
+          onSelect={selectBuilding}
+          stationSelected={stationSlug}
+          onSelectStation={selectStation}
+          style={focusStyle}
+        />
+      </div>
+      {stationRecord ? (
+        <div className="focus-scrim" style={focusStyle} aria-hidden="true" />
+      ) : null}
       <div
         className={`chi-card${stationRecord ? " station-card" : ""}`}
         role="status"

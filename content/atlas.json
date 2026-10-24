@@ -283,8 +283,9 @@
       "label": "Crime-data web app",
       "cx": 1080,
       "cy": 134,
-      "dx": 14,
-      "dy": -4
+      "dx": -16,
+      "dy": -4,
+      "anchor": "end"
     },
     "ece391-os-kernel": {
       "label": "Operating system kernel",
