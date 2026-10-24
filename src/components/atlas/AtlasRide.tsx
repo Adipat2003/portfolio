@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AtlasMap from "@/components/atlas/AtlasMap";
 import AtlasScene from "@/components/atlas/AtlasScene";
+import AskBox from "@/components/AskBox";
 import WeatherBadge from "@/components/WeatherBadge";
 import { atlas, landmarkNote, LINE_COLORS, stations, site } from "@/content/load";
 import { mosaics } from "@/content/mosaics";
@@ -10,32 +11,32 @@ import { weather } from "@/content/weather";
 import { MOSAIC_CELL, mosaicWidth } from "@/content/windowfont";
 
 /**
- * The Night Ride, in two forms.
+ * The Night Ride: the whole Atlas as one continuous, interactive scene.
  *
- * Desktop: the Atlas as one continuous scene you scroll through. The ride
- * element is a tall scroll track (one viewport per phase); the stage inside
- * it is sticky, so the city stays on screen while a requestAnimationFrame
- * loop lerps the camera, moves the you-are-here train along the stop
- * polyline, deepens the sky from dusk through night toward dawn, and swaps
- * the overlay card as each phase arrives. The stops are the stations AND the
- * window mosaics, woven into one west-to-east journey.
+ * One tall scroll track, one sticky stage, one experience on every screen
+ * size. A requestAnimationFrame loop lerps the camera between stop focuses,
+ * moves the you-are-here train (the glowing one) along the stop polyline,
+ * deepens the sky from dusk through night toward dawn, and swaps the overlay
+ * card as each phase arrives. The stops are the project stations, the
+ * window-mosaic impact figures, and the terminal, where the ticket-booth
+ * ask box answers questions from inside the scene. Clicking a station on
+ * the map or a dot on the trip strip jumps the ride to that stop.
  *
- * Mobile: no scroll track. The city renders as a pannable strip with a row
- * of stop chips; tapping a chip or a station opens its card in normal page
- * flow, because thirteen viewport-heights of sticky scrolling is a bad phone
- * experience and this facade refuses to ship one.
- *
- * Under prefers-reduced-motion the desktop lerps snap instantly, so the same
- * content arrives without motion. The Dispatch stays the canonical readable
- * surface either way.
+ * Phones get the same ride with lighter geometry (shorter phases, gentler
+ * zoom, dynamic viewport heights), not a different product. Under
+ * prefers-reduced-motion the lerps snap instantly, so the same content
+ * arrives without motion, and the Dispatch remains the canonical readable
+ * surface.
  */
 
 const [, , vw, vh] = atlas.viewBox.split(/\s+/).map(Number);
 
 type Stop =
 	| { kind: "station"; slug: string; label: string; x: number; y: number }
-	| { kind: "figure"; figureIndex: number; label: string; x: number; y: number };
+	| { kind: "figure"; figureIndex: number; label: string; x: number; y: number }
+	| { kind: "terminal"; label: string; x: number; y: number };
 
+/** The journey: west to east across the work and the numbers, then the terminal. */
 const stops: Stop[] = [
 	...[...stations]
 		.sort((a, b) => a.station.cx - b.station.cx)
@@ -58,22 +59,20 @@ const stops: Stop[] = [
 	}),
 ].sort((a, b) => a.x - b.x);
 
+/** The terminal ends the line at the east edge: the ticket booth lives here. */
+const TERMINAL: Stop = { kind: "terminal", label: "The terminal", x: 1140, y: 300 };
+stops.push(TERMINAL);
+
 type Focus = { x: number; y: number; zoom: number };
 
 const wideFocus: Focus = { x: vw / 2, y: vh / 2 - 30, zoom: 1 };
-
-/** Camera targets: wide city, one per stop, wide again. */
-const focuses: Focus[] = [
-	wideFocus,
-	...stops.map((s) => ({ x: s.x, y: s.y, zoom: 2 })),
-	{ x: vw / 2, y: vh / 2 - 40, zoom: 1 },
-];
+const outroFocus: Focus = { x: vw / 2, y: vh / 2 - 40, zoom: 1 };
 
 /** Train polyline: enters from the west edge, stops at every stop. */
 const rail: Array<{ x: number; y: number }> = [
 	{ x: Math.max(-30, stops[0].x - 170), y: stops[0].y + 70 },
 	...stops.map((s) => ({ x: s.x, y: s.y })),
-	{ x: Math.min(vw + 30, stops[stops.length - 1].x + 170), y: stops[stops.length - 1].y - 50 },
+	{ x: Math.min(vw + 30, TERMINAL.x + 120), y: TERMINAL.y - 60 },
 ];
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -101,8 +100,15 @@ const rgbCss = (c: number[]): string =>
 	`rgb(${Math.round(c[0])} ${Math.round(c[1])} ${Math.round(c[2])})`;
 const PREDAWN: number[][] = [hexToRgb("#241d38"), hexToRgb("#3a2a4a"), hexToRgb("#5c3f52")];
 
-/** The overlay card, shared by both forms: a landmark, a station, a figure,
-    or a hint. One renderer so the two surfaces cannot drift. */
+function stopAccent(stop: Stop): string {
+	if (stop.kind === "station") {
+		return LINE_COLORS[stations.find((st) => st.slug === stop.slug)!.project.line];
+	}
+	if (stop.kind === "figure") return "var(--signal)";
+	return "var(--night-ink)";
+}
+
+/** The overlay card: a landmark, a station, a figure, or a hint. */
 function RideCard({ stop, landmark }: { stop: Stop | null; landmark: string | null }) {
 	const building = landmark ? atlas.buildings.find((b) => b.name === landmark) ?? null : null;
 	const note = landmark ? landmarkNote(landmark) : null;
@@ -152,8 +158,8 @@ function RideCard({ stop, landmark }: { stop: Stop | null; landmark: string | nu
 		<div className="chi-card">
 			<p className="chi-hint">
 				{stop === null
-					? "Pick a stop to see the project or the number behind it."
-					: "End of the line. The rest of the city is below."}
+					? "Your train is the glowing one. Scroll to ride."
+					: "End of the line. Scroll on for the dawn."}
 			</p>
 		</div>
 	);
@@ -172,11 +178,6 @@ function useIsMobile() {
 }
 
 export default function AtlasRide() {
-	const isMobile = useIsMobile();
-	return isMobile ? <RideMobile /> : <RideDesktop />;
-}
-
-function RideDesktop() {
 	const rideRef = useRef<HTMLDivElement>(null);
 	const stageRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
@@ -185,9 +186,25 @@ function RideDesktop() {
 
 	const [phase, setPhase] = useState(0);
 	const [landmark, setLandmark] = useState<string | null>(null);
+	const isMobile = useIsMobile();
 
-	const phaseCount = focuses.length;
+	const phaseCount = stops.length + 2;
 	const stop = phase >= 1 && phase <= stops.length ? stops[phase - 1] : null;
+
+	/** Camera targets: wide city, one per stop, wide again. Phones zoom less so
+	    the whole stop stays legible on a small stage. */
+	const focuses = useMemo<Focus[]>(
+		() => [
+			wideFocus,
+			...stops.map((s) => ({
+				x: s.x,
+				y: s.y,
+				zoom: s.kind === "terminal" ? (isMobile ? 1.15 : 1.3) : isMobile ? 1.45 : 2,
+			})),
+			outroFocus,
+		],
+		[isMobile],
+	);
 
 	useEffect(() => {
 		const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -256,18 +273,22 @@ function RideDesktop() {
 		};
 		raf = requestAnimationFrame(tick);
 		return () => cancelAnimationFrame(raf);
-	}, [phaseCount]);
+	}, [phaseCount, focuses]);
+
+	function jumpToPhase(target: number) {
+		const ride = rideRef.current;
+		if (!ride) return;
+		const total = ride.offsetHeight - window.innerHeight;
+		const top = ride.getBoundingClientRect().top + window.scrollY;
+		window.scrollTo({ top: top + (target / (phaseCount - 1)) * total, behavior: "smooth" });
+	}
 
 	/** Clicking a station scrolls the ride to that phase. */
 	function goToStation(slug: string | null) {
 		if (!slug) return;
 		const index = stops.findIndex((s) => s.kind === "station" && s.slug === slug);
 		if (index === -1) return;
-		const ride = rideRef.current;
-		if (!ride) return;
-		const total = ride.offsetHeight - window.innerHeight;
-		const top = ride.getBoundingClientRect().top + window.scrollY;
-		window.scrollTo({ top: top + ((index + 1) / (phaseCount - 1)) * total, behavior: "smooth" });
+		jumpToPhase(index + 1);
 	}
 
 	function skipRide() {
@@ -280,6 +301,14 @@ function RideDesktop() {
 	const nextStop = stops[Math.min(stops.length, phase)];
 	const activeStationSlug = stop && stop.kind === "station" ? stop.slug : null;
 	const activeMosaic = stop && stop.kind === "figure" ? stop.figureIndex : -1;
+	const atTerminal = stop !== null && stop.kind === "terminal";
+
+	const stripText =
+		stop === null
+			? `NEXT STOP · ${nextStop ? nextStop.label.toUpperCase() : "END OF THE LINE"}`
+			: atTerminal
+				? "THE TERMINAL · ASK THE AGENT"
+				: `${stop.kind === "station" ? "NOW STOPPING" : "PASSING"} · ${stop.label.toUpperCase()}`;
 
 	return (
 		<div className="ride" ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount }}>
@@ -295,11 +324,11 @@ function RideDesktop() {
 							onSelectStation={goToStation}
 							activeStation={activeStationSlug}
 							activeMosaic={activeMosaic}
-							dimStations={stop !== null}
+							dimStations={stop !== null && !atTerminal}
 							classNameOverride={`chi-map riding${activeMosaic >= 0 ? " figure-focus" : ""}`}
 						>
 							<g ref={trainRef} className="you-train" aria-hidden="true">
-								<circle r="16" cx="10" cy="0" className="you-halo" />
+								<circle r="18" cx="10" cy="0" className="you-halo" />
 								<rect x="-13" y="-5" width="30" height="10" rx="3" className="you-body" />
 								<rect x="-9" y="-2.6" width="4.5" height="3" rx="0.8" className="train-window" />
 								<rect x="-2.5" y="-2.6" width="4.5" height="3" rx="0.8" className="train-window" />
@@ -309,38 +338,28 @@ function RideDesktop() {
 						</AtlasMap>
 					</div>
 
-					<div className="trip-strip" aria-hidden="true">
+					<div className="trip-strip" role="group" aria-label="Trip progress">
 						<span className="trip-dots">
 							{stops.map((s, i) => (
-								<i
-									key={s.kind === "station" ? s.slug : `figure-${s.figureIndex}`}
-									className={phase === i + 1 ? "hit" : i + 1 < phase ? "past" : ""}
-									style={{
-										background:
-											phase === i + 1
-												? s.kind === "station"
-													? LINE_COLORS[stations.find((st) => st.slug === s.slug)!.project.line]
-													: "var(--signal)"
-												: undefined,
-									}}
+								<button
+									key={s.kind === "station" ? s.slug : `${s.kind}-${i}`}
+									type="button"
+									aria-label={`Jump to ${s.label}`}
+									className={`trip-dot${phase === i + 1 ? " hit" : i + 1 < phase ? " past" : ""}`}
+									style={{ ["--accent-dot" as string]: stopAccent(s) }}
+									onClick={() => jumpToPhase(i + 1)}
 								/>
 							))}
 						</span>
-						{stop ? (
-							<b>
-								{stop.kind === "station" ? "NOW STOPPING" : "PASSING"} · {stop.label.toUpperCase()}
-							</b>
-						) : (
-							<b>NEXT STOP · {nextStop ? nextStop.label.toUpperCase() : "end of the line"}</b>
-						)}
+						<b>{stripText}</b>
 					</div>
 
 					<div className={`ride-copy${phase === 0 ? "" : " faded"}`}>
 						<span className="kicker">Facade 2: The Atlas</span>
 						<h1>The city is the navigation.</h1>
 						<p className="lede">
-							Ride the line through the work: scroll to travel, click a station to jump to it,
-							and watch the skyline spell the numbers in lit windows as you pass.
+							Your train is the glowing one. Scroll to ride the work, the numbers spelled in lit
+							windows, and the terminal where the agent answers.
 						</p>
 						<p className="dye-note">River dye week: Chicago runs the river green ahead of St. Patrick's Day.</p>
 						<button type="button" className="skip-ride" onClick={skipRide}>
@@ -348,8 +367,19 @@ function RideDesktop() {
 						</button>
 					</div>
 
-					<div className="ride-overlay" role="status" aria-live="polite">
-						<RideCard stop={landmark ? null : stop} landmark={landmark} />
+					<div className={`ride-overlay${atTerminal ? " terminal-overlay" : ""}`} role="status" aria-live="polite">
+						{atTerminal ? (
+							<div className="chi-card terminal-card" key="terminal">
+								<AskBox
+									variant="panel"
+									examples={site.ask_examples}
+									headingId="ride-ask"
+									heading="Ask the agent"
+								/>
+							</div>
+						) : (
+							<RideCard stop={landmark ? null : stop} landmark={landmark} />
+						)}
 					</div>
 
 					<div className="dawn-glow" aria-hidden="true" />
@@ -357,65 +387,5 @@ function RideDesktop() {
 				</AtlasScene>
 			</div>
 		</div>
-	);
-}
-
-function RideMobile() {
-	const [pick, setPick] = useState<number | null>(null);
-	const [landmark, setLandmark] = useState<string | null>(null);
-	const stop = pick !== null ? stops[pick] : null;
-
-	function choose(index: number) {
-		setPick(index);
-		setLandmark(null);
-	}
-
-	return (
-		<header className="atlas-hero ride-mobile">
-			<WeatherBadge className="atlas-weather" />
-			<div className="atlas-scroll">
-				<AtlasMap
-					selected={landmark}
-					onSelect={(name) => {
-						setLandmark(name);
-						if (name) setPick(null);
-					}}
-					onSelectStation={(slug) => {
-						if (!slug) return;
-						const index = stops.findIndex((s) => s.kind === "station" && s.slug === slug);
-						if (index !== -1) choose(index);
-					}}
-				/>
-			</div>
-			<p className="swipe-cue">Swipe the skyline to explore the whole map.</p>
-
-			<div className="stop-chips" role="tablist" aria-label="Stops on the map">
-				{stops.map((s, i) => (
-					<button
-						key={s.kind === "station" ? s.slug : `figure-${s.figureIndex}`}
-						type="button"
-						role="tab"
-						aria-selected={pick === i}
-						onClick={() => choose(i)}
-					>
-						{s.label}
-					</button>
-				))}
-			</div>
-
-			<div className="ride-overlay static-overlay" role="status" aria-live="polite">
-				<RideCard stop={landmark ? null : stop} landmark={landmark} />
-			</div>
-
-			<div className="ride-copy">
-				<span className="kicker">Facade 2: The Atlas</span>
-				<h1>The city is the navigation.</h1>
-				<p className="lede">
-					The skyline holds the work: tap a stop, or a landmark on the map, and the city answers.
-				</p>
-				<p className="dye-note">River dye week: Chicago runs the river green ahead of St. Patrick's Day.</p>
-			</div>
-			<div className={`weather-fx ${weather.condition_kind}`} aria-hidden="true" />
-		</header>
 	);
 }
