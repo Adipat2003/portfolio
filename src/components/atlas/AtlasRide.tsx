@@ -254,6 +254,7 @@ export default function AtlasRide() {
 					stage.style.setProperty("--atlas-sky-2", skyStops[1]);
 					stage.style.setProperty("--atlas-sky-3", skyStops[2]);
 					stage.style.setProperty("--dawn", dawnT.toFixed(3));
+					stage.style.setProperty("--ride-progress", raw.toFixed(4));
 				}
 
 				const ti = Math.min(rail.length - 2, i);
@@ -309,6 +310,8 @@ export default function AtlasRide() {
 			: atTerminal
 				? "THE TERMINAL · ASK THE AGENT"
 				: `${stop.kind === "station" ? "NOW STOPPING" : "PASSING"} · ${stop.label.toUpperCase()}`;
+	const counter =
+		phase >= 1 && phase <= stops.length ? ` · STOP ${phase} OF ${stops.length}` : "";
 
 	return (
 		<div className="ride" ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount }}>
@@ -351,8 +354,10 @@ export default function AtlasRide() {
 								/>
 							))}
 						</span>
-						<b>{stripText}</b>
+						<b>{stripText}{counter}</b>
 					</div>
+
+					<div className="ride-progress" aria-hidden="true" />
 
 					<div className={`ride-copy${phase === 0 ? "" : " faded"}`}>
 						<span className="kicker">Facade 2: The Atlas</span>

@@ -133,6 +133,8 @@ section{padding:76px 0}
 .chi-map.riding{transition:none}
 .trip-strip{position:absolute;top:74px;left:50%;translate:-50% 0;z-index:6;display:flex;align-items:center;gap:12px;background:rgba(13,15,22,.72);border:1px solid var(--night-rule);border-radius:999px;padding:9px 18px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--night-soft);pointer-events:none;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap}
 .trip-strip b{color:var(--signal)}
+/* Where you are on the line: a hairline progress rail across the stage top. */
+.ride-progress{position:absolute;top:0;left:0;height:3px;width:calc(var(--ride-progress,0) * 100%);background:linear-gradient(90deg,var(--flag-red),var(--signal));z-index:7;pointer-events:none;transition:none}
 .trip-dots{display:flex;gap:6px;pointer-events:auto}
 .trip-dot{appearance:none;border:0;padding:0;width:9px;height:9px;border-radius:50%;background:var(--night-rule);display:block;cursor:pointer;transition:transform .3s,background .3s}
 .trip-dot.past{background:rgba(233,230,223,.45)}
@@ -311,9 +313,11 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
   .hero{padding:64px 0 56px}
   section{padding:56px 0}
   /* One ride on every screen: shorter phases, dynamic heights, gentler zoom,
-     bigger dots. The sticky stage uses dvh so the address bar never janks. */
+     bigger dots. The sticky stage uses dvh so the address bar never janks.
+     The city renders larger so the tall stage does not read as empty sky. */
   .ride{--phase-h:62dvh}
   .atlas-hero{min-height:0}
+  .ride-stage .atlas-scroll svg.chi-map{width:175%}
   .trip-strip{top:64px;padding:7px 12px;gap:9px;font-size:10px;max-width:calc(100vw - 20px)}
   .trip-dots{gap:8px}
   .trip-dot{width:13px;height:13px}
