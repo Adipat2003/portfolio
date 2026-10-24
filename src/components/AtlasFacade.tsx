@@ -1,4 +1,6 @@
 import { site, publishedProjects, atlas } from "@/content/load";
+import { weather } from "@/content/weather";
+import WeatherBadge from "./WeatherBadge";
 import LandmarkExplorer from "./chicago/LandmarkExplorer";
 import ChicagoSpots from "./chicago/ChicagoSpots";
 import RotatingEvents from "./chicago/RotatingEvents";
@@ -22,6 +24,8 @@ export default function AtlasFacade() {
             </p>
             <p className="atlas-hero-hint">Select a landmark on the skyline to see what it is.</p>
           </div>
+          <WeatherBadge className="atlas-weather" />
+          <div className={`weather-fx ${weather.condition_kind}`} aria-hidden="true" />
         </AtlasScene>
       </header>
 

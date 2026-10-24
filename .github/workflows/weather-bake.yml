@@ -1,0 +1,34 @@
+name: Bake weather snapshot
+
+# Chicago time: 08:00 UTC is 3 AM CDT / 2 AM CST. The snapshot is committed
+# only when it changed, and the push triggers the Deploy site workflow, so the
+# live Atlas sky follows the weather with one build a day.
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bake:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node scripts/weather-snapshot.mjs
+      - name: Commit and push if the snapshot changed
+        run: |
+          git config user.name "weather-bake[bot]"
+          git config user.email "actions@users.noreply.github.com"
+          git add content/weather.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: bake daily weather snapshot"
+            git push
+          else
+            echo "no weather change to commit"
+          fi

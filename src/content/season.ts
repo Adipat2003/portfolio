@@ -82,7 +82,6 @@ function walk(
  * produces no output at all.
  */
 export function buildSeasons(seasons: Seasons): SeasonEngine {
-
   return {
     seasonFor(now) {
       return walk(seasons.boundaries, localKey(now, seasons.timezone));
@@ -98,4 +97,18 @@ export function buildSeasons(seasons: Seasons): SeasonEngine {
       };
     },
   };
+}
+
+/**
+ * The river dye window: Chicago dyes its river green ahead of St. Patrick's
+ * Day. This is a decorative approximation of that week (March 14 through 20,
+ * read in UTC like every other date rule here), not a claim about the exact
+ * dye date of any year. The palette switch is CSS-only, driven by
+ * data-river-dye on the document root, and season-check.mjs pins the window
+ * from both sides.
+ */
+export function riverDyeActive(date: Date): boolean {
+  const month = date.getUTCMonth() + 1;
+  const day = date.getUTCDate();
+  return month === 3 && day >= 14 && day <= 20;
 }

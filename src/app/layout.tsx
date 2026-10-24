@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { seasons, site } from "@/content/load";
+import { riverDyeActive } from "@/content/season";
 import SeasonSync from "@/components/SeasonSync";
 
 export const metadata: Metadata = {
@@ -26,7 +27,12 @@ const seasonStyle = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-season={season} style={seasonStyle}>
+    <html
+      lang="en"
+      data-season={season}
+      data-river-dye={riverDyeActive(new Date()) ? "true" : "false"}
+      style={seasonStyle}
+    >
       <head>
         <link rel="alternate" type="application/json" href="/portfolio/api/portfolio.json" />
       </head>
