@@ -26,20 +26,29 @@ export default function AtlasMap({
   onSelect,
   stationSelected = null,
   onSelectStation,
+  activeStation = null,
   style,
+  svgRef,
+  classNameOverride,
+  children,
 }: {
   selected?: string | null;
   onSelect?: (name: string | null) => void;
   stationSelected?: string | null;
   onSelectStation?: (slug: string | null) => void;
+  activeStation?: string | null;
   style?: CSSProperties;
+  svgRef?: React.RefObject<SVGSVGElement | null>;
+  classNameOverride?: string;
+  children?: React.ReactNode;
 }) {
   return (
     <svg
+      ref={svgRef}
       viewBox={atlas.viewBox}
       role="img"
       aria-label="The Atlas: a Chicago rail-map world where projects become stations"
-      className="chi-map"
+      className={classNameOverride ?? "chi-map"}
       style={style}
     >
       <AtlasDefs />
@@ -49,7 +58,12 @@ export default function AtlasMap({
       <AtlasRiver />
       <AtlasRoutes />
       <AtlasTrains />
-      <AtlasStations selected={stationSelected} onSelect={onSelectStation} />
+      <AtlasStations
+        selected={stationSelected}
+        onSelect={onSelectStation}
+        activeStation={activeStation}
+      />
+      {children}
     </svg>
   );
 }

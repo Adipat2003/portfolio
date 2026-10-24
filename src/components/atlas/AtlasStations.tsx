@@ -11,9 +11,11 @@ import { atlas, LINE_COLORS, stations } from "@/content/load";
 export default function AtlasStations({
   selected = null,
   onSelect,
+  activeStation = null,
 }: {
   selected?: string | null;
   onSelect?: (slug: string | null) => void;
+  activeStation?: string | null;
 }) {
   const style = atlas.station_style;
 
@@ -34,7 +36,9 @@ export default function AtlasStations({
       {stations.map(({ slug, station, project }) => (
         <g
           key={slug}
-          className={`station${selected === slug ? " station-active" : ""}`}
+          className={`station${selected === slug ? " station-active" : ""}${
+            activeStation && activeStation !== slug ? " station-dim" : ""
+          }`}
           role="button"
           tabIndex={0}
           aria-pressed={selected === slug}
