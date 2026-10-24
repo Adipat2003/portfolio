@@ -52,11 +52,18 @@ export default function AtlasFacade() {
       />
 
       <hr className="flag-rule" aria-hidden="true" />
-      <footer className="wrap site-foot">
-        <span>{site.facades.atlas.description}</span>
-        <span>
-          Machine-readable content: <a href="/portfolio/api/portfolio.json">portfolio.json</a>
-        </span>
+      <footer className="lakefront" aria-label="End of the line">
+        <div className="sun" aria-hidden="true" />
+        <div className="lakefront-inner wrap">
+          <p className="sign">End of the line</p>
+          <span>{site.facades.atlas.description}</span>
+          <span className="lake-links">
+            {site.contact?.github ? (
+              <a href={site.contact.github}>GitHub</a>
+            ) : null}
+            <a href="/portfolio/api/portfolio.json">portfolio.json</a>
+          </span>
+        </div>
       </footer>
     </div>
   );
