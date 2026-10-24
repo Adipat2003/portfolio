@@ -37,9 +37,15 @@ node scripts/ask-check.mjs         # 20 retrieval assertions across 14 questions
 node scripts/chicago-check.mjs    # 14 assertions over the Chicago shaping rules, expect PASS
 python3 scripts/build.py --check   # verifies committed static artifacts match content and Chicago surfaces sit on both facades
 node scripts/art-export.mjs --check  # verifies art/*.svg match atlas.json
+node scripts/weather-snapshot.mjs    # rebakes content/weather.json from NWS (the workflow does this daily)
 npm run check:service               # builds server/ and runs scripts/service-check.mjs
                                     # (16 probes: MCP protocol, weather cache, ask-model), expect PASS
 ```
+
+`season-check.mjs` also pins the March river-dye window (March 14 through 20)
+from both sides. After changing `content/atlas.json` or any other content
+file, run `python3 scripts/build.py` to regenerate the committed rollback
+artifacts, then the `--check` form until it says PASS.
 
 `scripts/ask-check.mjs` and `scripts/season-check.mjs` import the modules the
 page itself imports and run them under plain Node with no test dependency and no
@@ -274,6 +280,25 @@ phased plan. `docs/ai-exposure.md` carries the AI layer design.
   key, or on any model failure, it serves the grounded retrieval answer and
   reports model_polish: false. The key is environment-only; it is never
   logged, committed, or returned.
+- **Atlas redesign, October 2026, PRs #19 #20 #21.** The Atlas is now a
+  full-viewport After Dark scene: skyline anchored under the season sky, title
+  overlaid on the dusk, warm cursor light on fine pointers, twinkling window
+  lights, 'L' trains riding the exact route paths (SMIL, hidden under reduced
+  motion), interactive stations that glide the camera onto the selected
+  station and open a signage-styled project card, a weather overlay driven by
+  a baked NWS snapshot, and the river drawn as the municipal Y that turns
+  green for the March dye week. Chicago flag identity runs through both
+  facades (kicker stars, favorite-star hexagrams, flag-blue closing rules,
+  line-color bands on project cards). All of it is reduced-motion safe and
+  keyboard operable.
+- **Live weather.** `scripts/weather-snapshot.mjs` bakes
+  `content/weather.json` from the latest NWS observation (Midway, KMDW);
+  the `weather-bake` workflow runs daily at 08:00 UTC (3 AM Chicago in
+  daylight time) and pushes only when the snapshot changed, which triggers
+  the deploy. The badge carries the source and observation time, so
+  freshness is visible. weather.json is content consumed by the Next
+  renderer only; the Python rollback renders no weather line, which is a
+  documented divergence, and build.py --check ignores the file.
 - **Phase 6, food features.** Not started. Bite Radar list and the
   emerging-restaurant algorithm.
 

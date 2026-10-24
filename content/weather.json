@@ -1,0 +1,11 @@
+{
+  "source": "National Weather Service, api.weather.gov (Chicago Midway, KMDW)",
+  "license": "NWS data is in the public domain (weather.gov/disclaimer)",
+  "fetched_at": "2026-10-24T00:04:59.496Z",
+  "observed_at": "2026-10-23T23:50:00+00:00",
+  "temperature": 63,
+  "unit": "F",
+  "condition": "Clear",
+  "condition_kind": "clear",
+  "wind": "8 mph"
+}

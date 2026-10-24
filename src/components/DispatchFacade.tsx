@@ -5,6 +5,7 @@ import AskBox from "./AskBox";
 import ChicagoSpots from "./chicago/ChicagoSpots";
 import RotatingEvents from "./chicago/RotatingEvents";
 import LandmarksList from "./chicago/LandmarksList";
+import WeatherBadge from "./WeatherBadge";
 
 export default function DispatchFacade() {
   const meta = site.impact.slice(0, 3);
@@ -29,6 +30,7 @@ export default function DispatchFacade() {
               </span>
             ))}
           </div>
+          <WeatherBadge className="weather-line" />
         </div>
       </header>
 

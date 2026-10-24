@@ -13,7 +13,7 @@
  *
  * Usage: node scripts/season-check.mjs
  */
-const { buildSeasons } = await import(new URL("../src/content/season.ts", import.meta.url).href);
+const { buildSeasons, riverDyeActive } = await import(new URL("../src/content/season.ts", import.meta.url).href);
 const rawSeasons = JSON.parse(
   (await import("node:fs")).readFileSync(new URL("../content/seasons.json", import.meta.url), "utf8"),
 );
@@ -86,9 +86,28 @@ for (const [date, expected] of MID) {
   check(`${date} -> ${expected}`, got === expected, `got ${got}`);
 }
 
+// The river dye window, pinned from both sides so a date edit cannot quietly
+// move the green week.
+console.log("season-check: river dye window");
+const DYE = [
+  ["03-13", false],
+  ["03-14", true],
+  ["03-17", true],
+  ["03-20", true],
+  ["03-21", false],
+  ["07-04", false],
+];
+let dyeCount = 0;
+for (const [date, expected] of DYE) {
+  const [m, d] = date.split("-").map(Number);
+  const got = riverDyeActive(new Date(at(m, d)));
+  dyeCount += 1;
+  check(`river dye ${date} -> ${expected}`, got === expected, `got ${got}`);
+}
+
 console.log(
   failures === 0
-    ? `season-check: PASS (${BOUNDARIES.length + BEFORE.length + MID.length} dates)`
+    ? `season-check: PASS (${BOUNDARIES.length + BEFORE.length + MID.length} dates, ${dyeCount} dye checks)`
     : `season-check: FAIL (${failures})`,
 );
 process.exit(failures === 0 ? 0 : 1);

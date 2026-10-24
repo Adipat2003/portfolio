@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { seasons } from "@/content/load";
+import { riverDyeActive } from "@/content/season";
 
 /**
  * Keeps the document's season correct without a rebuild.
@@ -29,6 +30,10 @@ export default function SeasonSync() {
     root.style.setProperty("--atlas-sky-2", palette.sky[1]);
     root.style.setProperty("--atlas-sky-3", palette.sky[2]);
     root.style.setProperty("--atlas-lights", palette.lights);
+    const dye = riverDyeActive(new Date()) ? "true" : "false";
+    if (root.dataset.riverDye !== dye) {
+      root.dataset.riverDye = dye;
+    }
   }, []);
 
   return null;

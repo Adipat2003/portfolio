@@ -104,7 +104,6 @@ export const gradientSchema = z.object({
 });
 
 export const seasonName = z.enum(["winter", "spring", "summer", "fall"]);
-
 export const seasonBoundarySchema = z.object({
   name: seasonName,
   /** Month and day the season begins, as MM-DD. */
@@ -124,6 +123,20 @@ export const seasonsSchema = z.object({
   timezone: z.string(),
   boundaries: z.array(seasonBoundarySchema).min(1),
   palettes: z.record(seasonName, seasonPaletteSchema),
+});
+
+export const weatherKind = z.enum(["clear", "cloudy", "rain", "snow", "storm", "fog"]);
+
+export const weatherSchema = z.object({
+	source: z.string(),
+	license: z.string(),
+	fetched_at: z.string(),
+	observed_at: z.string().nullable(),
+	temperature: z.number(),
+	unit: z.literal("F"),
+	condition: z.string(),
+	condition_kind: weatherKind,
+	wind: z.string().nullable(),
 });
 
 export const chicagoSpotKind = z.enum([
@@ -188,6 +201,7 @@ export type LineName = z.infer<typeof lineName>;
 export type SeasonName = z.infer<typeof seasonName>;
 export type SeasonPalette = z.infer<typeof seasonPaletteSchema>;
 export type Seasons = z.infer<typeof seasonsSchema>;
+export type Weather = z.infer<typeof weatherSchema>;
 export type Route = z.infer<typeof routeSchema>;
 export type Station = z.infer<typeof stationSchema>;
 export type StationStyle = z.infer<typeof stationStyleSchema>;
