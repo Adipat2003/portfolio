@@ -24,17 +24,18 @@ a{color:inherit}
 .seg{display:inline-flex;border:1px solid var(--rule);border-radius:999px;padding:3px;background:var(--paper-2)}
 .seg button{appearance:none;border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;padding:8px 18px;min-height:44px;border-radius:999px;color:var(--ink-soft);cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
-.kicker{font-family:var(--mono);font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);position:relative;padding-left:18px}
-/* The kicker mark is a Chicago flag star: two overlapping triangles in the
-   kicker's own color, so it follows the seasonal accent on the Dispatch and
-   the signal color on the Atlas with no extra markup. */
-.kicker::before,.kicker::after{content:"";position:absolute;left:2px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;pointer-events:none}
-.kicker::before{top:2px;border-top:7px solid currentColor}
-.kicker::after{top:3px;border-bottom:7px solid currentColor}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);position:relative;padding-left:20px}
+/* The kicker mark is a true Chicago flag star: a crisp clip-path hexagram in
+   the kicker's own color, so it follows the seasonal accent on the Dispatch
+   and the signal color on the Atlas. */
+.kicker::before{content:"";position:absolute;left:1px;top:50%;translate:0 -50%;width:11px;height:11px;background:currentColor;clip-path:polygon(50% 2%,61% 31%,91.6% 26%,72% 50%,91.6% 74%,61% 69%,50% 98%,39% 69%,8.4% 74%,28% 50%,8.4% 26%,39% 31%)}
 .lede{font-size:19px;color:var(--ink-soft);max-width:62ch}
 .rule{height:1px;background:var(--rule);border:0;margin:0}
 .hero{padding:96px 0 72px;background:radial-gradient(1200px 500px at 78% -10%, var(--accent-soft), transparent 60%), var(--paper)}
-.hero h1{font-size:clamp(40px,6vw,68px);line-height:1.02;margin:20px 0 0;max-width:16ch}
+.hero h1{font-size:clamp(40px,6vw,68px);line-height:1.02;margin:20px 0 0;max-width:17ch;text-wrap:balance}
+/* The ghost flag star: the empty right half of the hero carries the Chicago
+   mark instead of nothing; blurred and cropped so it reads as atmosphere. */
+.ghost-star{position:absolute;right:-3%;top:14%;width:min(32vw,380px);aspect-ratio:1;background:var(--accent-soft);opacity:.5;filter:blur(2.5px);clip-path:polygon(50% 2%,61% 31%,91.6% 26%,72% 50%,91.6% 74%,61% 69%,50% 98%,39% 69%,8.4% 74%,28% 50%,8.4% 26%,39% 31%);pointer-events:none}
 .hero .lede{margin-top:22px}
 .hero-meta{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:36px;font-size:14px;color:var(--ink-soft)}
 .hero-meta b{color:var(--ink);font-weight:600}
@@ -107,11 +108,23 @@ section{padding:76px 0}
 .atlas-hero .chi-explorer{position:absolute;inset:0}
 .atlas-hero .chi-explorer svg.chi-map{position:absolute;left:50%;bottom:-1px;translate:-50% 0;transform:scale(var(--zoom,1));transform-origin:var(--fox,50%) var(--foy,50%);transition:transform .9s cubic-bezier(.22,.61,.36,1);width:100%;max-width:2200px;height:auto}
 .atlas-hero-copy{position:relative;z-index:4;pointer-events:none;padding-top:clamp(84px,13vh,150px);color:var(--night-ink);text-shadow:0 2px 18px rgba(13,15,22,.6)}
+/* A soft scrim behind the copy separates the reading zone from the map so
+   the hero does not read as one crowded stack; feathered wide so it reads
+   as atmosphere, not a dropped rectangle. */
+.atlas-hero-copy::before{content:"";position:absolute;inset:-12% -45% -14% -14%;z-index:-1;pointer-events:none;background:radial-gradient(78% 66% at 30% 44%,rgba(13,15,22,.5),rgba(13,15,22,.28) 45%,transparent 78%)}
 .atlas-hero-copy .kicker{color:var(--signal)}
-.atlas-hero-copy h1{font-size:clamp(40px,6vw,74px);line-height:1.02;margin:16px 0 0;max-width:16ch}
+.atlas-hero-copy h1{font-size:clamp(40px,6vw,74px);line-height:1.02;margin:16px 0 0;max-width:16ch;text-wrap:balance}
 .atlas-hero-copy .lede{margin-top:18px;max-width:52ch;color:var(--night-soft)}
 .atlas-hero-hint{margin-top:26px;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--signal);opacity:.9}
-.atlas-hero .chi-card{position:absolute;right:24px;bottom:28px;z-index:5;margin:0;max-width:400px;background:rgba(21,26,40,.86);border-color:var(--night-rule);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+/* The river dye note rides with the hero copy and is revealed by the same
+   data-river-dye flag that recolors the river, so the green reads as the
+   St. Patrick's nod instead of a rendering surprise. */
+.dye-note{display:none;margin-top:20px;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--signal);opacity:.95}
+[data-river-dye="true"] .dye-note{display:block}
+/* The pan cue, only where the map actually pans. */
+.swipe-cue{display:none}
+.atlas-hero .chi-card{position:absolute;right:24px;bottom:40px;z-index:5;margin:0;max-width:400px;background:rgba(21,26,40,.86);border-color:var(--night-rule);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.atlas-hero .chi-hint{font-size:13px;opacity:.85}
 .cursor-light{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(320px circle at var(--mx,50%) var(--my,32%),rgba(232,176,75,.13),transparent 72%);opacity:0;transition:opacity .45s}
 .atlas-scene:hover .cursor-light{opacity:1}
 .atlas-copy{position:relative;padding:40px 0 0}
@@ -135,8 +148,8 @@ section{padding:76px 0}
 .weather-fx.snow{background-image:radial-gradient(circle,rgba(255,255,255,.55) 0 1.1px,transparent 1.7px),radial-gradient(circle,rgba(255,255,255,.38) 0 1.5px,transparent 2px);background-size:170px 170px,110px 110px;background-position:0 0,55px 28px;animation:snow-drift 11s linear infinite}
 @keyframes snow-drift{to{background-position:64px 170px,-46px 110px}}
 /* The March dye window: the whole river turns green while it lasts. */
-[data-river-dye="true"] .chi-map .river-body path{stroke:#35a06b}
-[data-river-dye="true"] .chi-map .river-body path[fill="#0e1626"]{fill:#16402a}
+[data-river-dye="true"] .chi-map .river-body path{stroke:#3a9a68}
+[data-river-dye="true"] .chi-map .river-body path[fill="#0e1626"]{fill:#1b4630}
 .atelier-note{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font-family:var(--mono);font-size:12px;color:var(--night-soft);padding:18px 24px;border:1px dashed var(--night-rule);border-radius:12px;margin-top:32px}
 .atelier-note b{color:var(--signal);font-weight:600}
 footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:flex;flex-wrap:wrap;gap:8px 24px}
@@ -164,10 +177,7 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 .chi-list{list-style:none;padding:0;margin:0;display:grid;gap:12px}
 .chi-item{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;border-bottom:1px solid var(--rule);padding-bottom:10px}
 .chi-name{font-family:var(--mono);font-size:13px;color:var(--ink)}
-.chi-star{display:inline-block;position:relative;width:9px;height:10px;margin-right:7px;font-size:0;color:var(--flag-red);vertical-align:baseline}
-.chi-star::before,.chi-star::after{content:"";position:absolute;left:.5px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent}
-.chi-star::before{top:0;border-top:8px solid currentColor}
-.chi-star::after{top:1px;border-bottom:8px solid currentColor}
+.chi-star{display:inline-block;position:relative;width:12px;height:12px;margin-right:8px;font-size:0;color:var(--flag-red);vertical-align:baseline;background:currentColor;clip-path:polygon(50% 2%,61% 31%,91.6% 26%,72% 50%,91.6% 74%,61% 69%,50% 98%,39% 69%,8.4% 74%,28% 50%,8.4% 26%,39% 31%)}
 .chi-kind{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
 .chi-hood{font-size:13px;color:var(--ink-soft)}
 .chi-note{flex-basis:100%;font-size:14px;color:var(--ink-soft);max-width:70ch}
@@ -198,7 +208,10 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 .train-headlight{fill:#ffd98a}
 @media (prefers-reduced-motion:reduce){.train{display:none !important}}
 .chi-map .station{cursor:pointer}
-.station-active circle{stroke-width:5;filter:drop-shadow(0 0 9px rgba(233,230,223,.9))}
+.station-active circle{stroke-width:6;filter:drop-shadow(0 0 14px rgba(233,230,223,.95))}
+@media (min-width:861px){
+  .focus-scrim{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(circle at var(--fox,50%) var(--foy,50%),transparent 0 13%,rgba(13,15,22,.42) 36%)}
+}
 .sign{display:inline-block;margin:0;font-family:var(--sans);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:#11151f;border-radius:6px;padding:6px 12px}
 .station-card .line-band-dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:8px;vertical-align:middle}
 .station-card h3{margin:10px 0 0;font-size:19px}
@@ -230,7 +243,11 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
   .atlas-hero{min-height:0}
   .atlas-scene{position:static}
   .atlas-hero .chi-explorer{position:static}
-  .atlas-hero .chi-explorer svg.chi-map{position:static;transform:none;width:100%}
+  /* The city is wide; on small screens it pans instead of shrinking to
+     illegibility. Swipe across the skyline to read it. */
+  .atlas-hero .atlas-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .atlas-hero .atlas-scroll svg.chi-map{position:static;transform:none;width:240%;max-width:none}
+  .swipe-cue{display:block;margin:10px 24px 0;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--night-soft)}
   .atlas-hero-copy{padding:44px 0 8px;text-shadow:none}
   .atlas-hero .chi-card{position:static;margin:16px 24px 28px;max-width:none;backdrop-filter:none}
   .atlas-weather{position:static;margin:14px 24px 0;display:inline-block;background:rgba(13,15,22,.8);backdrop-filter:none}

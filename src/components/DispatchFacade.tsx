@@ -12,6 +12,7 @@ export default function DispatchFacade() {
   return (
     <div className="toggle-view" id="view-dispatch" data-active="true" aria-label={site.facades.dispatch.name}>
       <header className="hero">
+        <span className="ghost-star" aria-hidden="true" />
         <div className="wrap">
           <span className="kicker">
             {site.owner} &middot; {site.role}, {site.location}

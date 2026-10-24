@@ -24,11 +24,11 @@ export default function AtlasStations({
   return (
     <g
       fontFamily="ui-monospace, Menlo, monospace"
-      fontSize="13"
+      fontSize="14"
       fill="#e9e6df"
       style={{ paintOrder: "stroke" }}
       stroke={style.halo}
-      strokeWidth="5"
+      strokeWidth="6"
       strokeLinejoin="round"
     >
       {stations.map(({ slug, station, project }) => (
@@ -59,7 +59,11 @@ export default function AtlasStations({
             stroke={LINE_COLORS[project.line]}
             strokeWidth={style.stroke_width}
           />
-          <text x={station.cx + station.dx} y={station.cy + station.dy}>
+          <text
+            x={station.cx + station.dx}
+            y={station.cy + station.dy}
+            textAnchor={station.anchor ?? "start"}
+          >
             {station.label}
           </text>
         </g>

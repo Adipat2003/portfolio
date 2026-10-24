@@ -14,7 +14,9 @@ export default function AtlasFacade() {
     <div className="toggle-view atlas" id="view-atlas" data-active="true" aria-label={site.facades.atlas.name}>
       <header className="atlas-hero">
         <AtlasScene>
+          <WeatherBadge className="atlas-weather" />
           <LandmarkExplorer />
+          <p className="swipe-cue">Swipe the skyline to explore the whole map.</p>
           <div className="atlas-hero-copy wrap">
             <span className="kicker">Facade 2: The Atlas</span>
             <h1>The city is the navigation.</h1>
@@ -22,9 +24,8 @@ export default function AtlasFacade() {
               Same portfolio, different facade: the skyline is authored SVG, the river and elevated
               lines are routes, and each project is a station on the map.
             </p>
-            <p className="atlas-hero-hint">Select a landmark on the skyline to see what it is.</p>
+            <p className="dye-note">River dye week: Chicago runs the river green ahead of St. Patrick's Day.</p>
           </div>
-          <WeatherBadge className="atlas-weather" />
           <div className={`weather-fx ${weather.condition_kind}`} aria-hidden="true" />
         </AtlasScene>
       </header>

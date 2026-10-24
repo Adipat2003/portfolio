@@ -62,6 +62,8 @@ export const stationSchema = z.object({
   cy: z.number(),
   dx: z.number(),
   dy: z.number(),
+  /** Text anchor for the label, so an edge station can keep its name inside the map. */
+  anchor: z.enum(["start", "middle", "end"]).optional(),
 });
 
 export const stationStyleSchema = z.object({
