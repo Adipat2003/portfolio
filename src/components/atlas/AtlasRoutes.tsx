@@ -7,7 +7,7 @@ import { markerId } from "./markerId";
  */
 export default function AtlasRoutes() {
   return (
-    <g fill="none" strokeWidth={3}>
+    <g className="routes-layer" fill="none" strokeWidth={3}>
       {LINES.flatMap((line) =>
         atlas.routes.filter((r) => r.line === line).map((route) => (
           <path

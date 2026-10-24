@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import AtlasMap from "@/components/atlas/AtlasMap";
 import AtlasScene from "@/components/atlas/AtlasScene";
 import WeatherBadge from "@/components/WeatherBadge";
-import { atlas, landmarkNote, LINE_COLORS, stations } from "@/content/load";
+import { atlas, landmarkNote, LINE_COLORS, stations, site } from "@/content/load";
+import { mosaics } from "@/content/mosaics";
 import { weather } from "@/content/weather";
+import { MOSAIC_CELL, mosaicWidth } from "@/content/windowfont";
 
 /**
  * The Night Ride: the Atlas as one continuous scene you scroll through.
@@ -13,33 +15,59 @@ import { weather } from "@/content/weather";
  * The ride element is a tall scroll track (one viewport per phase); the stage
  * inside it is sticky, so the city stays on screen while a requestAnimationFrame
  * loop reads scroll position, lerps the camera (zoom and focus origin), moves
- * the you-are-here train along the station polyline, and swaps the overlay
- * card as each phase arrives. Clicking any station scrolls the ride to that
- * phase; clicking a landmark shows it in the same overlay. Under
- * prefers-reduced-motion the lerp is skipped (targets apply instantly), so the
- * same content arrives without motion.
+ * the you-are-here train along the stop polyline, and swaps the overlay card
+ * as each phase arrives. The stops are the stations AND the window mosaics,
+ * woven into one west-to-east journey, so the impact figures arrive as part
+ * of the city rather than as a strip below it. Clicking any station scrolls
+ * the ride to that phase; clicking a landmark shows it in the same overlay.
+ * Under prefers-reduced-motion the lerp is skipped (targets apply instantly),
+ * so the same content arrives without motion.
  */
 
-/** Left-to-right tour order: the ride crosses the city, not one line. */
-const tour = [...stations].sort((a, b) => a.station.cx - b.station.cx);
 const [, , vw, vh] = atlas.viewBox.split(/\s+/).map(Number);
+
+type Stop =
+	| { kind: "station"; slug: string; label: string; x: number; y: number }
+	| { kind: "figure"; figureIndex: number; label: string; x: number; y: number };
+
+const stops: Stop[] = [
+	...[...stations]
+		.sort((a, b) => a.station.cx - b.station.cx)
+		.map((s) => ({
+			kind: "station" as const,
+			slug: s.slug,
+			label: s.station.label,
+			x: s.station.cx,
+			y: s.station.cy,
+		})),
+	...mosaics.map((m) => {
+		const figure = site.impact[m.figure_index];
+		return {
+			kind: "figure" as const,
+			figureIndex: m.figure_index,
+			label: figure.label.split(",")[0],
+			x: m.x + mosaicWidth(figure.value) / 2,
+			y: m.y + (7 * MOSAIC_CELL) / 2,
+		};
+	}),
+].sort((a, b) => a.x - b.x);
 
 type Focus = { x: number; y: number; zoom: number };
 
 const wideFocus: Focus = { x: vw / 2, y: vh / 2 - 30, zoom: 1 };
 
-/** Camera targets: wide city, one per station, wide again. */
+/** Camera targets: wide city, one per stop, wide again. */
 const focuses: Focus[] = [
-  wideFocus,
-  ...tour.map((s) => ({ x: s.station.cx, y: s.station.cy, zoom: 2 })),
-  { x: vw / 2, y: vh / 2 - 40, zoom: 1 },
+	wideFocus,
+	...stops.map((s) => ({ x: s.x, y: s.y, zoom: 2 })),
+	{ x: vw / 2, y: vh / 2 - 40, zoom: 1 },
 ];
 
-/** Train polyline: enters from the west edge, stops at every station. */
+/** Train polyline: enters from the west edge, stops at every stop. */
 const rail: Array<{ x: number; y: number }> = [
-  { x: Math.max(-30, tour[0].station.cx - 170), y: tour[0].station.cy + 70 },
-  ...tour.map((s) => ({ x: s.station.cx, y: s.station.cy })),
-  { x: Math.min(vw + 30, tour[tour.length - 1].station.cx + 170), y: tour[tour.length - 1].station.cy - 50 },
+	{ x: Math.max(-30, stops[0].x - 170), y: stops[0].y + 70 },
+	...stops.map((s) => ({ x: s.x, y: s.y })),
+	{ x: Math.min(vw + 30, stops[stops.length - 1].x + 170), y: stops[stops.length - 1].y - 50 },
 ];
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -54,8 +82,8 @@ export default function AtlasRide() {
 	const [phase, setPhase] = useState(0);
 	const [landmark, setLandmark] = useState<string | null>(null);
 
-	// Ride geometry: one viewport-height phase per stop, plus in and out.
 	const phaseCount = focuses.length;
+	const stop = phase >= 1 && phase <= stops.length ? stops[phase - 1] : null;
 
 	useEffect(() => {
 		const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -109,7 +137,7 @@ export default function AtlasRide() {
 	/** Clicking a station scrolls the ride to that phase. */
 	function goToStation(slug: string | null) {
 		if (!slug) return;
-		const index = tour.findIndex((s) => s.slug === slug);
+		const index = stops.findIndex((s) => s.kind === "station" && s.slug === slug);
 		if (index === -1) return;
 		const ride = rideRef.current;
 		if (!ride) return;
@@ -125,10 +153,14 @@ export default function AtlasRide() {
 		window.scrollTo({ top: top + ride.offsetHeight + 8, behavior: "smooth" });
 	}
 
-	const station = phase >= 1 && phase <= tour.length ? tour[phase - 1] : null;
-	const nextStop = tour[Math.min(tour.length, phase)];
+	const nextStop = stops[Math.min(stops.length, phase)];
 	const building = landmark ? atlas.buildings.find((b) => b.name === landmark) ?? null : null;
 	const note = landmark ? landmarkNote(landmark) : null;
+	const activeStationSlug = stop && stop.kind === "station" ? stop.slug : null;
+	const activeMosaic = stop && stop.kind === "figure" ? stop.figureIndex : -1;
+	const figure = stop && stop.kind === "figure" ? site.impact[stop.figureIndex] : null;
+	const stationRecord =
+		stop && stop.kind === "station" ? stations.find((st) => st.slug === stop.slug)! : null;
 
 	return (
 		<div className="ride" ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount }}>
@@ -141,8 +173,10 @@ export default function AtlasRide() {
 							selected={landmark}
 							onSelect={setLandmark}
 							onSelectStation={goToStation}
-							activeStation={station ? station.slug : null}
-							classNameOverride="chi-map riding"
+							activeStation={activeStationSlug}
+							activeMosaic={activeMosaic}
+							dimStations={figure !== null}
+							classNameOverride={`chi-map riding${figure ? " figure-focus" : ""}`}
 						>
 							<g ref={trainRef} className="you-train" aria-hidden="true">
 								<circle r="16" cx="10" cy="0" className="you-halo" />
@@ -157,18 +191,27 @@ export default function AtlasRide() {
 
 					<div className="trip-strip" aria-hidden="true">
 						<span className="trip-dots">
-							{tour.map((s, i) => (
+							{stops.map((s, i) => (
 								<i
-									key={s.slug}
+									key={s.kind === "station" ? s.slug : `figure-${s.figureIndex}`}
 									className={phase === i + 1 ? "hit" : i + 1 < phase ? "past" : ""}
-									style={{ background: phase === i + 1 ? LINE_COLORS[s.project.line] : undefined }}
+									style={{
+										background:
+											phase === i + 1
+												? s.kind === "station"
+													? LINE_COLORS[stations.find((st) => st.slug === s.slug)!.project.line]
+													: "var(--signal)"
+												: undefined,
+									}}
 								/>
 							))}
 						</span>
-						{station ? (
-							<b>NOW STOPPING · {station.station.label}</b>
+						{stop ? (
+							<b>
+								{stop.kind === "station" ? "NOW STOPPING" : "PASSING"} · {stop.label.toUpperCase()}
+							</b>
 						) : (
-							<b>NEXT STOP · {nextStop ? nextStop.station.label : "end of the line"}</b>
+							<b>NEXT STOP · {nextStop ? nextStop.label.toUpperCase() : "end of the line"}</b>
 						)}
 					</div>
 
@@ -177,7 +220,7 @@ export default function AtlasRide() {
 						<h1>The city is the navigation.</h1>
 						<p className="lede">
 							Ride the line through the work: scroll to travel, click a station to jump to it,
-							and the skyline answers with each project.
+							and watch the skyline spell the numbers in lit windows as you pass.
 						</p>
 						<p className="dye-note">River dye week: Chicago runs the river green ahead of St. Patrick's Day.</p>
 						<button type="button" className="skip-ride" onClick={skipRide}>
@@ -192,18 +235,28 @@ export default function AtlasRide() {
 								<p className="chi-feature">{building.feature}</p>
 								{note ? <p className="chi-note">{note}</p> : null}
 							</div>
-						) : station ? (
-							<div className="chi-card station-card" key={station.slug}>
+						) : stationRecord ? (
+							<div className="chi-card station-card" key={stationRecord.slug}>
 								<span
 									className="line-band-dot"
 									aria-hidden="true"
-									style={{ background: LINE_COLORS[station.project.line] }}
+									style={{ background: LINE_COLORS[stationRecord.project.line] }}
 								/>
-								<p className="sign">{station.station.label}</p>
+								<p className="sign">{stationRecord.station.label}</p>
 								<h3>
-									<a href={`/portfolio/projects/${station.slug}/`}>{station.project.title}</a>
+									<a href={`/portfolio/projects/${stationRecord.slug}/`}>{stationRecord.project.title}</a>
 								</h3>
-								<p className="chi-feature">{station.project.summary}</p>
+								<p className="chi-feature">{stationRecord.project.summary}</p>
+							</div>
+						) : figure ? (
+							<div className="chi-card station-card figure-card" key={`figure-${activeMosaic}`}>
+								<span className="line-band-dot" aria-hidden="true" style={{ background: "var(--signal)" }} />
+								<p className="sign">The city in numbers</p>
+								<h3 className="figure-value">{figure.value}</h3>
+								<p className="chi-feature">{figure.label}</p>
+								<p className="figure-kind">
+									{figure.kind} · source: {figure.source}
+								</p>
 							</div>
 						) : phase === 0 ? (
 							<div className="chi-card">

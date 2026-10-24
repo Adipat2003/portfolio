@@ -129,6 +129,16 @@ export const seasonsSchema = z.object({
 
 export const weatherKind = z.enum(["clear", "cloudy", "rain", "snow", "storm", "fog"]);
 
+export const mosaicSchema = z.object({
+	figure_index: z.number().int().nonnegative(),
+	x: z.number(),
+	y: z.number(),
+});
+
+export const mosaicsSchema = z.object({
+	figures: z.array(mosaicSchema),
+});
+
 export const weatherSchema = z.object({
 	source: z.string(),
 	license: z.string(),
@@ -204,6 +214,7 @@ export type SeasonName = z.infer<typeof seasonName>;
 export type SeasonPalette = z.infer<typeof seasonPaletteSchema>;
 export type Seasons = z.infer<typeof seasonsSchema>;
 export type Weather = z.infer<typeof weatherSchema>;
+export type Mosaic = z.infer<typeof mosaicSchema>;
 export type Route = z.infer<typeof routeSchema>;
 export type Station = z.infer<typeof stationSchema>;
 export type StationStyle = z.infer<typeof stationStyleSchema>;
