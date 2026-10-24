@@ -299,6 +299,15 @@ phased plan. `docs/ai-exposure.md` carries the AI layer design.
   freshness is visible. weather.json is content consumed by the Next
   renderer only; the Python rollback renders no weather line, which is a
   documented divergence, and build.py --check ignores the file.
+- **The Night Ride, October 2026, PRs #23 #24 #25.** The Atlas hero is now a
+  13-phase scroll-driven scene: a sticky stage, a rAF loop lerping the camera
+  and the you-are-here train, stops that weave the 7 project stations and the
+  4 impact figures (spelled in lit windows via the 5x7 font in
+  src/content/windowfont.ts, placed by content/mosaics.json) into one
+  west-to-east journey, a trip-strip HUD, click-to-jump stations, dimmed
+  non-active stops, a dusk-to-night-to-pre-dawn sky interpolation, and a
+  sunrise lakefront footer. Reduced motion snaps instead of gliding; the
+  Dispatch is untouched and remains the readable canonical surface.
 - **Phase 6, food features.** Not started. Bite Radar list and the
   emerging-restaurant algorithm.
 
