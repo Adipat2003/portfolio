@@ -35,12 +35,16 @@ export default function AtlasStations({
       strokeWidth="6"
       strokeLinejoin="round"
     >
-      {stations.map(({ slug, station, project }) => (
-        <g
-          key={slug}
-          className={`station${selected === slug ? " station-active" : ""}${
-            dimAll || (activeStation && activeStation !== slug) ? " station-dim" : ""
-          }`}
+      {stations.map(({ slug, station, project }) => {
+        const dimmed =
+          activeStation !== slug &&
+          (dimAll || (activeStation != null && activeStation !== slug));
+        return (
+          <g
+            key={slug}
+            className={`station${selected === slug ? " station-active" : ""}${
+              dimmed ? " station-dim" : ""
+            }`}
           role="button"
           tabIndex={0}
           aria-pressed={selected === slug}
@@ -73,7 +77,8 @@ export default function AtlasStations({
             {station.label}
           </text>
         </g>
-      ))}
+        );
+      })}
     </g>
   );
 }

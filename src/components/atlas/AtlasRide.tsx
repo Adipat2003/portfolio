@@ -10,18 +10,24 @@ import { weather } from "@/content/weather";
 import { MOSAIC_CELL, mosaicWidth } from "@/content/windowfont";
 
 /**
- * The Night Ride: the Atlas as one continuous scene you scroll through.
+ * The Night Ride, in two forms.
  *
- * The ride element is a tall scroll track (one viewport per phase); the stage
- * inside it is sticky, so the city stays on screen while a requestAnimationFrame
- * loop reads scroll position, lerps the camera (zoom and focus origin), moves
- * the you-are-here train along the stop polyline, and swaps the overlay card
- * as each phase arrives. The stops are the stations AND the window mosaics,
- * woven into one west-to-east journey, so the impact figures arrive as part
- * of the city rather than as a strip below it. Clicking any station scrolls
- * the ride to that phase; clicking a landmark shows it in the same overlay.
- * Under prefers-reduced-motion the lerp is skipped (targets apply instantly),
- * so the same content arrives without motion.
+ * Desktop: the Atlas as one continuous scene you scroll through. The ride
+ * element is a tall scroll track (one viewport per phase); the stage inside
+ * it is sticky, so the city stays on screen while a requestAnimationFrame
+ * loop lerps the camera, moves the you-are-here train along the stop
+ * polyline, deepens the sky from dusk through night toward dawn, and swaps
+ * the overlay card as each phase arrives. The stops are the stations AND the
+ * window mosaics, woven into one west-to-east journey.
+ *
+ * Mobile: no scroll track. The city renders as a pannable strip with a row
+ * of stop chips; tapping a chip or a station opens its card in normal page
+ * flow, because thirteen viewport-heights of sticky scrolling is a bad phone
+ * experience and this facade refuses to ship one.
+ *
+ * Under prefers-reduced-motion the desktop lerps snap instantly, so the same
+ * content arrives without motion. The Dispatch stays the canonical readable
+ * surface either way.
  */
 
 const [, , vw, vh] = atlas.viewBox.split(/\s+/).map(Number);
@@ -95,7 +101,82 @@ const rgbCss = (c: number[]): string =>
 	`rgb(${Math.round(c[0])} ${Math.round(c[1])} ${Math.round(c[2])})`;
 const PREDAWN: number[][] = [hexToRgb("#241d38"), hexToRgb("#3a2a4a"), hexToRgb("#5c3f52")];
 
+/** The overlay card, shared by both forms: a landmark, a station, a figure,
+    or a hint. One renderer so the two surfaces cannot drift. */
+function RideCard({ stop, landmark }: { stop: Stop | null; landmark: string | null }) {
+	const building = landmark ? atlas.buildings.find((b) => b.name === landmark) ?? null : null;
+	const note = landmark ? landmarkNote(landmark) : null;
+	const figure = stop && stop.kind === "figure" ? site.impact[stop.figureIndex] : null;
+	const stationRecord =
+		stop && stop.kind === "station" ? stations.find((st) => st.slug === stop.slug)! : null;
+
+	if (building) {
+		return (
+			<div className="chi-card" key={building.name}>
+				<h3>{building.name}</h3>
+				<p className="chi-feature">{building.feature}</p>
+				{note ? <p className="chi-note">{note}</p> : null}
+			</div>
+		);
+	}
+	if (stationRecord) {
+		return (
+			<div className="chi-card station-card" key={stationRecord.slug}>
+				<span
+					className="line-band-dot"
+					aria-hidden="true"
+					style={{ background: LINE_COLORS[stationRecord.project.line] }}
+				/>
+				<p className="sign">{stationRecord.station.label}</p>
+				<h3>
+					<a href={`/portfolio/projects/${stationRecord.slug}/`}>{stationRecord.project.title}</a>
+				</h3>
+				<p className="chi-feature">{stationRecord.project.summary}</p>
+			</div>
+		);
+	}
+	if (figure) {
+		return (
+			<div className="chi-card station-card figure-card" key="figure">
+				<span className="line-band-dot" aria-hidden="true" style={{ background: "var(--signal)" }} />
+				<p className="sign">The city in numbers</p>
+				<h3 className="figure-value">{figure.value}</h3>
+				<p className="chi-feature">{figure.label}</p>
+				<p className="figure-kind">
+					{figure.kind} · source: {figure.source}
+				</p>
+			</div>
+		);
+	}
+	return (
+		<div className="chi-card">
+			<p className="chi-hint">
+				{stop === null
+					? "Pick a stop to see the project or the number behind it."
+					: "End of the line. The rest of the city is below."}
+			</p>
+		</div>
+	);
+}
+
+function useIsMobile() {
+	const [isMobile, setIsMobile] = useState(false);
+	useEffect(() => {
+		const mq = window.matchMedia("(max-width: 860px)");
+		const update = () => setIsMobile(mq.matches);
+		update();
+		mq.addEventListener("change", update);
+		return () => mq.removeEventListener("change", update);
+	}, []);
+	return isMobile;
+}
+
 export default function AtlasRide() {
+	const isMobile = useIsMobile();
+	return isMobile ? <RideMobile /> : <RideDesktop />;
+}
+
+function RideDesktop() {
 	const rideRef = useRef<HTMLDivElement>(null);
 	const stageRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
@@ -149,12 +230,12 @@ export default function AtlasRide() {
 				const dawnT = raw < 0.55 ? 0 : (raw - 0.55) / 0.45;
 				const stage = stageRef.current;
 				if (stage) {
-					const stops = dusk.map((from, k) =>
+					const skyStops = dusk.map((from, k) =>
 						rgbCss(mixRgb(mixRgb(from, night[k], skyT), PREDAWN[k], dawnT)),
 					);
-					stage.style.setProperty("--atlas-sky-1", stops[0]);
-					stage.style.setProperty("--atlas-sky-2", stops[1]);
-					stage.style.setProperty("--atlas-sky-3", stops[2]);
+					stage.style.setProperty("--atlas-sky-1", skyStops[0]);
+					stage.style.setProperty("--atlas-sky-2", skyStops[1]);
+					stage.style.setProperty("--atlas-sky-3", skyStops[2]);
 					stage.style.setProperty("--dawn", dawnT.toFixed(3));
 				}
 
@@ -197,13 +278,8 @@ export default function AtlasRide() {
 	}
 
 	const nextStop = stops[Math.min(stops.length, phase)];
-	const building = landmark ? atlas.buildings.find((b) => b.name === landmark) ?? null : null;
-	const note = landmark ? landmarkNote(landmark) : null;
 	const activeStationSlug = stop && stop.kind === "station" ? stop.slug : null;
 	const activeMosaic = stop && stop.kind === "figure" ? stop.figureIndex : -1;
-	const figure = stop && stop.kind === "figure" ? site.impact[stop.figureIndex] : null;
-	const stationRecord =
-		stop && stop.kind === "station" ? stations.find((st) => st.slug === stop.slug)! : null;
 
 	return (
 		<div className="ride" ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount }}>
@@ -215,11 +291,12 @@ export default function AtlasRide() {
 							svgRef={svgRef}
 							selected={landmark}
 							onSelect={setLandmark}
+							stationSelected={activeStationSlug}
 							onSelectStation={goToStation}
 							activeStation={activeStationSlug}
 							activeMosaic={activeMosaic}
-							dimStations={figure !== null}
-							classNameOverride={`chi-map riding${figure ? " figure-focus" : ""}`}
+							dimStations={stop !== null}
+							classNameOverride={`chi-map riding${activeMosaic >= 0 ? " figure-focus" : ""}`}
 						>
 							<g ref={trainRef} className="you-train" aria-hidden="true">
 								<circle r="16" cx="10" cy="0" className="you-halo" />
@@ -272,44 +349,7 @@ export default function AtlasRide() {
 					</div>
 
 					<div className="ride-overlay" role="status" aria-live="polite">
-						{building ? (
-							<div className="chi-card" key={building.name}>
-								<h3>{building.name}</h3>
-								<p className="chi-feature">{building.feature}</p>
-								{note ? <p className="chi-note">{note}</p> : null}
-							</div>
-						) : stationRecord ? (
-							<div className="chi-card station-card" key={stationRecord.slug}>
-								<span
-									className="line-band-dot"
-									aria-hidden="true"
-									style={{ background: LINE_COLORS[stationRecord.project.line] }}
-								/>
-								<p className="sign">{stationRecord.station.label}</p>
-								<h3>
-									<a href={`/portfolio/projects/${stationRecord.slug}/`}>{stationRecord.project.title}</a>
-								</h3>
-								<p className="chi-feature">{stationRecord.project.summary}</p>
-							</div>
-						) : figure ? (
-							<div className="chi-card station-card figure-card" key={`figure-${activeMosaic}`}>
-								<span className="line-band-dot" aria-hidden="true" style={{ background: "var(--signal)" }} />
-								<p className="sign">The city in numbers</p>
-								<h3 className="figure-value">{figure.value}</h3>
-								<p className="chi-feature">{figure.label}</p>
-								<p className="figure-kind">
-									{figure.kind} · source: {figure.source}
-								</p>
-							</div>
-						) : phase === 0 ? (
-							<div className="chi-card">
-								<p className="chi-hint">Scroll to board. The next stop lights up as you travel.</p>
-							</div>
-						) : (
-							<div className="chi-card">
-								<p className="chi-hint">End of the line. The rest of the city is below.</p>
-							</div>
-						)}
+						<RideCard stop={landmark ? null : stop} landmark={landmark} />
 					</div>
 
 					<div className="dawn-glow" aria-hidden="true" />
@@ -317,5 +357,65 @@ export default function AtlasRide() {
 				</AtlasScene>
 			</div>
 		</div>
+	);
+}
+
+function RideMobile() {
+	const [pick, setPick] = useState<number | null>(null);
+	const [landmark, setLandmark] = useState<string | null>(null);
+	const stop = pick !== null ? stops[pick] : null;
+
+	function choose(index: number) {
+		setPick(index);
+		setLandmark(null);
+	}
+
+	return (
+		<header className="atlas-hero ride-mobile">
+			<WeatherBadge className="atlas-weather" />
+			<div className="atlas-scroll">
+				<AtlasMap
+					selected={landmark}
+					onSelect={(name) => {
+						setLandmark(name);
+						if (name) setPick(null);
+					}}
+					onSelectStation={(slug) => {
+						if (!slug) return;
+						const index = stops.findIndex((s) => s.kind === "station" && s.slug === slug);
+						if (index !== -1) choose(index);
+					}}
+				/>
+			</div>
+			<p className="swipe-cue">Swipe the skyline to explore the whole map.</p>
+
+			<div className="stop-chips" role="tablist" aria-label="Stops on the map">
+				{stops.map((s, i) => (
+					<button
+						key={s.kind === "station" ? s.slug : `figure-${s.figureIndex}`}
+						type="button"
+						role="tab"
+						aria-selected={pick === i}
+						onClick={() => choose(i)}
+					>
+						{s.label}
+					</button>
+				))}
+			</div>
+
+			<div className="ride-overlay static-overlay" role="status" aria-live="polite">
+				<RideCard stop={landmark ? null : stop} landmark={landmark} />
+			</div>
+
+			<div className="ride-copy">
+				<span className="kicker">Facade 2: The Atlas</span>
+				<h1>The city is the navigation.</h1>
+				<p className="lede">
+					The skyline holds the work: tap a stop, or a landmark on the map, and the city answers.
+				</p>
+				<p className="dye-note">River dye week: Chicago runs the river green ahead of St. Patrick's Day.</p>
+			</div>
+			<div className={`weather-fx ${weather.condition_kind}`} aria-hidden="true" />
+		</header>
 	);
 }
