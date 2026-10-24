@@ -73,8 +73,31 @@ const rail: Array<{ x: number; y: number }> = [
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
+/** Sky color helpers: the ride deepens the dusk into night, then lifts it
+    toward a pre-dawn glow, all inside the ride stage. */
+const hexToRgb = (hex: string): number[] => {
+	const h = hex.trim().replace("#", "");
+	const full = h.length === 3
+		? h
+				.split("")
+				.map((c) => c + c)
+				.join("")
+		: h;
+	return [
+		parseInt(full.slice(0, 2), 16),
+		parseInt(full.slice(2, 4), 16),
+		parseInt(full.slice(4, 6), 16),
+	];
+};
+const mixRgb = (a: number[], b: number[], t: number): number[] =>
+	a.map((v, i) => v + (b[i] - v) * t);
+const rgbCss = (c: number[]): string =>
+	`rgb(${Math.round(c[0])} ${Math.round(c[1])} ${Math.round(c[2])})`;
+const PREDAWN: number[][] = [hexToRgb("#241d38"), hexToRgb("#3a2a4a"), hexToRgb("#5c3f52")];
+
 export default function AtlasRide() {
 	const rideRef = useRef<HTMLDivElement>(null);
+	const stageRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 	const trainRef = useRef<SVGGElement>(null);
 	const phaseRef = useRef(0);
@@ -89,6 +112,11 @@ export default function AtlasRide() {
 		const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 		const cam = { ...focuses[0] };
 		const pos = { ...rail[0] };
+		const rootCs = getComputedStyle(document.documentElement);
+		const dusk = (["--atlas-sky-1", "--atlas-sky-2", "--atlas-sky-3"] as const).map((key) =>
+			hexToRgb(rootCs.getPropertyValue(key)),
+		);
+		const night = dusk.map((c) => c.map((v) => v * 0.42));
 		let raf = 0;
 
 		const tick = () => {
@@ -114,6 +142,21 @@ export default function AtlasRide() {
 
 				svg.style.transform = `scale(${cam.zoom.toFixed(4)})`;
 				svg.style.transformOrigin = `${((cam.x / vw) * 100).toFixed(2)}% ${((cam.y / vh) * 100).toFixed(2)}%`;
+
+				// Dusk deepens to night through the middle of the ride, then
+				// lifts toward the pre-dawn glow by the end.
+				const skyT = raw < 0.55 ? raw / 0.55 : 1;
+				const dawnT = raw < 0.55 ? 0 : (raw - 0.55) / 0.45;
+				const stage = stageRef.current;
+				if (stage) {
+					const stops = dusk.map((from, k) =>
+						rgbCss(mixRgb(mixRgb(from, night[k], skyT), PREDAWN[k], dawnT)),
+					);
+					stage.style.setProperty("--atlas-sky-1", stops[0]);
+					stage.style.setProperty("--atlas-sky-2", stops[1]);
+					stage.style.setProperty("--atlas-sky-3", stops[2]);
+					stage.style.setProperty("--dawn", dawnT.toFixed(3));
+				}
 
 				const ti = Math.min(rail.length - 2, i);
 				const train = { x: lerp(rail[ti].x, rail[ti + 1].x, t), y: lerp(rail[ti].y, rail[ti + 1].y, t) };
@@ -164,7 +207,7 @@ export default function AtlasRide() {
 
 	return (
 		<div className="ride" ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount }}>
-			<div className="ride-stage atlas-hero">
+			<div className="ride-stage atlas-hero" ref={stageRef}>
 				<AtlasScene>
 					<WeatherBadge className="atlas-weather" />
 					<div className="atlas-scroll">
@@ -269,6 +312,7 @@ export default function AtlasRide() {
 						)}
 					</div>
 
+					<div className="dawn-glow" aria-hidden="true" />
 					<div className={`weather-fx ${weather.condition_kind}`} aria-hidden="true" />
 				</AtlasScene>
 			</div>
