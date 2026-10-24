@@ -206,6 +206,7 @@ export default function AtlasRide() {
 
 	useEffect(() => {
 		const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const narrow = window.matchMedia("(max-width: 860px)");
 		const cam = { ...focuses[0] };
 		const pos = { ...rail[0] };
 		const rootCs = getComputedStyle(document.documentElement);
@@ -237,7 +238,14 @@ export default function AtlasRide() {
 				cam.zoom += (tgt.zoom - cam.zoom) * ease;
 
 				svg.style.transform = `scale(${cam.zoom.toFixed(4)})`;
-				svg.style.transformOrigin = `${((cam.x / vw) * 100).toFixed(2)}% ${((cam.y / vh) * 100).toFixed(2)}%`;
+				// On phones the city is top-anchored and the card owns the
+				// bottom, so the focus origin sits lower to lift each stop
+				// into the upper third of the screen.
+				const originBias = narrow.matches ? 14 : 0;
+				svg.style.transformOrigin = `${((cam.x / vw) * 100).toFixed(2)}% ${(
+					(cam.y / vh) * 100 +
+					originBias
+				).toFixed(2)}%`;
 
 				// Dusk deepens to night through the middle of the ride, then
 				// lifts toward the pre-dawn glow by the end.
