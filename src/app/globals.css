@@ -146,6 +146,15 @@ section{padding:76px 0}
 .you-train{pointer-events:none}
 .you-halo{fill:rgba(232,176,75,.16)}
 .you-body{fill:#1b2133;stroke:var(--signal);stroke-width:1.1}
+/* Window mosaics: the impact figures spelled in lit windows. */
+.mosaic-cell{fill:var(--atlas-lights,#e8b04b);opacity:.92;animation:mosaic-in .7s ease both}
+@keyframes mosaic-in{from{opacity:0}to{opacity:.92}}
+.mosaic-active .mosaic-cell{fill:#ffd98a;opacity:1;filter:drop-shadow(0 0 4px rgba(232,176,75,.85))}
+.figure-card .figure-value{font-family:var(--mono);font-size:30px;letter-spacing:.02em;color:var(--night-ink)}
+.figure-card .figure-kind{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--signal)}
+/* The ticket booth: the ask box as a station-agent window. */
+.atlas .ask-box{border:1px solid rgba(232,176,75,.4);box-shadow:inset 0 0 0 1px rgba(232,176,75,.12),0 8px 30px rgba(8,10,16,.45)}
+.atlas .ask-box h2{color:var(--night-ink)}
 
 .dye-note{display:none;margin-top:20px;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--signal);opacity:.95}
 [data-river-dye="true"] .dye-note{display:block}
@@ -238,6 +247,8 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 .chi-map .station{cursor:pointer}
 .station-dim{opacity:.22;transition:opacity .45s ease}
 .station{transition:opacity .45s ease}
+.routes-layer{transition:opacity .45s ease}
+.chi-map.figure-focus .routes-layer{opacity:.3}
 .station-active circle{stroke-width:6;filter:drop-shadow(0 0 14px rgba(233,230,223,.95))}
 @media (min-width:861px){
   .focus-scrim{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(circle at var(--fox,50%) var(--foy,50%),transparent 0 13%,rgba(13,15,22,.42) 36%)}

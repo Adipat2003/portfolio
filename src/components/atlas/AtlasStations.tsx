@@ -12,10 +12,12 @@ export default function AtlasStations({
   selected = null,
   onSelect,
   activeStation = null,
+  dimAll = false,
 }: {
   selected?: string | null;
   onSelect?: (slug: string | null) => void;
   activeStation?: string | null;
+  dimAll?: boolean;
 }) {
   const style = atlas.station_style;
 
@@ -37,7 +39,7 @@ export default function AtlasStations({
         <g
           key={slug}
           className={`station${selected === slug ? " station-active" : ""}${
-            activeStation && activeStation !== slug ? " station-dim" : ""
+            dimAll || (activeStation && activeStation !== slug) ? " station-dim" : ""
           }`}
           role="button"
           tabIndex={0}

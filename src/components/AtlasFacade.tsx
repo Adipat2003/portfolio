@@ -48,7 +48,7 @@ export default function AtlasFacade() {
       <AskBox
         examples={site.ask_examples}
         headingId="f2-ask"
-        heading="The Atlas answers too"
+        heading="The ticket booth: ask the agent"
       />
 
       <hr className="flag-rule" aria-hidden="true" />
