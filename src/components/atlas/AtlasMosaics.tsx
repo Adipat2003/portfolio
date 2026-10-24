@@ -17,7 +17,9 @@ export default function AtlasMosaics({ active = -1 }: { active?: number }) {
 				return (
 					<g
 						key={mosaic.figure_index}
-						className={`mosaic${active === mosaic.figure_index ? " mosaic-active" : ""}`}
+						className={`mosaic${active === mosaic.figure_index ? " mosaic-active" : ""}${
+							active >= 0 && active !== mosaic.figure_index ? " mosaic-dim" : ""
+						}`}
 					>
 						{cells.map((cell, i) => (
 							<rect
