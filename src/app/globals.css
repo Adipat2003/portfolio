@@ -6,9 +6,9 @@
   /* Chicago flag tokens: the six-pointed stars and the two light-blue bars. */
   --flag-red:#d22630; --flag-blue:#86b8d8;
   /* Seasonal tokens are injected from content/seasons.json on <html>. */
-  --sans: ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
-  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: var(--font-sans-dl), ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  --serif: var(--font-serif-dl), "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --mono: var(--font-mono-dl), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
@@ -18,8 +18,8 @@ p{margin:0}
 a{color:inherit}
 :focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:2px}
 .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
-.concept-bar{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:1px solid var(--rule)}
-.concept-bar-inner{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;padding:12px 24px;max-width:1120px;margin:0 auto}
+.concept-bar{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:1px solid transparent}
+.concept-bar-inner{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;padding:10px 24px;max-width:1120px;margin:0 auto}
 .concept-title{font-family:var(--mono);font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft)}
 .seg{display:inline-flex;border:1px solid var(--rule);border-radius:999px;padding:3px;background:var(--paper-2)}
 .seg button{appearance:none;border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;padding:8px 18px;min-height:44px;border-radius:999px;color:var(--ink-soft);cursor:pointer}
@@ -29,25 +29,26 @@ a{color:inherit}
    the kicker's own color, so it follows the seasonal accent on the Dispatch
    and the signal color on the Atlas. */
 .kicker::before{content:"";position:absolute;left:1px;top:50%;translate:0 -50%;width:11px;height:11px;background:currentColor;clip-path:polygon(50% 2%,61% 31%,91.6% 26%,72% 50%,91.6% 74%,61% 69%,50% 98%,39% 69%,8.4% 74%,28% 50%,8.4% 26%,39% 31%)}
-.lede{font-size:19px;color:var(--ink-soft);max-width:62ch}
+.lede{font-size:19px;color:var(--ink-soft);max-width:54ch}
 .rule{height:1px;background:var(--rule);border:0;margin:0}
 .hero{padding:96px 0 72px;background:radial-gradient(1200px 500px at 78% -10%, var(--accent-soft), transparent 60%), var(--paper)}
 .hero h1{font-size:clamp(40px,6vw,68px);line-height:1.02;margin:20px 0 0;max-width:17ch;text-wrap:balance}
 /* The ghost flag star: the empty right half of the hero carries the Chicago
    mark instead of nothing; blurred and cropped so it reads as atmosphere. */
-.ghost-star{position:absolute;right:-3%;top:14%;width:min(32vw,380px);aspect-ratio:1;background:var(--accent-soft);opacity:.5;filter:blur(2.5px);clip-path:polygon(50% 2%,61% 31%,91.6% 26%,72% 50%,91.6% 74%,61% 69%,50% 98%,39% 69%,8.4% 74%,28% 50%,8.4% 26%,39% 31%);pointer-events:none}
+.ghost-star{position:absolute;right:-2%;top:14%;width:min(32vw,380px);aspect-ratio:1;background:var(--accent-soft);opacity:.62;filter:blur(2px);clip-path:polygon(50% 2%,61% 31%,91.6% 26%,72% 50%,91.6% 74%,61% 69%,50% 98%,39% 69%,8.4% 74%,28% 50%,8.4% 26%,39% 31%);pointer-events:none}
 .hero .lede{margin-top:22px}
 .hero-meta{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:36px;font-size:14px;color:var(--ink-soft)}
 .hero-meta b{color:var(--ink);font-weight:600}
 .impact-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);border-block:1px solid var(--rule)}
 .impact-strip div{background:var(--paper);padding:26px 4px 24px}
-.impact-strip .num{font-family:var(--serif);font-size:38px;line-height:1}
+.impact-strip .num{font-family:var(--serif);font-size:46px;line-height:1}
 .impact-strip .lab{font-size:13px;color:var(--ink-soft);margin-top:8px}
 .impact-strip .kind{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-top:6px;display:block}
 section{padding:76px 0}
 .sec-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 24px;justify-content:space-between;margin-bottom:36px}
 .sec-head h2{font-size:clamp(28px,4vw,40px)}
-.card{border:1px solid var(--rule);border-radius:14px;padding:26px;background:var(--paper);display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
+.card{border:0;border-top:2px solid var(--rule);border-radius:8px;padding:28px 26px;background:var(--paper);display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;transition:translate .25s ease,box-shadow .25s ease,border-color .25s ease}
+.card:hover{translate:0 -3px;box-shadow:0 10px 28px rgba(18,16,14,.09);border-top-color:var(--accent)}
 .card .line-band{position:absolute;top:0;left:0;right:0;height:3px;display:block}
 .card h3{font-size:21px}
 .card h3 a{text-decoration:none}
@@ -57,9 +58,9 @@ section{padding:76px 0}
 .card .role b{color:var(--ink)}
 .card .figs{list-style:none;padding:0;margin:0;font-size:13px;color:var(--ink-soft);display:grid;gap:4px}
 .card .figs b{color:var(--ink);font-family:var(--mono);font-size:12px}
-.pending{border-style:dashed}
+.pending{border-top-style:dashed}
 .tags{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:0}
-.tags li{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;color:var(--ink-soft);border:1px solid var(--rule);border-radius:999px;padding:4px 10px}
+.tags li{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;color:var(--ink-soft);background:var(--paper-2);border:0;border-radius:999px;padding:4px 12px}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 .ask-box{border:1px solid var(--rule);border-radius:14px;background:var(--paper-2);padding:28px;display:grid;gap:16px}
 .ask-row{display:flex;gap:12px;flex-wrap:wrap}
@@ -85,7 +86,8 @@ section{padding:76px 0}
 .atlas{background:var(--night);color:var(--night-ink)}
 .atlas .lede,.atlas .card p,.atlas .card .role{color:var(--night-soft)}
 .atlas .kicker{color:var(--signal)}
-.atlas .card{background:var(--night-2);border-color:var(--night-rule)}
+.atlas .card{background:var(--night-2);border-top:2px solid var(--night-rule)}
+.atlas .card:hover{box-shadow:0 10px 28px rgba(8,10,16,.5);border-top-color:var(--signal)}
 .atlas .card .figs b,.atlas .card .role b{color:var(--night-ink)}
 .atlas .tags li{border-color:var(--night-rule);color:var(--night-soft)}
 .atlas .impact-strip .kind{color:var(--signal)}
@@ -235,7 +237,8 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 [data-facade="atlas"] .seg button{color:var(--night-soft)}
 [data-facade="atlas"] .seg button[aria-pressed="true"]{background:var(--signal);color:#171208}
 .filter-bar{display:grid;gap:14px;margin-bottom:28px}
-.filter-bar input[type="search"]{font:inherit;font-size:15px;min-height:44px;padding:10px 16px;border:1px solid var(--rule);border-radius:10px;background:var(--paper);color:var(--ink);max-width:420px;width:100%}
+.filter-bar input[type="search"]{font:inherit;font-size:15px;min-height:44px;padding:10px 2px;border:0;border-bottom:1px solid var(--rule);border-radius:0;background:transparent;color:var(--ink);max-width:420px;width:100%;transition:border-color .25s ease}
+.filter-bar input[type="search"]:focus{border-bottom-color:var(--accent);outline:0}
 .filter-bar input[type="search"]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .detail-head{padding:56px 0 40px;border-bottom:1px solid var(--rule)}
 .detail-head h1{font-size:clamp(32px,5vw,52px);line-height:1.06;margin:16px 0 0;max-width:20ch}

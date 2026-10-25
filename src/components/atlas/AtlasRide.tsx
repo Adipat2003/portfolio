@@ -67,11 +67,13 @@ type Focus = { x: number; y: number; zoom: number };
 const wideFocus: Focus = { x: vw / 2, y: vh / 2 - 30, zoom: 1 };
 const outroFocus: Focus = { x: vw / 2, y: vh / 2 - 40, zoom: 1 };
 
-/** Train polyline: enters from the west edge, stops at every stop. */
+/** Train polyline: enters from the west edge and parks at the terminal.
+    The exit point used to sit past the viewBox, so the train clipped off
+    the map during the outro; now it arrives and stays, which is what
+    "end of the line" should look like. */
 const rail: Array<{ x: number; y: number }> = [
 	{ x: Math.max(-30, stops[0].x - 170), y: stops[0].y + 70 },
 	...stops.map((s) => ({ x: s.x, y: s.y })),
-	{ x: Math.min(vw + 30, TERMINAL.x + 120), y: TERMINAL.y - 60 },
 ];
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -265,8 +267,12 @@ export default function AtlasRide() {
 					stage.style.setProperty("--ride-progress", raw.toFixed(4));
 				}
 
-				const ti = Math.min(rail.length - 2, i);
-				const train = { x: lerp(rail[ti].x, rail[ti + 1].x, t), y: lerp(rail[ti].y, rail[ti + 1].y, t) };
+				// The train reaches the terminal at the final stop and parks
+				// there through the outro, instead of clipping off the map.
+				const tf = Math.min(f, rail.length - 1);
+				const ti = Math.min(rail.length - 2, Math.floor(tf));
+				const tt = smooth(tf - ti);
+				const train = { x: lerp(rail[ti].x, rail[ti + 1].x, tt), y: lerp(rail[ti].y, rail[ti + 1].y, tt) };
 				pos.x += (train.x - pos.x) * (reduce ? 1 : 0.1);
 				pos.y += (train.y - pos.y) * (reduce ? 1 : 0.1);
 				trainRef.current?.setAttribute("transform", `translate(${pos.x.toFixed(1)} ${pos.y.toFixed(1)})`);
