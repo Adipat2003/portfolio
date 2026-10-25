@@ -346,6 +346,11 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
   .trip-stop.hit em{display:inline}
   .trip-stop.hit{padding:6px 10px}
   .ride-copy{padding:56px 20px 0;text-shadow:none}
+  /* Phase 0 is a quiet boarding screen: the index waits until you scroll,
+     the headline breathes, and the map reads as background. */
+  .ride-phase-0 .trip-strip{display:none}
+  .ride-copy h1{font-size:clamp(30px,8.5vw,44px)}
+  .ride-copy .lede{font-size:15px;max-width:30ch}
   .ride-overlay{left:12px;right:12px;bottom:12px;max-width:none}
   .ride-overlay .chi-card{background:rgba(21,26,40,.94);backdrop-filter:none;padding:14px 16px}
   .ride-overlay .chi-card h3{font-size:17px}

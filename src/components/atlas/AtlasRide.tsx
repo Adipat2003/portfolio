@@ -360,7 +360,7 @@ export default function AtlasRide() {
 		phase >= 1 && phase <= stops.length ? ` · STOP ${phase} OF ${stops.length}` : "";
 
 	return (
-		<div className="ride" ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount }}>
+		<div className={`ride${phase === 0 ? " ride-phase-0" : ""}`} ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount }}>
 			<div className="ride-stage atlas-hero" ref={stageRef}>
 				<AtlasScene>
 					<div className="atlas-scroll">
@@ -372,7 +372,7 @@ export default function AtlasRide() {
 							onSelectStation={goToStation}
 							activeStation={activeStationSlug}
 							activeMosaic={activeMosaic}
-							dimStations={stop !== null && !atTerminal}
+							dimStations={!(stop !== null && atTerminal)}
 							classNameOverride={`chi-map riding${activeMosaic >= 0 || landmark ? " figure-focus" : ""}`}
 						>
 							<g ref={trainRef} className="you-train" aria-hidden="true">
@@ -412,10 +412,8 @@ export default function AtlasRide() {
 					<div className={`ride-copy${phase === 0 ? "" : " faded"}`}>
 						<span className="kicker">Facade 2: The Atlas</span>
 						<h1>The city is the navigation.</h1>
-						<p className="lede">
-							Your train is the glowing one. Scroll to ride the work, the numbers spelled in lit
-							windows, and the terminal where the agent answers.
-						</p>
+						<p className="lede">Your train is the glowing one. Scroll to ride.</p>
+						<p className="lede lede-second">Ride past the numbers in lit windows. Get off at the terminal to ask.</p>
 						<p className="dye-note">River dye week: Chicago runs the river green ahead of St. Patrick's Day.</p>
 						<button type="button" className="skip-ride" onClick={skipRide}>
 							Skip the ride
