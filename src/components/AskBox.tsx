@@ -7,6 +7,14 @@ import type { Figure } from "@/content/schema";
 
 type AskExample = { question: string; answer: string; source: string };
 
+/**
+ * The hosted service base URL, baked at build time. Empty on the static
+ * Pages build, so the ask feature runs on local grounded retrieval; set it
+ * (NEXT_PUBLIC_SERVICE_URL) and the same UI upgrades to model-polished
+ * answers from the service, falling back locally on any failure.
+ */
+const SERVICE_URL = process.env.NEXT_PUBLIC_SERVICE_URL ?? "";
+
 // The retriever indexes exactly what the page renders, so an answer can never
 // come from a record the reader is not looking at.
 const { retrieve } = buildRetriever({ site, projects: publishedProjects });
@@ -100,9 +108,27 @@ export default function AskBox({
 }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Match[] | null>(null);
+  const [polished, setPolished] = useState<{ answer: string; sources: string[] } | null>(null);
 
   function ask(question: string) {
     setQuery(question);
+    setPolished(null);
+    setResults(null);
+    if (SERVICE_URL) {
+      fetch(`${SERVICE_URL}/ask-model`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      })
+        .then(async (res) => {
+          if (!res.ok) throw new Error(`service ${res.status}`);
+          const data = await res.json();
+          if (data?.grounded !== true) throw new Error("not grounded");
+          setPolished({ answer: String(data.answer), sources: Array.isArray(data.sources) ? data.sources : [] });
+        })
+        .catch(() => setResults(retrieve(question)));
+      return;
+    }
     setResults(retrieve(question));
   }
 
@@ -153,7 +179,17 @@ export default function AskBox({
 
       <div className="answer" role="status" aria-live="polite">
         {" "}
-        {!answered
+        {polished ? (
+          <>
+            <div className="ask-result">
+              <p>{polished.answer}</p>
+            </div>
+            <span className="src">
+              Grounded sources: {polished.sources.join("; ")} · rephrased by the service
+            </span>
+          </>
+        ) : null}
+        {!answered && !polished
           ? "Ask a question, and the answer comes from the portfolio records with its source attached."
           : null}
         {declined ? NO_ANSWER : null}
@@ -165,7 +201,7 @@ export default function AskBox({
               </div>
             ))
           : null}
-        {!answered ? <span className="src">No answer yet</span> : null}
+        {!answered && !polished ? <span className="src">No answer yet</span> : null}
       </div>
     </>
   );

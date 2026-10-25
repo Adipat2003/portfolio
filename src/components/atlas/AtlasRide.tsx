@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AtlasMap from "@/components/atlas/AtlasMap";
 import AtlasScene from "@/components/atlas/AtlasScene";
 import AskBox from "@/components/AskBox";
+import CtaLive from "@/components/atlas/CtaLive";
 import { atlas, landmarkNote, LINE_COLORS, stations, site } from "@/content/load";
 import { mosaics } from "@/content/mosaics";
 import { MOSAIC_CELL, mosaicWidth } from "@/content/windowfont";
@@ -361,6 +362,8 @@ export default function AtlasRide() {
 						</span>
 						<b>{stripText}{counter}</b>
 					</div>
+
+					<CtaLive />
 
 					<div className="ride-progress" aria-hidden="true" />
 

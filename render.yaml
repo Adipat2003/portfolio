@@ -1,0 +1,20 @@
+# One-click blueprint for the portfolio Node service (MCP endpoint,
+# CTA transit proxy, NVIDIA ask layer). Create a Render account, click
+# "New + Blueprint" on this repo, and it deploys from this file.
+# Keys are entered in the dashboard at deploy time; none are stored here.
+services:
+  - type: web
+    name: portfolio-service
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build:service
+    startCommand: npm run start:service
+    envVars:
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: CTA_API_KEY
+        sync: false
+      - key: CTA_MAPID
+        value: "40380"
+      - key: SERVICE_ALLOWED_ORIGINS
+        value: "https://adipat2003.github.io,http://localhost:1312,http://127.0.0.1:1312"

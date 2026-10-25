@@ -122,6 +122,22 @@ async function main() {
 			preflight.status === 204 &&
 				preflight.headers.get("access-control-allow-origin") === "https://adipat2003.github.io",
 		);
+
+		// CTA proxy degradation: no key configured means an honest
+		// not-available payload with the credit line, never an error.
+		const transit = await get("/transit");
+		ok(
+			"transit degrades honestly without a key",
+			transit.status === 200 &&
+				transit.json.available === false &&
+				typeof transit.json.reason === "string" &&
+				String(transit.json.credit).includes("Chicago Transit Authority"),
+		);
+		const transitAgain = await get("/transit");
+		ok(
+			"transit no-key response is stable across calls",
+			transitAgain.json.available === false,
+		);
 	} finally {
 		child.kill();
 	}
