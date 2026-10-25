@@ -39,7 +39,13 @@ export default function AtlasBuildings({
             <title>
               {b.name}: {b.feature}
             </title>
-            <path d={b.d} fill={`url(#${atlas.building_fill.id})`} stroke="#3a4a6e" strokeWidth={1} />
+            <path
+              d={b.d}
+              fill={`url(#${atlas.building_fill.id})`}
+              stroke="#3a4a6e"
+              strokeWidth={1}
+              className={open ? "bld-selected" : undefined}
+            />
             {b.extra ? (
               b.extra_fill ? (
                 <path d={b.extra} fill={b.extra_fill} stroke="none" />

@@ -189,6 +189,28 @@ export default function AtlasRide() {
 	const [phase, setPhase] = useState(0);
 	const [landmark, setLandmark] = useState<string | null>(null);
 	const isMobile = useIsMobile();
+	/** When a landmark is open, the camera glides onto it like a stop. */
+	const landmarkFocusRef = useRef<Focus | null>(null);
+
+	function selectLandmark(name: string | null) {
+		setLandmark(name);
+		if (!name) {
+			landmarkFocusRef.current = null;
+			return;
+		}
+		// Find the building's group by its aria-label and take its center in
+		// viewBox units, so the camera focus needs no new data.
+		const svg = svgRef.current;
+		const group = svg?.querySelector<SVGGElement>(`g[aria-label^="${name}:"]`);
+		if (group) {
+			const box = group.getBBox();
+			landmarkFocusRef.current = {
+				x: box.x + box.width / 2,
+				y: box.y + box.height / 2,
+				zoom: isMobile ? 1.5 : 1.9,
+			};
+		}
+	}
 
 	const phaseCount = stops.length + 2;
 	const stop = phase >= 1 && phase <= stops.length ? stops[phase - 1] : null;
@@ -231,7 +253,7 @@ export default function AtlasRide() {
 				const i = Math.min(phaseCount - 2, Math.floor(f));
 				const t = smooth(f - i);
 
-				const tgt = {
+				const tgt = landmarkFocusRef.current ?? {
 					x: lerp(focuses[i].x, focuses[i + 1].x, t),
 					y: lerp(focuses[i].y, focuses[i + 1].y, t),
 					zoom: lerp(focuses[i].zoom, focuses[i + 1].zoom, t),
@@ -282,6 +304,7 @@ export default function AtlasRide() {
 					phaseRef.current = next;
 					setPhase(next);
 					setLandmark(null);
+					landmarkFocusRef.current = null;
 					// Keep the active stop visible inside the strip's own
 					// scroll track; the page itself never moves here.
 					const strip = stripRef.current;
@@ -344,13 +367,13 @@ export default function AtlasRide() {
 						<AtlasMap
 							svgRef={svgRef}
 							selected={landmark}
-							onSelect={setLandmark}
+							onSelect={selectLandmark}
 							stationSelected={activeStationSlug}
 							onSelectStation={goToStation}
 							activeStation={activeStationSlug}
 							activeMosaic={activeMosaic}
 							dimStations={stop !== null && !atTerminal}
-							classNameOverride={`chi-map riding${activeMosaic >= 0 ? " figure-focus" : ""}`}
+							classNameOverride={`chi-map riding${activeMosaic >= 0 || landmark ? " figure-focus" : ""}`}
 						>
 							<g ref={trainRef} className="you-train" aria-hidden="true">
 								<circle r="18" cx="10" cy="0" className="you-halo" />
