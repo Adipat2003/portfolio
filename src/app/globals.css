@@ -122,7 +122,7 @@ section{padding:76px 0}
    Phones use dynamic viewport units and shorter phases so the ride stays
    smooth and the address bar never fights the sticky stage. */
 .ride{--phase-h:100vh;position:relative;height:calc(var(--ride-phases) * var(--phase-h))}
-.ride-stage{position:sticky;top:0;height:100vh;height:100dvh;min-height:100%;overflow:hidden}
+.ride-stage{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden}
 /* Carriage vignette: one shared darkness at the frame edges so the scene
    reads as a place seen from inside, not stacked layers. */
 .ride-stage::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;box-shadow:inset 0 0 140px 34px rgba(8,10,16,.55);background:linear-gradient(180deg,rgba(8,10,16,.28),transparent 18%,transparent 82%,rgba(8,10,16,.4))}
