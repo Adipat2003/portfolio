@@ -212,6 +212,26 @@ export default function AtlasRide() {
 		}
 	}
 
+	/** Keep the stage aware of the real header height: phones wrap the bar to
+	    two rows and every fixed offset guess has already been wrong once.
+	    The bar is measured, never assumed. */
+	useEffect(() => {
+		const bar = document.getElementById("concept-bar");
+		const stage = stageRef.current;
+		if (!bar || !stage) return;
+		const apply = () => {
+			stage.style.setProperty("--bar-h", `${Math.round(bar.getBoundingClientRect().height)}px`);
+		};
+		apply();
+		const observer = new ResizeObserver(apply);
+		observer.observe(bar);
+		window.addEventListener("resize", apply);
+		return () => {
+			observer.disconnect();
+			window.removeEventListener("resize", apply);
+		};
+	}, []);
+
 	const phaseCount = stops.length + 2;
 	const stop = phase >= 1 && phase <= stops.length ? stops[phase - 1] : null;
 
