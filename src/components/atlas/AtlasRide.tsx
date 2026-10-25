@@ -179,6 +179,7 @@ function useIsMobile() {
 export default function AtlasRide() {
 	const rideRef = useRef<HTMLDivElement>(null);
 	const stageRef = useRef<HTMLDivElement>(null);
+	const stripRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 	const trainRef = useRef<SVGGElement>(null);
 	const phaseRef = useRef(0);
@@ -275,6 +276,13 @@ export default function AtlasRide() {
 					phaseRef.current = next;
 					setPhase(next);
 					setLandmark(null);
+					// Keep the active stop visible inside the strip's own
+					// scroll track; the page itself never moves here.
+					const strip = stripRef.current;
+					const hit = strip?.querySelector<HTMLElement>(".trip-stop.hit");
+					if (strip && hit) {
+						strip.scrollLeft = hit.offsetLeft - strip.clientWidth / 2 + hit.offsetWidth / 2;
+					}
 				}
 			}
 			raf = requestAnimationFrame(tick);
@@ -288,7 +296,9 @@ export default function AtlasRide() {
 		if (!ride) return;
 		const total = ride.offsetHeight - window.innerHeight;
 		const top = ride.getBoundingClientRect().top + window.scrollY;
-		window.scrollTo({ top: top + (target / (phaseCount - 1)) * total, behavior: "smooth" });
+		// Instant jump: the camera lerp in the frame loop is the glide, so
+		// the browser's smooth-scroll never fights the ride on phones.
+		window.scrollTo({ top: top + (target / (phaseCount - 1)) * total, behavior: "auto" });
 	}
 
 	/** Clicking a station scrolls the ride to that phase. */
@@ -303,7 +313,7 @@ export default function AtlasRide() {
 		const ride = rideRef.current;
 		if (!ride) return;
 		const top = ride.getBoundingClientRect().top + window.scrollY;
-		window.scrollTo({ top: top + ride.offsetHeight + 8, behavior: "smooth" });
+		window.scrollTo({ top: top + ride.offsetHeight + 8, behavior: "auto" });
 	}
 
 	const nextStop = stops[Math.min(stops.length, phase)];
@@ -347,17 +357,20 @@ export default function AtlasRide() {
 						</AtlasMap>
 					</div>
 
-					<div className="trip-strip" role="group" aria-label="Trip progress">
+					<div className="trip-strip" ref={stripRef} role="group" aria-label="Trip progress">
 						<span className="trip-dots">
 							{stops.map((s, i) => (
 								<button
 									key={s.kind === "station" ? s.slug : `${s.kind}-${i}`}
 									type="button"
 									aria-label={`Jump to ${s.label}`}
-									className={`trip-dot${phase === i + 1 ? " hit" : i + 1 < phase ? " past" : ""}`}
+									className={`trip-stop${phase === i + 1 ? " hit" : i + 1 < phase ? " past" : ""}`}
 									style={{ ["--accent-dot" as string]: stopAccent(s) }}
 									onClick={() => jumpToPhase(i + 1)}
-								/>
+								>
+									<i className="trip-stop-dot" aria-hidden="true" />
+									<em>{s.kind === "terminal" ? "Terminal" : s.label}</em>
+								</button>
 							))}
 						</span>
 						<b>{stripText}{counter}</b>
