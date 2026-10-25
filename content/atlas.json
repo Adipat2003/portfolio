@@ -99,6 +99,38 @@
       "d": "M792 420 L792 240 L804 214 L816 240 L816 420 Z",
       "extra": "M802 196 L802 214 L806 214 L806 196 Z",
       "extra_fill": "#222b42"
+    },
+    {
+      "name": "Monadnock Building",
+      "feature": "broad shouldered slab with rounded bay columns",
+      "d": "M848 420 L848 176 L876 176 L876 420 Z",
+      "extra": "M856 176 L856 420 M868 176 L868 420",
+      "extra_stroke": "#3a4a6e",
+      "extra_width": 1
+    },
+    {
+      "name": "Fisher Building",
+      "feature": "slender tower with an octagonal turret crown",
+      "d": "M892 420 L892 200 L910 190 L928 200 L928 420 Z",
+      "extra": "M900 190 L910 176 L920 190",
+      "extra_stroke": "#3a4a6e",
+      "extra_width": 1.2
+    },
+    {
+      "name": "353 North Clark",
+      "feature": "stepped modern slab with setback shoulders",
+      "d": "M952 420 L952 224 L986 224 L986 420 Z",
+      "extra": "M952 258 L986 258 M952 292 L986 292 M952 326 L986 326",
+      "extra_stroke": "#2c3a58",
+      "extra_width": 1
+    },
+    {
+      "name": "Aqua Tower",
+      "feature": "irregular cantilevered balconies like rolling water",
+      "d": "M1040 420 L1040 214 L1074 214 L1074 420 Z",
+      "extra": "M1040 246 L1074 240 M1040 280 L1074 272 M1040 314 L1074 308",
+      "extra_stroke": "#3a4a6e",
+      "extra_width": 1
     }
   ],
   "window_lights": [
