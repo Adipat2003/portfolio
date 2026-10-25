@@ -19,9 +19,10 @@ import { resolve } from "node:path";
 import { loadContent } from "./content";
 import { handleMessage } from "./mcp";
 import { createAskModel } from "./ask-model";
+import { createCtaProxy } from "./cta";
 
-const PORT = Number(process.env.SERVICE_PORT ?? 8788);
-const HOST = process.env.SERVICE_HOST ?? "127.0.0.1";
+const PORT = Number(process.env.PORT ?? process.env.SERVICE_PORT ?? 8788);
+const HOST = process.env.SERVICE_HOST ?? (process.env.PORT ? "0.0.0.0" : "127.0.0.1");
 const ROOT = process.env.PORTFOLIO_ROOT ?? resolve(__dirname, "..", "..", "..");
 const ALLOWED_ORIGINS = new Set(
 	(
@@ -35,6 +36,11 @@ const NVIDIA_ENDPOINT =
 	process.env.NVIDIA_ENDPOINT ?? "https://integrate.api.nvidia.com/v1/chat/completions";
 
 const content = loadContent(ROOT);
+const cta = createCtaProxy({
+	apiKey: process.env.CTA_API_KEY,
+	mapid: process.env.CTA_MAPID ?? "40380",
+	ttlMs: 45_000,
+});
 const askModel = createAskModel(content, {
 	apiKey: NVIDIA_API_KEY,
 	model: NVIDIA_MODEL,
@@ -45,6 +51,7 @@ const askModel = createAskModel(content, {
 
 const RATE_LIMITS: Record<string, number> = {
 	"/mcp": 60,
+	"/transit": 20,
 	"/ask-model": 10,
 };
 const buckets = new Map<string, { count: number; reset: number }>();
@@ -141,6 +148,12 @@ const server = createServer(async (req, res) => {
 		return;
 	}
 
+	if (route === "/transit" && req.method === "GET") {
+		const payload = await cta.get();
+		sendJson(res, 200, payload, corsHeaders(origin));
+		return;
+	}
+
 	if (route === "/mcp" && req.method === "POST") {
 		let message: unknown;
 		try {
@@ -185,7 +198,7 @@ const server = createServer(async (req, res) => {
 
 server.listen(PORT, HOST, () => {
 	process.stdout.write(
-		`portfolio-service on http://${HOST}:${PORT} (mcp, ask-model; polish ${
+		`portfolio-service on http://${HOST}:${PORT} (mcp, transit, ask-model; polish ${
 			NVIDIA_API_KEY ? "enabled" : "disabled"
 		})\n`,
 	);

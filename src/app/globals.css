@@ -135,6 +135,14 @@ section{padding:76px 0}
 .trip-strip b{color:var(--signal)}
 /* Where you are on the line: a hairline progress rail across the stage top. */
 .ride-progress{position:absolute;top:0;left:0;height:3px;width:calc(var(--ride-progress,0) * 100%);background:linear-gradient(90deg,var(--flag-red),var(--signal));z-index:7;pointer-events:none;transition:none}
+/* Live CTA arrivals, rendered only when the hosted service exists. */
+.cta-live{position:absolute;top:118px;left:50%;translate:-50% 0;z-index:6;display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none}
+.cta-chip{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--night-ink);background:rgba(13,15,22,.66);border:1px solid var(--night-rule);border-radius:999px;padding:5px 12px;white-space:nowrap}
+.cta-chip b{font-weight:700}
+.cta-line{padding:1px 6px;border-radius:4px;margin-right:2px}
+.cta-red{background:#c0392b;color:#fff}
+.cta-blue{background:#2e86c1;color:#fff}
+.cta-credit{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--night-soft);opacity:.8}
 .trip-dots{display:flex;gap:6px;pointer-events:auto}
 .trip-dot{appearance:none;border:0;padding:0;width:9px;height:9px;border-radius:50%;background:var(--night-rule);display:block;cursor:pointer;transition:transform .3s,background .3s}
 .trip-dot.past{background:rgba(233,230,223,.45)}
