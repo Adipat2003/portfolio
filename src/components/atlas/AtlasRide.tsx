@@ -223,7 +223,7 @@ export default function AtlasRide() {
 			...stops.map((s) => ({
 				x: s.x,
 				y: s.y,
-				zoom: s.kind === "terminal" ? (isMobile ? 1.15 : 1.3) : isMobile ? 1.45 : 2,
+				zoom: s.kind === "terminal" ? (isMobile ? 1.15 : 1.3) : isMobile ? 1.3 : 2,
 			})),
 			outroFocus,
 		],
