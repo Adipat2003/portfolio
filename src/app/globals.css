@@ -131,8 +131,18 @@ section{padding:76px 0}
 .ride-stage .atlas-scroll svg.chi-map{position:absolute;left:50%;bottom:-1px;translate:-50% 0;width:100%;max-width:2200px;height:auto}
 /* The ride drives the transform every frame, so the click-transition is off. */
 .chi-map.riding{transition:none}
-.trip-strip{position:absolute;top:74px;left:50%;translate:-50% 0;z-index:6;display:flex;align-items:center;gap:12px;background:rgba(13,15,22,.72);border:1px solid var(--night-rule);border-radius:999px;padding:9px 18px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--night-soft);pointer-events:none;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap}
+.trip-strip{position:absolute;top:74px;left:50%;translate:-50% 0;z-index:6;display:flex;align-items:center;gap:12px;background:rgba(13,15,22,.72);border:1px solid var(--night-rule);border-radius:999px;padding:8px 16px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--night-soft);pointer-events:none;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap;max-width:calc(100vw - 16px);overflow-x:auto;scrollbar-width:none}
+.trip-strip::-webkit-scrollbar{display:none}
 .trip-strip b{color:var(--signal)}
+/* The route diagram: every stop named, colored, and tappable. */
+.trip-dots{display:flex;gap:4px;pointer-events:auto;align-items:center}
+.trip-stop{appearance:none;border:1px solid transparent;background:transparent;padding:5px 9px;display:flex;align-items:center;gap:6px;cursor:pointer;border-radius:999px;white-space:nowrap;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--night-soft)}
+.trip-stop em{font-style:normal}
+.trip-stop-dot{width:8px;height:8px;border-radius:50%;background:var(--accent-dot,var(--night-rule));display:block;transition:box-shadow .3s,background .3s}
+.trip-stop.past .trip-stop-dot{background:rgba(233,230,223,.45)}
+.trip-stop.hit{background:rgba(232,176,75,.14);border-color:rgba(232,176,75,.5);color:var(--signal)}
+.trip-stop.hit .trip-stop-dot{box-shadow:0 0 7px var(--accent-dot,var(--signal))}
+.trip-stop:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
 /* Where you are on the line: a hairline progress rail across the stage top. */
 .ride-progress{position:absolute;top:0;left:0;height:3px;width:calc(var(--ride-progress,0) * 100%);background:linear-gradient(90deg,var(--flag-red),var(--signal));z-index:7;pointer-events:none;transition:none}
 /* Live CTA arrivals, rendered only when the hosted service exists. */
@@ -143,11 +153,7 @@ section{padding:76px 0}
 .cta-red{background:#c0392b;color:#fff}
 .cta-blue{background:#2e86c1;color:#fff}
 .cta-credit{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--night-soft);opacity:.8}
-.trip-dots{display:flex;gap:6px;pointer-events:auto}
-.trip-dot{appearance:none;border:0;padding:0;width:9px;height:9px;border-radius:50%;background:var(--night-rule);display:block;cursor:pointer;transition:transform .3s,background .3s}
-.trip-dot.past{background:rgba(233,230,223,.45)}
-.trip-dot.hit{transform:scale(1.6);background:var(--accent-dot,var(--signal));box-shadow:0 0 8px var(--accent-dot,var(--signal))}
-.trip-dot:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.trip-dots{display:flex;gap:4px;pointer-events:auto;align-items:center}
 .ride-copy{position:relative;z-index:4;pointer-events:none;padding-top:clamp(84px,13vh,150px);color:var(--night-ink);text-shadow:0 2px 18px rgba(13,15,22,.6);transition:opacity .6s ease,translate .6s ease}
 .ride-copy.faded{opacity:0;translate:0 -18px}
 .ride-copy::before{content:"";position:absolute;inset:-12% -45% -14% -14%;z-index:-1;pointer-events:none;background:radial-gradient(78% 66% at 30% 44%,rgba(13,15,22,.5),rgba(13,15,22,.28) 45%,transparent 78%)}
@@ -323,9 +329,7 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
   .ride{--phase-h:62dvh}
   .atlas-hero{min-height:0}
   .ride-stage .atlas-scroll svg.chi-map{top:-1px;bottom:auto;width:300%}
-  .trip-strip{top:64px;padding:7px 12px;gap:9px;font-size:10px;max-width:calc(100vw - 20px)}
-  .trip-dots{gap:8px}
-  .trip-dot{width:13px;height:13px}
+  .trip-strip{top:64px;padding:6px 12px;gap:8px;font-size:10px;max-width:calc(100vw - 12px)}
   .ride-copy{padding:56px 20px 0;text-shadow:none}
   .ride-overlay{left:12px;right:12px;bottom:12px;max-width:none}
   .ride-overlay .chi-card{background:rgba(21,26,40,.94);backdrop-filter:none;padding:14px 16px}
