@@ -5,6 +5,7 @@ import AskBox from "./AskBox";
 import ChicagoSpots from "./chicago/ChicagoSpots";
 import RotatingEvents from "./chicago/RotatingEvents";
 import LandmarksList from "./chicago/LandmarksList";
+import BiteRadar from "./chicago/BiteRadar";
 
 export default function DispatchFacade() {
   const meta = site.impact.slice(0, 3);
@@ -75,6 +76,8 @@ export default function DispatchFacade() {
         kicker="Aditya in Chicago"
         heading="Places that are his, in his own city"
       />
+
+      <BiteRadar id="f1-bites" />
 
       <RotatingEvents />
 

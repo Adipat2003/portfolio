@@ -208,6 +208,19 @@ section{padding:76px 0}
 [data-river-dye="true"] .chi-map .river-body path[fill="#0e1626"]{fill:#1b4630}
 .atelier-note{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font-family:var(--mono);font-size:12px;color:var(--night-soft);padding:18px 24px;border:1px dashed var(--night-rule);border-radius:12px;margin-top:32px}
 .atelier-note b{color:var(--signal);font-weight:600}
+/* Bite Radar: ranked restaurants from his self-reported Beli list. */
+.bite-list{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.bite-item{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;border-bottom:1px solid var(--rule);padding-bottom:12px}
+.bite-rank{width:10px;height:10px;flex:0 0 auto;background:var(--rule)}
+.bite-rising .bite-rank{background:var(--flag-red);clip-path:polygon(50% 2%,61% 31%,91.6% 26%,72% 50%,91.6% 74%,61% 69%,50% 98%,39% 69%,8.4% 74%,28% 50%,8.4% 26%,39% 31%)}
+.bite-name{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;flex:1 1 240px}
+.bite-name b{font-size:16px}
+.bite-kind{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.bite-hood{font-size:13px;color:var(--ink-soft)}
+.bite-score{flex:0 0 120px;height:6px;background:var(--paper-2);border-radius:3px;overflow:hidden}
+.bite-score i{display:block;height:100%;background:linear-gradient(90deg,var(--flag-red),var(--signal))}
+.bite-status{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.bite-rising .bite-status{color:var(--flag-red)}
 footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:flex;flex-wrap:wrap;gap:8px 24px}
 .atlas footer.site-foot{color:var(--night-soft)}
 [data-facade="atlas"].concept-bar{background:var(--night);border-color:var(--night-rule)}

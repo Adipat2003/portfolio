@@ -146,6 +146,31 @@ export const chicagoSpotKind = z.enum([
   "other",
 ]);
 
+/**
+ * Bite Radar: one visit record from Aditya's Beli list, approved for
+ * publication by hand. Self-reported by definition; the private Masterlist
+ * stays private, and only records committed to this file ever render.
+ */
+export const biteVisitSchema = z.object({
+  name: z.string().min(1),
+  neighborhood: z.string(),
+  kind: chicagoSpotKind,
+  /** His Beli rating, 1 to 5. */
+  rating: z.number().int().min(1).max(5),
+  /** Last visit, YYYY-MM. */
+  visited_on: z.string().regex(/^\d{4}-\d{2}$/, "visited_on must be YYYY-MM"),
+  /** Total visits, when he tracks repeats. Defaults to 1. */
+  visits: z.number().int().positive().optional(),
+  note: z.string().optional(),
+});
+
+export const bitesSchema = z.object({
+  public_safe_reviewed: z.literal(true, {
+    errorMap: () => ({ message: "bites.json must set public_safe_reviewed: true" }),
+  }),
+  visits: z.array(biteVisitSchema),
+});
+
 export const chicagoSpotSchema = z.object({
   slug: z.string().regex(/^[a-z0-9-]+$/, "slug must be lowercase with hyphens"),
   name: z.string(),
@@ -200,6 +225,7 @@ export type SeasonName = z.infer<typeof seasonName>;
 export type SeasonPalette = z.infer<typeof seasonPaletteSchema>;
 export type Seasons = z.infer<typeof seasonsSchema>;
 export type Mosaic = z.infer<typeof mosaicSchema>;
+export type BiteVisit = z.infer<typeof biteVisitSchema>;
 export type Route = z.infer<typeof routeSchema>;
 export type Station = z.infer<typeof stationSchema>;
 export type StationStyle = z.infer<typeof stationStyleSchema>;

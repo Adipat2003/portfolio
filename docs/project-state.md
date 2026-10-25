@@ -35,6 +35,7 @@ node scripts/season-check.mjs      # 14 boundary and palette checks, expect PASS
 python3 scripts/season-check-python.py  # Python date and renderer parity, expect PASS
 node scripts/ask-check.mjs         # 20 retrieval assertions across 14 questions, expect PASS
 node scripts/chicago-check.mjs    # 14 assertions over the Chicago shaping rules, expect PASS
+node scripts/bite-check.mjs       # 10 Bite Radar scoring checks over fixtures, expect PASS
 python3 scripts/build.py --check   # verifies committed static artifacts match content and Chicago surfaces sit on both facades
 node scripts/art-export.mjs --check  # verifies art/*.svg match atlas.json
 npm run check:service               # builds server/ and runs scripts/service-check.mjs
@@ -304,8 +305,18 @@ phased plan. `docs/ai-exposure.md` carries the AI layer design.
   non-active stops, a dusk-to-night-to-pre-dawn sky interpolation, and a
   sunrise lakefront footer. Reduced motion snaps instead of gliding; the
   Dispatch is untouched and remains the readable canonical surface.
-- **Phase 6, food features.** Not started. Bite Radar list and the
-  emerging-restaurant algorithm.
+- **Phase 6, food features.** BITE RADAR BUILT Oct 2026 (PR #33): the
+  emerging-restaurant feature, local-first because Beli has no official
+  public API (verified again Oct 2026; the community scraper wrappers are
+  out of bounds under this repo's terms posture). The integration IS
+  `content/bites.json`: hand-approved records from his private Beli
+  list, public_safe-gated, duplicate names fail the build. The scoring
+  lives in the pure module `src/content/bite-radar.ts` (rating 50
+  percent, recency 30, repeats 20; rising/steady/cooling labels on his
+  own self-reported behavior), pinned by `scripts/bite-check.mjs` (10
+  checks over fixtures, since the committed log is empty). The Dispatch
+  renders the top five with score bars; nothing renders until he adds
+  records.
 
 ### Approved dependency set
 
@@ -324,7 +335,9 @@ These block work and belong to Aditya:
   `npm ci && npm run build:service && npm run start:service`, and the env
   vars listed at the top of server/index.ts. NVIDIA_API_KEY is optional and
   only enables model polish.
-- **Beli API access** for the food features, still unverified.
+- **Beli API access** for the food features, still unverified. RESOLVED
+  Oct 2026: no official public API exists; Bite Radar is local-first over
+  content/bites.json (see Phase 6 above), and nothing else may scrape.
 - **Deployment of the Next build.** DONE 2026-10-23: Pages build_type is
   `workflow`, the `Deploy site` Actions workflow ships out/ on every push to
   main, and the live URL was verified in a browser (facade switch, detail
