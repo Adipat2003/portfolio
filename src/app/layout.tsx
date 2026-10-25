@@ -1,8 +1,26 @@
 import type { Metadata } from "next";
+import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { seasons, site } from "@/content/load";
 import { riverDyeActive } from "@/content/season";
 import SeasonSync from "@/components/SeasonSync";
+
+/** Editorial display serif for headlines: print-dispatch character. */
+const serif = Fraunces({
+	subsets: ["latin"],
+	weight: ["400", "600"],
+	variable: "--font-serif-dl",
+	display: "swap",
+});
+/** UI grotesk. */
+const sans = Inter({ subsets: ["latin"], variable: "--font-sans-dl", display: "swap" });
+/** Signage mono: trip strips, kickers, labels. */
+const mono = JetBrains_Mono({
+	subsets: ["latin"],
+	weight: ["400", "700"],
+	variable: "--font-mono-dl",
+	display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Aditya Patel: Engineering Portfolio",
@@ -31,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       data-season={season}
       data-river-dye={riverDyeActive(new Date()) ? "true" : "false"}
+      className={`${serif.variable} ${sans.variable} ${mono.variable}`}
       style={seasonStyle}
     >
       <head>
