@@ -155,7 +155,7 @@ const server = createServer(async (req, res) => {
 		// means the egress itself is broken. The real key is never used here.
 		const started = Date.now();
 		try {
-			const res = await fetch(NVIDIA_ENDPOINT, {
+			const probe = await fetch(NVIDIA_ENDPOINT, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: "Bearer invalid-probe" },
 				body: JSON.stringify({ model: NVIDIA_MODEL, messages: [{ role: "user", content: "hi" }] }),
@@ -164,7 +164,7 @@ const server = createServer(async (req, res) => {
 			sendJson(
 				res,
 				200,
-				{ endpoint: NVIDIA_ENDPOINT, model: NVIDIA_MODEL, status: res.status, ms: Date.now() - started },
+				{ endpoint: NVIDIA_ENDPOINT, model: NVIDIA_MODEL, status: probe.status, ms: Date.now() - started },
 				corsHeaders(origin),
 			);
 			return;
