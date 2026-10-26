@@ -163,6 +163,8 @@ section{padding:76px 0}
 .cta-pnk{background:#d49bc4;color:#1d2433}
 .cta-y{background:#f1c40f;color:#1d2433}
 .cta-credit{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--night-soft);opacity:.8}
+.booth-waiting{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--signal);animation:booth-pulse 1.6s ease-in-out infinite}
+@keyframes booth-pulse{0%,100%{opacity:.45}50%{opacity:1}}
 .trip-dots{display:flex;gap:4px;pointer-events:auto;align-items:center}
 .ride-copy{position:relative;z-index:4;pointer-events:none;padding-top:clamp(84px,13vh,150px);padding-inline:clamp(24px,6vw,96px);color:var(--night-ink);text-shadow:0 2px 18px rgba(13,15,22,.6);transition:opacity .6s ease,translate .6s ease}
 .ride-copy.faded{opacity:0;translate:0 -18px}

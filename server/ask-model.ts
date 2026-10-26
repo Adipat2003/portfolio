@@ -40,25 +40,8 @@ export function createAskModel(
   content: Content,
   opts: { apiKey?: string; model: string; endpoint: string },
 ) {
-  /** Temporary diagnostic: request-level model override, restricted to a
-	    whitelist of bounded-cost instruct models so the public endpoint cannot
-	    be aimed at heavyweight deployments. Removed once the default is chosen. */
-  const allowedOverrides = new Set([
-    "z-ai/glm-5.3-flash",
-    "mistralai/mistral-large-2-instruct",
-    "nv-mistralai/mistral-nemo-12b-instruct",
-    "mistralai/mistral-7b-instruct-v0.3",
-    "deepseek-ai/deepseek-v4.1-flash",
-  ]);
-
-  return async function askModel(
-    question: string,
-    modelOverride?: string,
-  ): Promise<AskModelResult> {
-    const model =
-      modelOverride && allowedOverrides.has(modelOverride)
-        ? modelOverride
-        : opts.model;
+  return async function askModel(question: string): Promise<AskModelResult> {
+    const model = opts.model;
     const matches: Match[] = content.retriever.retrieve(question, 3);
     if (matches.length === 0) {
       return {

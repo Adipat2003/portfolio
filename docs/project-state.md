@@ -346,14 +346,27 @@ next, react, react-dom, zod, typescript, @types/node, @types/react,
 
 These block work and belong to Aditya:
 
-- **Node service host.** The service is built and verified (see Phase 4 above);
-  it needs a public https Node host. This Oracle box cannot serve it: only a
-  Tailscale interface listens, and there is no domain or sudo. Any free
-  Node-capable platform works (Render, Fly, Cloudflare Workers with a fetch
-  adapter). The signup is Aditya's step; the service needs only
-  `npm ci && npm run build:service && npm run start:service`, and the env
-  vars listed at the top of server/index.ts. NVIDIA_API_KEY is optional and
-  only enables model polish.
+- **Node service host.** DONE 2026-10-26: the service is live on Render
+  (Blueprint deploy from render.yaml) at
+  https://portfolio-service-elt4.onrender.com, auto-deploying from main.
+  Both keys are configured by Aditya in the Render dashboard (never in
+  the repo): CTA_API_KEY returns real Clark/Lake arrivals (mapid 40380
+  verified against CTA's own documentation), NVIDIA_API_KEY enables
+  model polish. The live-fire debugging that followed is recorded below.
+- **Ask model on the site, live.** DONE 2026-10-26: the site build bakes
+  NEXT_PUBLIC_SERVICE_URL from a repository Actions variable (set via the
+  Actions API) so the terminal's ask booth routes through /ask-model and
+  the ride's CtaLive chips fetch real arrivals. The model is
+  z-ai/glm-5.3-flash: the only servable instruct model measured through
+  the real key (mistral and nemotron ids in NVIDIA's public catalog
+  return 404/410; deepseek-v4.1-flash exceeds 60s). Live latency is
+  roughly 23-45s, so the booth shows a pulsing 'checking the records'
+  line while the answer is prepared, and every failure falls back to the
+  grounded retrieval text. Notes for the future: NVIDIA's catalog lists
+  ids that are no longer servable, so always verify through /ask-model
+  before switching NVIDIA_MODEL; and the CTA JSON feed speaks ISO
+  timestamps ('2026-10-26T11:28:55'), not the spaced shape in the API
+  docs.
 - **Beli API access** for the food features, still unverified. RESOLVED
   Oct 2026: no official public API exists; Bite Radar is local-first over
   content/bites.json (see Phase 6 above), and nothing else may scrape.
@@ -370,12 +383,14 @@ These block work and belong to Aditya:
   read its license fields from an allowed network before use).
 - **Phase 2 adjustments**, requested by Aditya and not yet specified.
 - **An NVIDIA model on the site itself**, requested by Aditya: a RAG-style
-  model fed on a corpus about him, to answer visitors about him. The retrieval
-  half is now built and the corpus is the portfolio records. Still needed: his
-  own context file to widen the corpus, the route through the Node service, and
-  a decision on how the "sound great" framing coexists with the no-fabrication
-  rule. A model may rephrase what retrieval returns; it may never be the source
-  of a claim.
+  model fed on a corpus about him, to answer visitors about him. DONE
+  2026-10-26: retrieval over the portfolio records is the only source of
+  claims; z-ai/glm-5.3-flash on /ask-model rephrases what retrieval
+  returned, keeps figures with their hedging and sources, and diverts
+  anything outside Aditya's portfolio with one redirect sentence. The
+  no-fabrication rule holds: the model may never be the source of a
+  claim, and any model failure falls back to the grounded retrieval
+  text. Corpus widening via his own context file remains open.
 - **Chicago interactivity**, requested by Aditya: bars and food spots, and a
   rotating list of city events such as sports. The foundation is now on PR #14.
   What remains is the records themselves, which need Aditya to approve each

@@ -109,12 +109,16 @@ export default function AskBox({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Match[] | null>(null);
   const [polished, setPolished] = useState<{ answer: string; sources: string[] } | null>(null);
+  const [pending, setPending] = useState(false);
 
   function ask(question: string) {
     setQuery(question);
     setPolished(null);
     setResults(null);
     if (SERVICE_URL) {
+      // The hosted model rephrase can take tens of seconds; the pending line
+      // is the booth's equivalent of an agent checking the records.
+      setPending(true);
       fetch(`${SERVICE_URL}/ask-model`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -126,7 +130,8 @@ export default function AskBox({
           if (data?.grounded !== true) throw new Error("not grounded");
           setPolished({ answer: String(data.answer), sources: Array.isArray(data.sources) ? data.sources : [] });
         })
-        .catch(() => setResults(retrieve(question)));
+        .catch(() => setResults(retrieve(question)))
+        .finally(() => setPending(false));
       return;
     }
     setResults(retrieve(question));
@@ -189,7 +194,12 @@ export default function AskBox({
             </span>
           </>
         ) : null}
-        {!answered && !polished
+        {pending ? (
+          <div className="ask-result">
+            <p className="booth-waiting">The terminal is checking the records&hellip;</p>
+          </div>
+        ) : null}
+        {!answered && !polished && !pending
           ? "Ask a question, and the answer comes from the portfolio records with its source attached."
           : null}
         {declined ? NO_ANSWER : null}
@@ -201,7 +211,7 @@ export default function AskBox({
               </div>
             ))
           : null}
-        {!answered && !polished ? <span className="src">No answer yet</span> : null}
+        {!answered && !polished && !pending ? <span className="src">No answer yet</span> : null}
       </div>
     </>
   );
