@@ -30,14 +30,14 @@ const ALLOWED_ORIGINS = new Set(
 		"https://adipat2003.github.io,http://localhost:1312,http://127.0.0.1:1312"
 	).split(","),
 );
-const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY; // never logged, never returned
+const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY?.trim(); // never logged, never returned; trim guards against paste artifacts
 const NVIDIA_MODEL = process.env.NVIDIA_MODEL ?? "deepseek-ai/deepseek-v4.1-flash";
 const NVIDIA_ENDPOINT =
 	process.env.NVIDIA_ENDPOINT ?? "https://integrate.api.nvidia.com/v1/chat/completions";
 
 const content = loadContent(ROOT);
 const cta = createCtaProxy({
-	apiKey: process.env.CTA_API_KEY,
+	apiKey: process.env.CTA_API_KEY?.trim(),
 	mapid: process.env.CTA_MAPID ?? "40380",
 	ttlMs: 45_000,
 });

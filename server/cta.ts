@@ -31,11 +31,12 @@ type TransitPayload =
 export function createCtaProxy(opts: { apiKey?: string; mapid: string; ttlMs: number }) {
 	let cached: { payload: TransitPayload; expiresAt: number } | null = null;
 
-	/** The Tracker's timestamps look like '20261024 08:35:00' local to Chicago. */
-	function parseCtaTime(raw: string): number {
+	/** CTA clock strings look like '20261024 08:35:00' in Chicago local time.
+	    Parsed as pseudo-UTC (no offset applied). */
+	function parseCtaClock(raw: string): number {
 		const m = /^(\d{4})(\d{2})(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(raw);
-		if (!m) return Date.now();
-		return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 5, +m[5], +m[6]);
+		if (!m) return NaN;
+		return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
 	}
 
 	async function fetchArrivals(): Promise<Arrival[]> {
@@ -50,12 +51,22 @@ export function createCtaProxy(opts: { apiKey?: string; mapid: string; ttlMs: nu
 		if (err) throw new Error(String(err));
 		const etas: any[] = data?.ctatt?.eta ?? [];
 		const now = Date.now();
+		// The Tracker reports its own clock (tmst) alongside every eta, so the
+		// Chicago-to-UTC offset comes from the data itself: DST-proof, with no
+		// hardcoded offset to drift across November and March.
+		const offsetMs = Number.isNaN(parseCtaClock(String(data?.ctatt?.tmst ?? "")))
+			? 0
+			: parseCtaClock(String(data.ctatt.tmst)) - now;
 		return etas
-			.map((eta) => ({
-				line: String(eta.rt ?? "").toLowerCase(),
-				destination: String(eta.destNm ?? ""),
-				minutes: Math.max(0, Math.round((parseCtaTime(String(eta.prdt ?? "")) - now) / 60_000)),
-			}))
+			.map((eta) => {
+				const dueMs = parseCtaClock(String(eta.prdt ?? ""));
+				const realDueMs = Number.isNaN(dueMs) ? now : dueMs - offsetMs;
+				return {
+					line: String(eta.rt ?? "").toLowerCase(),
+					destination: String(eta.destNm ?? ""),
+					minutes: Math.max(0, Math.min(120, Math.round((realDueMs - now) / 60_000))),
+				};
+			})
 			.filter((a) => a.line && a.destination)
 			.slice(0, 4);
 	}

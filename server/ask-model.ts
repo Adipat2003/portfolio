@@ -113,9 +113,13 @@ export function createAskModel(
 				records,
 				sources: [...sources],
 			};
-		} catch {
+		} catch (err) {
 			// The model layer is polish, never the source. On any failure the
-			// grounded retrieval answer ships unchanged.
+			// grounded retrieval answer ships unchanged, with the status code
+			// surfaced so a bad key or model id is diagnosable from the response
+			// without ever exposing the key or the request payload.
+			const reason =
+				err instanceof Error ? err.message.replace(/Bearer\s+\S+/gi, "Bearer <redacted>") : "unknown";
 			return {
 				grounded: true,
 				answer: baseAnswer,
@@ -123,7 +127,7 @@ export function createAskModel(
 				retrieved: matches.length,
 				records,
 				sources: [...sources],
-				note: "model polish unavailable: serving the grounded retrieval answer",
+				note: `model polish unavailable (${reason}): serving the grounded retrieval answer`,
 			};
 		}
 	};
