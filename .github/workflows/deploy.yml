@@ -24,9 +24,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - run: npm run build
+      - name: Build the site (bakes the hosted service URL, when configured)
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SERVICE_URL: ${{ vars.NEXT_PUBLIC_SERVICE_URL }}
       - name: Verify content-driven modules
         run: |
+          node scripts/bite-check.mjs
           node scripts/season-check.mjs
           node scripts/ask-check.mjs
           node scripts/chicago-check.mjs
