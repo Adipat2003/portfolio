@@ -261,6 +261,8 @@ export default function AtlasRide() {
 		);
 		const night = dusk.map((c) => c.map((v) => v * 0.42));
 		let raf = 0;
+		let txPrev = 0;
+		let tyPrev = 0;
 
 		const tick = () => {
 			const ride = rideRef.current;
@@ -284,18 +286,31 @@ export default function AtlasRide() {
 				cam.zoom += (tgt.zoom - cam.zoom) * ease;
 
 				svg.style.transformOrigin = "0 0";
-				// Real camera: an explicit translate+scale keeps the focus point
-				// anchored on screen at ANY zoom and aspect. The old pivot trick
-				// only panned (zoom - 1) x the pivot distance, so phones (zoom 1.3)
-				// crawled at 30% speed and the train walked off the east edge.
-				const svgRect = svg.getBoundingClientRect();
-				const fit = Math.min(svgRect.width / vw, svgRect.height / vh);
-				const anchorX = svgRect.width * 0.5;
-				const anchorY = svgRect.height * (narrow.matches ? 0.36 : 0.5);
-				svg.style.transform = `translate(${(anchorX - cam.x * fit * cam.zoom).toFixed(2)}px,${(
-					anchorY -
-					cam.y * fit * cam.zoom
-				).toFixed(2)}px) scale(${cam.zoom.toFixed(4)})`;
+				// Real camera: explicit translate+scale keeps the focus point
+				// anchored on screen at any zoom and aspect. The old pivot trick
+				// only panned (zoom - 1) x the pivot distance, so phones (zoom
+				// 1.3) crawled at 30% speed and the train walked off the east
+				// edge. Careful: getBoundingClientRect on the svg is
+				// POST-transform (this loop's own zoom scales it), so the
+				// untransformed layout box is recovered by dividing out z and
+				// subtracting the translate this loop set last frame.
+				const stageR = stageRef.current?.getBoundingClientRect();
+				if (stageR) {
+					const z = cam.zoom;
+					const rect = svg.getBoundingClientRect();
+					const layoutW = rect.width / z;
+					const layoutH = rect.height / z;
+					const fit = Math.min(layoutW / vw, layoutH / vh);
+					const Lx = rect.x - txPrev;
+					const Ly = rect.y - tyPrev;
+					const anchorX = stageR.x + stageR.width * 0.5;
+					const anchorY = stageR.y + stageR.height * (narrow.matches ? 0.36 : 0.5);
+					const tx = anchorX - Lx - cam.x * fit * z;
+					const ty = anchorY - Ly - cam.y * fit * z;
+					svg.style.transform = `translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${z.toFixed(4)})`;
+					txPrev = tx;
+					tyPrev = ty;
+				}
 
 				// Dusk deepens to night through the middle of the ride, then
 				// lifts toward the pre-dawn glow by the end.
