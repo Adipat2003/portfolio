@@ -149,6 +149,12 @@ const server = createServer(async (req, res) => {
 	}
 
 	if (route === "/transit" && req.method === "GET") {
+		if (url.searchParams.get("raw") === "1") {
+			// temporary diagnostic echo; removed once the clock math is verified live
+			await cta.get();
+			sendJson(res, 200, cta.raw() ?? { note: "no upstream document yet" }, corsHeaders(origin));
+			return;
+		}
 		const payload = await cta.get();
 		sendJson(res, 200, payload, corsHeaders(origin));
 		return;
