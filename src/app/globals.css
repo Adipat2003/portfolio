@@ -204,7 +204,7 @@ section{padding:76px 0}
 [data-river-dye="true"] .dye-note{display:block}
 /* The pan cue, only where the map actually pans. */
 .swipe-cue{display:none}
-.atlas-hero .chi-card{position:absolute;right:24px;bottom:40px;z-index:5;margin:0;max-width:400px;background:rgba(21,26,40,.86);border-color:var(--night-rule);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.atlas-hero .chi-card{margin:0;max-width:400px;background:rgba(21,26,40,.86);border-color:var(--night-rule);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .atlas-hero .chi-hint{font-size:13px;opacity:.85}
 .cursor-light{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(320px circle at var(--mx,50%) var(--my,32%),rgba(232,176,75,.13),transparent 72%);opacity:0;transition:opacity .45s}
 .atlas-scene:hover .cursor-light{opacity:1}
