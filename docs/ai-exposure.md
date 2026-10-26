@@ -79,6 +79,9 @@ Tools exposed, all read-only:
 
 - answers only from the portfolio records; cites the source document for each claim
 - refuses to upgrade a projection into a realized result, and refuses to invent figures
+- diverts anything outside Aditya, his work, his numbers, or the site's Chicago
+  layer: one short sentence pointing back to portfolio topics, never an improvised
+  answer
 - when the portfolio does not support a claim, says so plainly instead of guessing
 - when a question concerns the current employer's internal systems, answers only
   from material marked `public_safe`
