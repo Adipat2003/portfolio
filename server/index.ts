@@ -148,6 +148,42 @@ const server = createServer(async (req, res) => {
 		return;
 	}
 
+	if (route === "/model-probe" && req.method === "GET") {
+		// Diagnostic: measures the deployed host's path to the model endpoint
+		// with a deliberately invalid key. A fast 401 means connectivity is
+		// fine and any /ask-model slowness is in the inference path; a hang
+		// means the egress itself is broken. The real key is never used here.
+		const started = Date.now();
+		try {
+			const res = await fetch(NVIDIA_ENDPOINT, {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: "Bearer invalid-probe" },
+				body: JSON.stringify({ model: NVIDIA_MODEL, messages: [{ role: "user", content: "hi" }] }),
+				signal: AbortSignal.timeout(30_000),
+			});
+			sendJson(
+				res,
+				200,
+				{ endpoint: NVIDIA_ENDPOINT, model: NVIDIA_MODEL, status: res.status, ms: Date.now() - started },
+				corsHeaders(origin),
+			);
+			return;
+		} catch (err) {
+			sendJson(
+				res,
+				200,
+				{
+					endpoint: NVIDIA_ENDPOINT,
+					model: NVIDIA_MODEL,
+					error: err instanceof Error ? err.message : "unknown",
+					ms: Date.now() - started,
+				},
+				corsHeaders(origin),
+			);
+			return;
+		}
+	}
+
 	if (route === "/transit" && req.method === "GET") {
 		if (url.searchParams.get("raw") === "1") {
 			// temporary diagnostic echo; removed once the clock math is verified live
