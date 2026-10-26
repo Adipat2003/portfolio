@@ -38,8 +38,7 @@ const ALLOWED_ORIGINS = new Set(
   ).split(","),
 );
 const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY?.trim(); // never logged, never returned; trim guards against paste artifacts
-const NVIDIA_MODEL =
-  process.env.NVIDIA_MODEL ?? "nvidia/llama-3.1-nemotron-70b-instruct";
+const NVIDIA_MODEL = process.env.NVIDIA_MODEL ?? "z-ai/glm-5.3-flash";
 const NVIDIA_ENDPOINT =
   process.env.NVIDIA_ENDPOINT ??
   "https://integrate.api.nvidia.com/v1/chat/completions";
@@ -165,65 +164,7 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  if (route === "/model-probe" && req.method === "GET") {
-    // Diagnostic: measures the deployed host's path to the model endpoint
-    // with a deliberately invalid key. A fast 401 means connectivity is
-    // fine and any /ask-model slowness is in the inference path; a hang
-    // means the egress itself is broken. The real key is never used here.
-    const started = Date.now();
-    try {
-      const probe = await fetch(NVIDIA_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer invalid-probe",
-        },
-        body: JSON.stringify({
-          model: NVIDIA_MODEL,
-          messages: [{ role: "user", content: "hi" }],
-        }),
-        signal: AbortSignal.timeout(30_000),
-      });
-      sendJson(
-        res,
-        200,
-        {
-          endpoint: NVIDIA_ENDPOINT,
-          model: NVIDIA_MODEL,
-          status: probe.status,
-          ms: Date.now() - started,
-        },
-        corsHeaders(origin),
-      );
-      return;
-    } catch (err) {
-      sendJson(
-        res,
-        200,
-        {
-          endpoint: NVIDIA_ENDPOINT,
-          model: NVIDIA_MODEL,
-          error: err instanceof Error ? err.message : "unknown",
-          ms: Date.now() - started,
-        },
-        corsHeaders(origin),
-      );
-      return;
-    }
-  }
-
   if (route === "/transit" && req.method === "GET") {
-    if (url.searchParams.get("raw") === "1") {
-      // temporary diagnostic echo; removed once the clock math is verified live
-      await cta.get();
-      sendJson(
-        res,
-        200,
-        cta.raw() ?? { note: "no upstream document yet" },
-        corsHeaders(origin),
-      );
-      return;
-    }
     const payload = await cta.get();
     sendJson(res, 200, payload, corsHeaders(origin));
     return;
@@ -272,9 +213,7 @@ const server = createServer(async (req, res) => {
       );
       return;
     }
-    const requested = (parsed as { model?: unknown })?.model;
-    const modelOverride = typeof requested === "string" ? requested : undefined;
-    const result = await askModel(question, modelOverride);
+    const result = await askModel(question);
     sendJson(res, 200, result, corsHeaders(origin));
     return;
   }

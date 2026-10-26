@@ -30,10 +30,6 @@ type TransitPayload =
 
 export function createCtaProxy(opts: { apiKey?: string; mapid: string; ttlMs: number }) {
 	let cached: { payload: TransitPayload; expiresAt: number } | null = null;
-	// Diagnostic only: the last raw upstream document, never containing the
-	// key, exposed temporarily so clock-format bugs are visible from the
-	// deployed service. Removed once /transit is verified.
-	let lastRaw: unknown = null;
 
 	/** CTA clock strings come as ISO '2026-10-26T11:28:55' (the JSON feed);
 	    the space-separated '20261026 11:28:55' shape is also accepted.
@@ -53,7 +49,6 @@ export function createCtaProxy(opts: { apiKey?: string; mapid: string; ttlMs: nu
 		});
 		if (!res.ok) throw new Error(`upstream ${res.status}`);
 		const data: any = await res.json();
-		lastRaw = data;
 		const err = data?.ctatt?.errNm;
 		if (err) throw new Error(String(err));
 		const etas: any[] = data?.ctatt?.eta ?? [];
@@ -88,11 +83,6 @@ export function createCtaProxy(opts: { apiKey?: string; mapid: string; ttlMs: nu
 	}
 
 	return {
-		/** Diagnostic: the last raw upstream JSON (schedule data only, key never included). */
-		raw(): unknown {
-			return lastRaw;
-		},
-
 		async get(): Promise<TransitPayload> {
 			if (!opts.apiKey) {
 				return { available: false, reason: "CTA key not configured", credit: CREDIT };
