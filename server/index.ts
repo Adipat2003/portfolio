@@ -10,8 +10,9 @@
  *   SERVICE_ALLOWED_ORIGINS  comma-separated allowed Origin values
  *   NVIDIA_API_KEY          optional; enables model polish on /ask-model
  *   NVIDIA_MODEL            model id for the ask layer (default
- *                           z-ai/glm-5.3-flash; the rephrase task wants a
- *                           fast instruct model, not a reasoner)
+ *                           nvidia/llama-3.1-nemotron-70b-instruct; the
+ *                           rephrase task wants a fast instruct model,
+ *                           not a hybrid reasoner)
  *   NVIDIA_ENDPOINT         chat completions endpoint (default
  *                           https://integrate.api.nvidia.com/v1/chat/completions)
  */
@@ -32,7 +33,7 @@ const ALLOWED_ORIGINS = new Set(
 	).split(","),
 );
 const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY?.trim(); // never logged, never returned; trim guards against paste artifacts
-const NVIDIA_MODEL = process.env.NVIDIA_MODEL ?? "z-ai/glm-5.3-flash";
+const NVIDIA_MODEL = process.env.NVIDIA_MODEL ?? "nvidia/llama-3.1-nemotron-70b-instruct";
 const NVIDIA_ENDPOINT =
 	process.env.NVIDIA_ENDPOINT ?? "https://integrate.api.nvidia.com/v1/chat/completions";
 
