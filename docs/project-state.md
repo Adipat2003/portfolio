@@ -59,6 +59,25 @@ exercising it and report success on an empty run.
 projects/<slug>/index.html, api/portfolio.json, and llms.txt in place. Run it
 after any content change, then run the `--check` form until it says PASS.
 
+The full quality gate, in order, for any change that touches the ride,
+layout, CSS, map, or facade switch:
+
+```bash
+npm run typecheck
+npm run build
+node scripts/season-check.mjs
+node scripts/ask-check.mjs
+node scripts/chicago-check.mjs
+node scripts/bite-check.mjs
+node scripts/art-export.mjs --check
+python3 scripts/build.py --check
+npm run check:service        # when server/ changed
+```
+
+Then the aspect-ratio matrix and the interaction pass from AGENTS.md, which
+are browser checks, not script checks, and which are the only thing that
+catches layout regressions at other viewports.
+
 Local serve of the static export, then verify with real URLs:
 
 ```bash
