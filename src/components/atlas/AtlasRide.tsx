@@ -283,15 +283,19 @@ export default function AtlasRide() {
 				cam.y += (tgt.y - cam.y) * ease;
 				cam.zoom += (tgt.zoom - cam.zoom) * ease;
 
-				svg.style.transform = `scale(${cam.zoom.toFixed(4)})`;
-				// On phones the city is top-anchored and the card owns the
-				// bottom, so the focus origin sits lower to lift each stop
-				// into the upper third of the screen.
-				const originBias = narrow.matches ? 14 : 0;
-				svg.style.transformOrigin = `${((cam.x / vw) * 100).toFixed(2)}% ${(
-					(cam.y / vh) * 100 +
-					originBias
-				).toFixed(2)}%`;
+				svg.style.transformOrigin = "0 0";
+				// Real camera: an explicit translate+scale keeps the focus point
+				// anchored on screen at ANY zoom and aspect. The old pivot trick
+				// only panned (zoom - 1) x the pivot distance, so phones (zoom 1.3)
+				// crawled at 30% speed and the train walked off the east edge.
+				const svgRect = svg.getBoundingClientRect();
+				const fit = Math.min(svgRect.width / vw, svgRect.height / vh);
+				const anchorX = svgRect.width * 0.5;
+				const anchorY = svgRect.height * (narrow.matches ? 0.36 : 0.5);
+				svg.style.transform = `translate(${(anchorX - cam.x * fit * cam.zoom).toFixed(2)}px,${(
+					anchorY -
+					cam.y * fit * cam.zoom
+				).toFixed(2)}px) scale(${cam.zoom.toFixed(4)})`;
 
 				// Dusk deepens to night through the middle of the ride, then
 				// lifts toward the pre-dawn glow by the end.

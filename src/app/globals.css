@@ -163,6 +163,8 @@ section{padding:76px 0}
 .cta-pnk{background:#d49bc4;color:#1d2433}
 .cta-y{background:#f1c40f;color:#1d2433}
 .cta-credit{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--night-soft);opacity:.8}
+.cta-asof{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--night-soft)}
+.cta-connecting{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--night-soft);animation:booth-pulse 1.6s ease-in-out infinite}
 .booth-waiting{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--signal);animation:booth-pulse 1.6s ease-in-out infinite}
 @keyframes booth-pulse{0%,100%{opacity:.45}50%{opacity:1}}
 .trip-dots{display:flex;gap:4px;pointer-events:auto;align-items:center}
