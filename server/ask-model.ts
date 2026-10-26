@@ -88,6 +88,11 @@ export function createAskModel(
 					model: opts.model,
 					temperature: 0,
 					max_tokens: 500,
+					// GLM and Qwen hybrid models think by default; a 120-word grounded
+					// rephrase does not need it, and the thinking phase is what pushed
+					// generation past the timeout. Models that do not know the flag
+					// ignore it.
+					chat_template_kwargs: { thinking: false },
 					messages: [
 						{ role: "system", content: SYSTEM_CONTRACT },
 						{
@@ -98,7 +103,7 @@ export function createAskModel(
 						},
 					],
 				}),
-				signal: AbortSignal.timeout(45_000), // cold NVIDIA requests can exceed 20s; the grounded fallback keeps this a ceiling
+				signal: AbortSignal.timeout(60_000), // ceiling only; with thinking disabled the answer lands in seconds
 			});
 			if (!res.ok) throw new Error(`model endpoint ${res.status}`);
 			const data: any = await res.json();
