@@ -11,7 +11,7 @@
   --mono: var(--font-mono-dl), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html{-webkit-text-size-adjust:100%}
 body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.55}
 h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-0.01em;margin:0}
 p{margin:0}
@@ -136,6 +136,8 @@ section{padding:76px 0}
 .trip-strip{position:absolute;top:74px;left:50%;translate:-50% 0;z-index:6;display:flex;align-items:center;gap:12px;background:rgba(13,15,22,.72);border:1px solid var(--night-rule);border-radius:999px;padding:8px 16px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--night-soft);pointer-events:auto;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap;max-width:calc(100vw - 16px);overflow-x:auto;scrollbar-width:none}
 .trip-strip::-webkit-scrollbar{display:none}
 .trip-strip b{color:var(--signal)}
+/* Edge fades read the strip's overflow as intentional scrolling, never as a clip. */
+.trip-dots{mask-image:linear-gradient(90deg,transparent 0,black 14px,black calc(100% - 14px),transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0,black 14px,black calc(100% - 14px),transparent 100%)}
 /* The route diagram: every stop named, colored, and tappable. */
 .trip-dots{display:flex;gap:4px;pointer-events:auto;align-items:center}
 .trip-stop{appearance:none;border:1px solid transparent;background:transparent;padding:5px 9px;display:flex;align-items:center;gap:6px;cursor:pointer;border-radius:999px;white-space:nowrap;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--night-soft)}
@@ -156,7 +158,7 @@ section{padding:76px 0}
 .cta-blue{background:#2e86c1;color:#fff}
 .cta-credit{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--night-soft);opacity:.8}
 .trip-dots{display:flex;gap:4px;pointer-events:auto;align-items:center}
-.ride-copy{position:relative;z-index:4;pointer-events:none;padding-top:clamp(84px,13vh,150px);color:var(--night-ink);text-shadow:0 2px 18px rgba(13,15,22,.6);transition:opacity .6s ease,translate .6s ease}
+.ride-copy{position:relative;z-index:4;pointer-events:none;padding-top:clamp(84px,13vh,150px);padding-inline:clamp(24px,6vw,96px);color:var(--night-ink);text-shadow:0 2px 18px rgba(13,15,22,.6);transition:opacity .6s ease,translate .6s ease}
 .ride-copy.faded{opacity:0;translate:0 -18px}
 .ride-copy::before{content:"";position:absolute;inset:-12% -45% -14% -14%;z-index:-1;pointer-events:none;background:radial-gradient(78% 66% at 30% 44%,rgba(13,15,22,.5),rgba(13,15,22,.28) 45%,transparent 78%)}
 .ride-copy .kicker{color:var(--signal)}
