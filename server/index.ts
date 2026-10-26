@@ -10,7 +10,8 @@
  *   SERVICE_ALLOWED_ORIGINS  comma-separated allowed Origin values
  *   NVIDIA_API_KEY          optional; enables model polish on /ask-model
  *   NVIDIA_MODEL            model id for the ask layer (default
- *                           deepseek-ai/deepseek-v4.1-flash)
+ *                           meta/llama-3.3-70b-instruct; the rephrase task
+ *                           wants a fast instruct model, not a reasoner)
  *   NVIDIA_ENDPOINT         chat completions endpoint (default
  *                           https://integrate.api.nvidia.com/v1/chat/completions)
  */
@@ -31,7 +32,7 @@ const ALLOWED_ORIGINS = new Set(
 	).split(","),
 );
 const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY?.trim(); // never logged, never returned; trim guards against paste artifacts
-const NVIDIA_MODEL = process.env.NVIDIA_MODEL ?? "deepseek-ai/deepseek-v4.1-flash";
+const NVIDIA_MODEL = process.env.NVIDIA_MODEL ?? "meta/llama-3.3-70b-instruct";
 const NVIDIA_ENDPOINT =
 	process.env.NVIDIA_ENDPOINT ?? "https://integrate.api.nvidia.com/v1/chat/completions";
 
