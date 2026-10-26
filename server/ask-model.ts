@@ -98,7 +98,7 @@ export function createAskModel(
 						},
 					],
 				}),
-				signal: AbortSignal.timeout(20_000),
+				signal: AbortSignal.timeout(45_000), // cold NVIDIA requests can exceed 20s; the grounded fallback keeps this a ceiling
 			});
 			if (!res.ok) throw new Error(`model endpoint ${res.status}`);
 			const data: any = await res.json();
