@@ -6,8 +6,6 @@ import AtlasScene from "@/components/atlas/AtlasScene";
 import AskBox from "@/components/AskBox";
 import CtaLive from "@/components/atlas/CtaLive";
 import { atlas, landmarkNote, LINE_COLORS, stations, site } from "@/content/load";
-import { mosaics } from "@/content/mosaics";
-import { MOSAIC_CELL, mosaicWidth } from "@/content/windowfont";
 
 /**
  * The Night Ride: the whole Atlas as one continuous, interactive scene.
@@ -16,9 +14,10 @@ import { MOSAIC_CELL, mosaicWidth } from "@/content/windowfont";
  * size. A requestAnimationFrame loop lerps the camera between stop focuses,
  * moves the you-are-here train (the glowing one) along the stop polyline,
  * deepens the sky from dusk through night toward dawn, and swaps the overlay
- * card as each phase arrives. The stops are the project stations, the
- * window-mosaic impact figures, and the terminal, where the ticket-booth
- * ask box answers questions from inside the scene. Clicking a station on
+ * card as each phase arrives. The stops are project stations and the terminal,
+ * where the ticket-booth ask box answers questions from inside the scene. Project
+ * figures stay with their owning station instead of becoming separate stops.
+ * Clicking a station on
  * the map or a dot on the trip strip jumps the ride to that stop.
  *
  * Phones get the same ride with lighter geometry (shorter phases, gentler
@@ -32,10 +31,9 @@ const [, , vw, vh] = atlas.viewBox.split(/\s+/).map(Number);
 
 type Stop =
 	| { kind: "station"; slug: string; label: string; x: number; y: number }
-	| { kind: "figure"; figureIndex: number; label: string; x: number; y: number }
 	| { kind: "terminal"; label: string; x: number; y: number };
 
-/** The journey: west to east across the work and the numbers, then the terminal. */
+/** The journey: west to east across project stations, then the terminal. */
 const stops: Stop[] = [
 	...[...stations]
 		.sort((a, b) => a.station.cx - b.station.cx)
@@ -46,16 +44,6 @@ const stops: Stop[] = [
 			x: s.station.cx,
 			y: s.station.cy,
 		})),
-	...mosaics.map((m) => {
-		const figure = site.impact[m.figure_index];
-		return {
-			kind: "figure" as const,
-			figureIndex: m.figure_index,
-			label: figure.label.split(",")[0],
-			x: m.x + mosaicWidth(figure.value) / 2,
-			y: m.y + (7 * MOSAIC_CELL) / 2,
-		};
-	}),
 ].sort((a, b) => a.x - b.x);
 
 /** The terminal ends the line at the east edge: the ticket booth lives here. */
@@ -104,7 +92,6 @@ function stopAccent(stop: Stop): string {
 	if (stop.kind === "station") {
 		return LINE_COLORS[stations.find((st) => st.slug === stop.slug)!.project.line];
 	}
-	if (stop.kind === "figure") return "var(--signal)";
 	return "var(--night-ink)";
 }
 
@@ -112,7 +99,6 @@ function stopAccent(stop: Stop): string {
 function RideCard({ stop, landmark }: { stop: Stop | null; landmark: string | null }) {
 	const building = landmark ? atlas.buildings.find((b) => b.name === landmark) ?? null : null;
 	const note = landmark ? landmarkNote(landmark) : null;
-	const figure = stop && stop.kind === "figure" ? site.impact[stop.figureIndex] : null;
 	const stationRecord =
 		stop && stop.kind === "station" ? stations.find((st) => st.slug === stop.slug)! : null;
 
@@ -138,19 +124,20 @@ function RideCard({ stop, landmark }: { stop: Stop | null; landmark: string | nu
 					<a href={`/portfolio/projects/${stationRecord.slug}/`}>{stationRecord.project.title}</a>
 				</h3>
 				<p className="chi-feature">{stationRecord.project.summary}</p>
-			</div>
-		);
-	}
-	if (figure) {
-		return (
-			<div className="chi-card station-card figure-card" key="figure">
-				<span className="line-band-dot" aria-hidden="true" style={{ background: "var(--signal)" }} />
-				<p className="sign">The city in numbers</p>
-				<h3 className="figure-value">{figure.value}</h3>
-				<p className="chi-feature">{figure.label}</p>
-				<p className="figure-kind">
-					{figure.kind} · source: {figure.source}
-				</p>
+				{stationRecord.project.figures.length > 0 ? (
+					<ul className="station-evidence" aria-label={`${stationRecord.project.title} figures`}>
+						{stationRecord.project.figures.map((figure) => (
+							<li key={`${figure.value}-${figure.label}`}>
+								<div className="station-evidence-heading">
+									<b>{figure.value}</b>
+									<span>{figure.kind}</span>
+								</div>
+								<p>{figure.label}</p>
+								<small>Source: {figure.source}</small>
+							</li>
+						))}
+					</ul>
+				) : null}
 			</div>
 		);
 	}
@@ -375,7 +362,7 @@ export default function AtlasRide() {
 		const strip = stripRef.current;
 		if (!strip) return;
 		const hit = strip.querySelector<HTMLElement>(".trip-stop.hit");
-		const text = strip.querySelector<HTMLElement>(".strip-text");
+		const text = strip.querySelector<HTMLElement>(".strip-counter:not(:empty)") ?? strip.querySelector<HTMLElement>(".strip-text");
 		if (!hit) return;
 		const maxLeft = strip.scrollWidth - strip.clientWidth;
 		strip.scrollLeft = Math.max(0, Math.min(maxLeft, hit.offsetLeft - strip.clientWidth / 2 + hit.offsetWidth / 2));
@@ -417,7 +404,6 @@ export default function AtlasRide() {
 
 	const nextStop = stops[Math.min(stops.length, phase)];
 	const activeStationSlug = stop && stop.kind === "station" ? stop.slug : null;
-	const activeMosaic = stop && stop.kind === "figure" ? stop.figureIndex : -1;
 	const atTerminal = (stop !== null && stop.kind === "terminal") || phase > stops.length;
 
 	const stripText =
@@ -428,8 +414,10 @@ export default function AtlasRide() {
 				: `${stop.kind === "station" ? "NOW STOPPING" : "PASSING"} · ${stop.label.toUpperCase()}`;
 	const counter =
 		phase >= 1 && phase <= stops.length && !(stop !== null && stop.kind === "terminal")
-			? ` · STOP ${phase} OF ${stops.length}`
-			: "";
+			? `STOP ${phase} OF ${stops.length}`
+			: atTerminal
+				? "TERMINAL"
+				: "";
 
 	return (
 		<div className={`ride${phase === 0 ? " ride-phase-0" : ""}`} ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount + 2 }}>
@@ -443,9 +431,8 @@ export default function AtlasRide() {
 							stationSelected={activeStationSlug}
 							onSelectStation={goToStation}
 							activeStation={activeStationSlug}
-							activeMosaic={activeMosaic}
 							dimStations={!(stop !== null && atTerminal)}
-							classNameOverride={`chi-map riding${activeMosaic >= 0 || landmark ? " figure-focus" : ""}`}
+							classNameOverride={`chi-map riding${landmark ? " figure-focus" : ""}`}
 						>
 							<g ref={trainRef} className="you-train" aria-hidden="true">
 								<circle r="18" cx="10" cy="0" className="you-halo" />
@@ -474,7 +461,8 @@ export default function AtlasRide() {
 								</button>
 							))}
 						</span>
-						<b className="strip-text">{stripText}{counter}</b>
+						<b className="strip-text">{stripText}{counter ? ` · ${counter}` : ""}</b>
+						<b className="strip-counter" aria-hidden="true">{counter}</b>
 					</div>
 
 					<div className="ride-progress" aria-hidden="true" />
@@ -483,7 +471,7 @@ export default function AtlasRide() {
 						<span className="kicker">Facade 2: The Atlas</span>
 						<h1>The city is the navigation.</h1>
 						<p className="lede">Your train is the glowing one. Scroll to ride.</p>
-						<p className="lede lede-second">Ride past the numbers in lit windows. Get off at the terminal to ask.</p>
+						<p className="lede lede-second">Explore the projects at each stop. Get off at the terminal to ask.</p>
 						<p className="dye-note">River dye week: Chicago runs the river green ahead of St. Patrick's Day.</p>
 						<button type="button" className="skip-ride" onClick={skipRide}>
 							Skip the ride

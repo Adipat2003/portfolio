@@ -3,6 +3,9 @@ previews/
 node_modules/
 .next/
 out/
+.env
+.env.*
+!.env.example
 *.tsbuildinfo
 __pycache__/
 server/dist/

@@ -5,6 +5,8 @@
  *
  * Plain Node ESM, no dependencies, same style as the other check scripts.
  */
+import assert from "node:assert/strict";
+import { createCtaProxy } from "../server/dist/server/cta.js";
 import { spawn } from "node:child_process";
 import process from "node:process";
 
@@ -37,9 +39,51 @@ function rpc(method, params, id = 1) {
 	return { jsonrpc: "2.0", id, method, params };
 }
 
+async function checkCtaNormalization() {
+	const originalFetch = globalThis.fetch;
+	let calls = 0;
+	let body = { ctatt: { tmst: "2026-10-27T23:58:00", eta: [
+		{ rt: "Blue", destNm: "O'Hare", stpDe: "Service toward O'Hare", prdt: "2026-10-27T23:58:00", arrT: "2026-10-28T00:03:00", isApp: "0", isDly: "1", isSch: "0" },
+		{ rt: "Brn", destNm: "Kimball", prdt: "20261027 23:58:00", arrT: "20261027 23:58:20", isApp: 1, isSch: true },
+		{ rt: "G", destNm: "Harlem", prdt: "2026-10-27T23:58:00", arrT: "invalid" },
+		{ rt: "Org", destNm: "Midway", prdt: "invalid", arrT: "2026-10-28T00:03:00" },
+		{ rt: "P", destNm: "Linden", prdt: "2026-10-27T23:58:00", arrT: "2026-10-27T23:55:00" },
+	] } };
+	try {
+		globalThis.fetch = async () => {
+			calls++;
+			return Response.json(body);
+		};
+		const proxy = createCtaProxy({ apiKey: "fixture", mapid: "40380", ttlMs: 60_000 });
+		const result = await proxy.get();
+		assert.equal(result.available, true);
+		assert.deepEqual(result.arrivals, [
+			{ line: "brn", destination: "Kimball", direction: "", minutes: 0, isApproaching: true, isDelayed: false, isScheduled: true },
+			{ line: "blue", destination: "O'Hare", direction: "Service toward O'Hare", minutes: 5, isApproaching: false, isDelayed: true, isScheduled: false },
+		]);
+		await proxy.get();
+		assert.equal(calls, 1, "cached station avoids another upstream call");
+		const expiring = createCtaProxy({ apiKey: "fixture", mapid: "40380", ttlMs: 0 });
+		await expiring.get();
+		globalThis.fetch = async () => { throw new Error("upstream failure"); };
+		assert.equal((await expiring.get()).available, false, "expired arrivals cannot masquerade as live");
+		body = { ctatt: { eta: [] } };
+		globalThis.fetch = async () => Response.json(body);
+		const empty = await expiring.get();
+		assert.equal(empty.available, true);
+		assert.deepEqual(empty.arrivals, []);
+		body = { ctatt: { errCd: "100", errNm: "invalid request" } };
+		assert.equal((await expiring.get()).available, false);
+		ok("CTA timestamps, midnight, flags, malformed/departed rows, cache and failures", true);
+	} finally {
+		globalThis.fetch = originalFetch;
+	}
+}
+
 async function main() {
+	await checkCtaNormalization();
 	child = spawn("node", ["server/dist/server/index.js"], {
-		env: { ...process.env, SERVICE_PORT: String(PORT), SERVICE_HOST: "127.0.0.1" },
+		env: { ...process.env, CTA_API_KEY: "", NVIDIA_API_KEY: "", PORT: String(PORT), SERVICE_PORT: String(PORT), SERVICE_HOST: "127.0.0.1" },
 		stdout: "pipe",
 		stderr: "pipe",
 	});
@@ -133,6 +177,18 @@ async function main() {
 				typeof transit.json.reason === "string" &&
 				String(transit.json.credit).includes("Chicago Transit Authority"),
 		);
+		ok(
+			"transit lists the supported Loop stations",
+			transit.json.stations?.length === 4 && transit.json.stations.some((station) => station.id === "40380"),
+		);
+		const stateLake = await get("/transit?station=40260");
+		ok(
+			"transit selects an allowlisted station",
+			stateLake.status === 200 && stateLake.json.available === false &&
+				stateLake.json.station_id === "40260" && stateLake.json.station === "State/Lake",
+		);
+		const invalidStation = await get("/transit?station=99999");
+		ok("transit rejects an unknown station", invalidStation.status === 400);
 		const transitAgain = await get("/transit");
 		ok(
 			"transit no-key response is stable across calls",

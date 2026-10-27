@@ -10,7 +10,6 @@ import AtlasSky from "./AtlasSky";
 import AtlasStations from "./AtlasStations";
 import AtlasTrains from "./AtlasTrains";
 import AtlasWindowLights from "./AtlasWindowLights";
-import AtlasMosaics from "./AtlasMosaics";
 
 /**
  * The Atlas hero map. This file is the shell only: the viewBox, the accessible
@@ -28,7 +27,6 @@ export default function AtlasMap({
   stationSelected = null,
   onSelectStation,
   activeStation = null,
-  activeMosaic = -1,
   dimStations = false,
   style,
   svgRef,
@@ -40,7 +38,6 @@ export default function AtlasMap({
   stationSelected?: string | null;
   onSelectStation?: (slug: string | null) => void;
   activeStation?: string | null;
-  activeMosaic?: number;
   dimStations?: boolean;
   style?: CSSProperties;
   svgRef?: React.RefObject<SVGSVGElement | null>;
@@ -60,7 +57,6 @@ export default function AtlasMap({
       <AtlasSky />
       <AtlasBuildings selected={selected} onSelect={onSelect} />
       <AtlasWindowLights />
-      <AtlasMosaics active={activeMosaic} />
       <AtlasRiver />
       <AtlasRoutes />
       <AtlasTrains />

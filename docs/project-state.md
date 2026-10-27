@@ -155,8 +155,8 @@ per-record `public_safe`.
 ## The two facades
 
 **Facade 1, The Dispatch.** Classic editorial scroll, the default and primary
-surface. Hero, impact strip (4 figures with hedging kind), filterable project
-grid, about, ask-the-guide, footer. Everything essential lives here.
+surface. Hero, searchable two-column project grid with figures in their owning cards,
+about, ask-the-guide, footer. Everything essential lives here.
 
 **Facade 2, The Atlas.** Chicago rail map. Hand-authored night skyline, river,
 two arrowed elevated routes, and projects as stations. Enhancement only. It
@@ -425,3 +425,40 @@ built. Verify with `hermes config get model` before touching it.
   whitespace differences (figure hedges showed as `( self-reported ,`).
   Strip `<!-- -->` before comparing rendered text between the Python pages
   and the Next export, or normalize whitespace and compare full strings.
+
+## CTA network work, 2026-10-27
+
+Phase 0 of `docs/atlas-live-cta-network-plan.md` is implemented. The geographic
+network converter, positions feed and two map placements remain future phases.
+The current skyline ride stays in place. Issue #64 tracks this deliverable.
+
+- Arrival minutes use CTA `arrT` minus `prdt`, as defined in the
+  [official API guide](https://www.transitchicago.com/developers/ttdocs/).
+  Invalid timestamps are omitted, source approaching/delayed/scheduled flags
+  are preserved, and expired cached arrivals cannot be returned as live after
+  an upstream failure.
+- The terminal has a bounded scroll area below the measured header and trip
+  strip. Browser scroll anchoring is disabled inside the ride: changing a
+  station's board height previously moved the page into the preceding stop.
+  Station controls stay available during loading and service failure; requests
+  have a 15-second deadline and are cancelled on station changes/unmount.
+  Empty feeds say "No arrivals", and schedule-only feeds say "Scheduled".
+- The existing local wrapper loads credentials without logging them, passes
+  CTA/NVIDIA keys only to the service, and leaves Next.js with the public URL.
+  A local service launched through that wrapper returned valid predictions
+  (including nonzero ETAs and approaching flags). The secrets file was not
+  read or copied into the repository. The service check explicitly clears keys
+  so its no-key checks stay deterministic even with shell credentials set.
+- Render `/health` and `/transit?station=40380` both returned HTTP 200 before
+  this change. Its older deployment still returned all-zero ETAs. A successful
+  health response alone does not establish arrival correctness; check the
+  normalized payload again after the service deploys.
+- Local service checks, typecheck, static export build, and content checks
+  pass. The Python rollback artifacts were regenerated and pass
+  `python3.14 scripts/build.py --check`. The canonical browser suite verifies the nine viewport geometries,
+  station and landmark selection, guide answers, Dispatch filters/detail
+  navigation, keyboard focus, reduced motion, no-JavaScript content, and touch
+  dragging. It also covers controlled loading, scheduled/delayed, empty and
+  unavailable board states. Viewport JPEGs were inspected at desktop, short
+  laptop and phone sizes. Post-merge Pages geometry and hosted CTA payload
+  verification remain required before calling production validated.

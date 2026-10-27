@@ -63,6 +63,24 @@ node scripts/ask-check.mjs
 python3 scripts/build.py --check
 ```
 
+## Local API secrets
+
+Local runs load `~/.config/portfolio/secrets.env` when it exists. The personal
+file is outside this repository, has owner-only permissions, and is never
+tracked. `npm run dev`, `npm run build`, `npm run start`, and
+`npm run start:service` load it automatically; shell-exported values take
+precedence. Node.js 20.12 or newer is required for this local loader.
+
+Supported entries are `CTA_API_KEY` and `NVIDIA_API_KEY` for local values,
+plus `CTA_MAPID`, `NVIDIA_MODEL`,
+`NEXT_PUBLIC_SERVICE_URL`, and `SERVICE_ALLOWED_ORIGINS`. The frontend calls
+the local Node service at `http://localhost:8788`; build and start that service
+with `npm run build:service` and `npm run start:service` in another terminal.
+Only `npm run start:service` receives the two server keys; Next.js commands
+receive the public service URL but not CTA or NVIDIA credentials.
+`npm run check:service` intentionally bypasses the file so its no-key fallback
+checks remain meaningful. Production keys continue to live in Render.
+
 Never hand-edit generated files; change content and rebuild.
 
 ## Content model
