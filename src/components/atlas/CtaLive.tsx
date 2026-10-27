@@ -6,9 +6,8 @@ import { useEffect, useState } from "react";
  * Live CTA arrivals from the server-side proxy. The browser only sees
  * normalized station/arrival data; the CTA key stays in the Node service.
  *
- * Where it lives: the terminal station panel. People can switch between
- * nearby Loop stations and see the next predictions with direction and
- * quality flags, then ask the portfolio guide below the board.
+ * Shared by the terminal's Loop selector and the geographic map's selected
+ * station. Predictions retain their direction and source status flags.
  */
 
 const SERVICE_URL = process.env.NEXT_PUBLIC_SERVICE_URL ?? "";
@@ -88,7 +87,7 @@ export default function CtaLive({ stationId, showStations = true }: { stationId?
 				const data = (await res.json()) as TransitResponse;
 				if (cancelled) return;
 				const stations = Array.isArray(data.stations) && data.stations.length ? data.stations : STATIONS;
-				const station = String(data.station ?? stations.find((entry) => entry.id === selectedStation)?.name ?? "Loop station");
+				const station = String(data.station ?? stations.find((entry) => entry.id === selectedStation)?.name ?? "Selected station");
 				const arrivals = data.available === true && Array.isArray(data.arrivals)
 					? data.arrivals.slice(0, 3)
 					: [];
@@ -119,7 +118,7 @@ export default function CtaLive({ stationId, showStations = true }: { stationId?
 
 		setState((current) => ({
 			...current, kind: "loading", stationId: selectedStation,
-			station: current.stations.find((entry) => entry.id === selectedStation)?.name ?? "Loop station",
+			station: current.stations.find((entry) => entry.id === selectedStation)?.name ?? "Selected station",
 			arrivals: [], asOf: "",
 		}));
 		poll();
@@ -135,14 +134,16 @@ export default function CtaLive({ stationId, showStations = true }: { stationId?
 	const message = state.kind === "loading"
 		? "Checking this station…"
 		: state.kind === "unavailable"
-			? "Live arrivals are unavailable right now. The project ride still works."
+			? showStations
+				? "Live arrivals are unavailable right now. The project ride still works."
+				: "Live arrivals are unavailable right now. The network map still works."
 			: "No upcoming arrivals are reported right now.";
 
 	return (
-		<div className="transit-board" aria-label="CTA Loop station arrivals" data-state={state.kind} data-station={state.stationId} aria-busy={state.kind === "loading"}>
+		<div className="transit-board" aria-label={showStations ? "CTA Loop station arrivals" : "CTA station arrivals"} data-state={state.kind} data-station={state.stationId} aria-busy={state.kind === "loading"}>
 			<div className="transit-board-heading">
 				<div>
-					<span className="transit-eyebrow">Loop service</span>
+					<span className="transit-eyebrow">{showStations ? "Loop service" : "Station arrivals"}</span>
 					<h3>{state.station}</h3>
 				</div>
 				<span className={`transit-status transit-status-${state.kind}`}>

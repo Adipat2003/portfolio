@@ -137,6 +137,9 @@ async function checkNetwork(page) {
 	await start.getByRole("combobox").selectOption({ label: "Kimball" });
 	await page.waitForTimeout(400);
 	assert.equal(await start.locator(".rail-selected-station h3").innerText(), "Kimball");
+	if (await start.locator(".transit-board").count()) {
+		assert.equal(await start.locator(".transit-board").getAttribute("aria-label"), "CTA station arrivals", "station boards outside the Loop have a network-wide accessible label");
+	}
 	assert.equal(await start.locator('.rail-station[aria-pressed="true"]').count(), 1);
 	await start.getByRole("button", { name: "All lines", exact: true }).click();
 	await start.getByRole("searchbox", { name: "Search CTA stations" }).fill("Clark/Lake");
@@ -493,13 +496,26 @@ try {
 		await touchPage.waitForTimeout(200);
 		assert.notEqual(await strip.evaluate((element) => element.scrollLeft), stripMetrics.left, "phone trip strip responds to touch dragging");
 		await touchPage.getByRole("button", { name: /Jump to The terminal/ }).click();
-		await touchPage.waitForFunction(() => document.querySelector(".terminal-card .transit-board")?.getAttribute("data-state") !== "loading");
+		await touchPage.locator(".terminal-overlay").waitFor();
+		if (await touchPage.locator(".terminal-card .transit-board").count()) {
+			await touchPage.waitForFunction(() => {
+				const board = document.querySelector(".terminal-card .transit-board");
+				return board && board.getAttribute("data-state") !== "loading";
+			}, null, { timeout: 25_000 });
+		}
 		await touchPage.locator(".terminal-overlay").evaluate((element) => { element.scrollTop = element.scrollHeight; });
 		await touchPage.locator(".terminal-overlay").hover();
-		await touchPage.mouse.wheel(0, 6000);
-		await touchPage.waitForTimeout(400);
-		const endMapTop = await touchPage.locator('.rail-network[data-placement="end"]').evaluate((element) => element.getBoundingClientRect().top);
-		assert.ok(endMapTop < 844, "phone can scroll out of the terminal to the closing network");
+		let closingMapVisible = false;
+		for (let gesture = 0; gesture < 4; gesture++) {
+			await touchPage.mouse.wheel(0, 2400);
+			await touchPage.waitForTimeout(150);
+			closingMapVisible = await touchPage.locator('.rail-network[data-placement="end"]').evaluate((element) => {
+				const bounds = element.getBoundingClientRect();
+				return bounds.top < innerHeight && bounds.bottom > 0;
+			});
+			if (closingMapVisible) break;
+		}
+		assert.ok(closingMapVisible, "phone can scroll out of the terminal to the closing network");
 		await capture(touchPage, "network-end-phone");
 		await touchContext.close();
 
