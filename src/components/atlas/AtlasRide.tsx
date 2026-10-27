@@ -358,11 +358,20 @@ export default function AtlasRide() {
 					setLandmark(null);
 					landmarkFocusRef.current = null;
 					// Keep the active stop visible inside the strip's own
-					// scroll track; the page itself never moves here.
+					// scroll track; the page itself never moves here. The
+					// marquee text after the dots is the stop's caption, so
+					// when it would clip past the track's right edge the
+					// scroll reveals it instead of the dot alone.
 					const strip = stripRef.current;
 					const hit = strip?.querySelector<HTMLElement>(".trip-stop.hit");
+					const text = strip?.querySelector<HTMLElement>(".strip-text");
 					if (strip && hit) {
-						strip.scrollLeft = hit.offsetLeft - strip.clientWidth / 2 + hit.offsetWidth / 2;
+						const maxLeft = strip.scrollWidth - strip.clientWidth;
+						const centered = Math.max(0, Math.min(maxLeft, hit.offsetLeft - strip.clientWidth / 2 + hit.offsetWidth / 2));
+						strip.scrollLeft = centered;
+						if (text && text.offsetLeft + text.offsetWidth - strip.scrollLeft > strip.clientWidth) {
+							strip.scrollLeft = Math.min(maxLeft, text.offsetLeft + text.offsetWidth - strip.clientWidth);
+						}
 					}
 				}
 			}
@@ -462,7 +471,7 @@ export default function AtlasRide() {
 								</button>
 							))}
 						</span>
-						<b>{stripText}{counter}</b>
+						<b className="strip-text">{stripText}{counter}</b>
 					</div>
 
 					<CtaLive />
