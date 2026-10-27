@@ -23,6 +23,7 @@ export default function AtlasBuildings({
         return (
           <g
             key={b.name}
+            className={open ? "atlas-building selected-building" : "atlas-building"}
             role="button"
             tabIndex={0}
             aria-expanded={open}
@@ -41,6 +42,7 @@ export default function AtlasBuildings({
             </title>
             <path
               d={b.d}
+              vectorEffect="non-scaling-stroke"
               fill={`url(#${atlas.building_fill.id})`}
               stroke="#3a4a6e"
               strokeWidth={1}
@@ -48,9 +50,9 @@ export default function AtlasBuildings({
             />
             {b.extra ? (
               b.extra_fill ? (
-                <path d={b.extra} fill={b.extra_fill} stroke="none" />
+                <path vectorEffect="non-scaling-stroke" d={b.extra} fill={b.extra_fill} stroke="none" />
               ) : (
-                <path d={b.extra} stroke={b.extra_stroke} strokeWidth={b.extra_width} fill="none" />
+                <path vectorEffect="non-scaling-stroke" d={b.extra} stroke={b.extra_stroke} strokeWidth={b.extra_width} fill="none" />
               )
             ) : null}
           </g>

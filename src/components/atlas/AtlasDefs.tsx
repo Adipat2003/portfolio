@@ -2,24 +2,13 @@ import { atlas, LINES, LINE_COLORS } from "@/content/load";
 import { markerId } from "./markerId";
 
 /**
- * The reusable pieces of the map: the sky gradient, the tower fill, and one
+ * The reusable pieces of the map: the tower fill and one
  * arrowhead marker per line. Every value comes from atlas.json, so a palette
  * change is a content change.
  */
 export default function AtlasDefs() {
   return (
     <defs>
-      <linearGradient id={atlas.sky.id} x1={atlas.sky.x1} y1={atlas.sky.y1} x2={atlas.sky.x2} y2={atlas.sky.y2}>
-        {atlas.sky.stops.map((stop, i) => (
-          <stop
-            key={stop.offset}
-            offset={stop.offset}
-            /* The season's sky, with the content value as the fallback so an
-               unthemed render still draws the authored sky. */
-            style={{ stopColor: `var(--atlas-sky-${i + 1}, ${stop.color})` }}
-          />
-        ))}
-      </linearGradient>
       <linearGradient
         id={atlas.building_fill.id}
         x1={atlas.building_fill.x1}

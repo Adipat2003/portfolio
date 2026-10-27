@@ -42,7 +42,7 @@ type BoardState = {
 
 const LINE_NAMES: Record<string, string> = {
 	red: "Red", blue: "Blue", brn: "Brown", g: "Green",
-	org: "Orange", p: "Purple", pnk: "Pink", y: "Yellow",
+	org: "Orange", p: "Purple", pink: "Pink", pnk: "Pink", y: "Yellow",
 };
 const DEFAULT_STATION = "40380";
 const STATIONS: Station[] = [
@@ -61,8 +61,9 @@ function clockOf(iso: string): string {
 	}
 }
 
-export default function CtaLive() {
-	const [selectedStation, setSelectedStation] = useState(DEFAULT_STATION);
+export default function CtaLive({ stationId, showStations = true }: { stationId?: string; showStations?: boolean }) {
+	const [localStation, setSelectedStation] = useState(DEFAULT_STATION);
+	const selectedStation = stationId ?? localStation;
 	const [state, setState] = useState<BoardState>({
 		kind: "loading",
 		station: "Clark/Lake",
@@ -151,7 +152,7 @@ export default function CtaLive() {
 						: state.kind === "loading" ? "Updating" : state.kind === "empty" ? "No arrivals" : "Offline"}
 				</span>
 			</div>
-			{state.stations.length > 1 ? (
+			{showStations && state.stations.length > 1 ? (
 				<div className="transit-stations" role="group" aria-label="Choose a Loop station">
 					{state.stations.map((station) => (
 						<button

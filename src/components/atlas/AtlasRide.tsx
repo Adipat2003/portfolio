@@ -4,11 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AtlasMap from "@/components/atlas/AtlasMap";
 import AtlasScene from "@/components/atlas/AtlasScene";
 import AskBox from "@/components/AskBox";
+import { clampedCamera } from "@/content/cta-geometry";
 import CtaLive from "@/components/atlas/CtaLive";
 import { atlas, landmarkNote, LINE_COLORS, stations, site } from "@/content/load";
 
 /**
- * The Night Ride: the whole Atlas as one continuous, interactive scene.
+ * The Night Ride: the secondary portfolio tour inside Atlas.
  *
  * One tall scroll track, one sticky stage, one experience on every screen
  * size. A requestAnimationFrame loop lerps the camera between stop focuses,
@@ -50,7 +51,7 @@ const stops: Stop[] = [
 const TERMINAL: Stop = { kind: "terminal", label: "The terminal", x: 1140, y: 300 };
 stops.push(TERMINAL);
 
-type Focus = { x: number; y: number; zoom: number };
+type Focus = { x: number; y: number; zoom: number; height?: number };
 
 const wideFocus: Focus = { x: vw / 2, y: vh / 2 - 30, zoom: 1 };
 
@@ -194,6 +195,7 @@ export default function AtlasRide() {
 				x: box.x + box.width / 2,
 				y: box.y + box.height / 2,
 				zoom: isMobile ? 1.5 : 1.9,
+				height: box.height,
 			};
 		}
 	}
@@ -218,6 +220,18 @@ export default function AtlasRide() {
 		};
 	}, []);
 
+	useEffect(() => {
+		const release = () => {
+			if (!landmarkFocusRef.current) return;
+			landmarkFocusRef.current = null;
+			setLandmark(null);
+		};
+		const escape = (event: KeyboardEvent) => { if (event.key === "Escape") release(); };
+		window.addEventListener("scroll", release, { passive: true });
+		window.addEventListener("keydown", escape);
+		return () => { window.removeEventListener("scroll", release); window.removeEventListener("keydown", escape); };
+	}, []);
+
 	const phaseCount = stops.length + 2;
 	const stop = phase >= 1 && phase <= stops.length ? stops[phase - 1] : null;
 
@@ -240,9 +254,10 @@ export default function AtlasRide() {
 	);
 
 	useEffect(() => {
-		const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 		const narrow = window.matchMedia("(max-width: 860px)");
 		const cam = { ...focuses[0] };
+		let anchorY = narrow.matches ? .36 : .5;
 		const pos = { ...rail[0] };
 		const rootCs = getComputedStyle(document.documentElement);
 		const dusk = (["--atlas-sky-1", "--atlas-sky-2", "--atlas-sky-3"] as const).map((key) =>
@@ -250,8 +265,7 @@ export default function AtlasRide() {
 		);
 		const night = dusk.map((c) => c.map((v) => v * 0.42));
 		let raf = 0;
-		let txPrev = 0;
-		let tyPrev = 0;
+
 
 		const tick = () => {
 			const ride = rideRef.current;
@@ -275,48 +289,39 @@ export default function AtlasRide() {
 				const i = Math.min(phaseCount - 2, Math.floor(f));
 				const t = smooth(f - i);
 
-				const tgt = landmarkFocusRef.current ?? {
+				const landmarkFocus = landmarkFocusRef.current;
+				const stageHeight = stageRef.current?.clientHeight ?? innerHeight;
+				const chromeBottom = stripRef.current?.getBoundingClientRect().bottom ?? 120;
+				const landmarkFit = Math.min(svg.clientWidth / vw, svg.clientHeight / vh);
+				const tgt = landmarkFocus ? {
+					...landmarkFocus,
+					zoom: Math.min(landmarkFocus.zoom, (stageHeight - chromeBottom - 32) / ((landmarkFocus.height ?? vh) * landmarkFit)),
+				} : {
 					x: lerp(focuses[i].x, focuses[i + 1].x, t),
 					y: lerp(focuses[i].y, focuses[i + 1].y, t),
 					zoom: lerp(focuses[i].zoom, focuses[i + 1].zoom, t),
 				};
-				const ease = reduce ? 1 : 0.08;
+				const ease = reduce.matches ? 1 : 0.08;
+				const targetAnchor = landmarkFocus ? (stageHeight + chromeBottom - 16) / (2 * stageHeight) : narrow.matches ? .36 : .5;
+				anchorY += (targetAnchor - anchorY) * ease;
 				cam.x += (tgt.x - cam.x) * ease;
 				cam.y += (tgt.y - cam.y) * ease;
 				cam.zoom += (tgt.zoom - cam.zoom) * ease;
 
-				svg.style.transformOrigin = "0 0";
-				// Real camera: explicit translate+scale keeps the focus point
-				// anchored on screen at any zoom and aspect. The old pivot trick
-				// only panned (zoom - 1) x the pivot distance, so phones (zoom
-				// 1.3) crawled at 30% speed and the train walked off the east
-				// edge. Careful: getBoundingClientRect on the svg is
-				// POST-transform (this loop's own zoom scales it), so the
-				// untransformed layout box is recovered by dividing out z and
-				// subtracting the translate this loop set last frame.
-				const stageR = stageRef.current?.getBoundingClientRect();
-				if (stageR) {
-					const z = cam.zoom;
-					const rect = svg.getBoundingClientRect();
-					const layoutW = rect.width / z;
-					const layoutH = rect.height / z;
-					const fit = Math.min(layoutW / vw, layoutH / vh);
-					const Lx = rect.x - txPrev;
-					const Ly = rect.y - tyPrev;
-					const anchorX = stageR.x + stageR.width * 0.5;
-					const anchorY = stageR.y + stageR.height * (narrow.matches ? 0.36 : 0.5);
-					const tx = anchorX - Lx - cam.x * fit * z;
-					const ty = anchorY - Ly - cam.y * fit * z;
-					svg.style.transform = `translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${z.toFixed(4)})`;
-					txPrev = tx;
-					tyPrev = ty;
+				const stage = stageRef.current;
+				if (stage) {
+					const css = getComputedStyle(svg);
+					const camera = clampedCamera({ width: svg.clientWidth, height: svg.clientHeight,
+						left: parseFloat(css.left) || 0, top: parseFloat(css.top) || 0 },
+						{ width: stage.clientWidth, height: stage.clientHeight }, cam,
+						{ width: vw, height: vh }, anchorY);
+					svg.style.transform = `translate(${camera.x.toFixed(2)}px,${camera.y.toFixed(2)}px) scale(${camera.zoom.toFixed(4)})`;
 				}
 
 				// Dusk deepens to night through the middle of the ride, then
 				// lifts toward the pre-dawn glow by the end.
 				const skyT = raw < 0.55 ? raw / 0.55 : 1;
 				const dawnT = raw < 0.55 ? 0 : (raw - 0.55) / 0.45;
-				const stage = stageRef.current;
 				if (stage) {
 					const skyStops = dusk.map((from, k) =>
 						rgbCss(mixRgb(mixRgb(from, night[k], skyT), PREDAWN[k], dawnT)),
@@ -334,8 +339,8 @@ export default function AtlasRide() {
 				const ti = Math.min(rail.length - 2, Math.floor(tf));
 				const tt = smooth(tf - ti);
 				const train = { x: lerp(rail[ti].x, rail[ti + 1].x, tt), y: lerp(rail[ti].y, rail[ti + 1].y, tt) };
-				pos.x += (train.x - pos.x) * (reduce ? 1 : 0.1);
-				pos.y += (train.y - pos.y) * (reduce ? 1 : 0.1);
+				pos.x += (train.x - pos.x) * (reduce.matches ? 1 : 0.1);
+				pos.y += (train.y - pos.y) * (reduce.matches ? 1 : 0.1);
 				trainRef.current?.setAttribute("transform", `translate(${pos.x.toFixed(1)} ${pos.y.toFixed(1)})`);
 
 				const next = Math.round(f);
@@ -420,7 +425,7 @@ export default function AtlasRide() {
 				: "";
 
 	return (
-		<div className={`ride${phase === 0 ? " ride-phase-0" : ""}`} ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount + 2 }}>
+		<div id="atlas-ride" className={`ride${phase === 0 ? " ride-phase-0" : ""}`} ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount + 2 }}>
 			<div className="ride-stage atlas-hero" ref={stageRef}>
 				<AtlasScene>
 					<div className="atlas-scroll">
@@ -428,10 +433,10 @@ export default function AtlasRide() {
 							svgRef={svgRef}
 							selected={landmark}
 							onSelect={selectLandmark}
-							stationSelected={activeStationSlug}
+							stationSelected={landmark || atTerminal ? null : activeStationSlug}
 							onSelectStation={goToStation}
-							activeStation={activeStationSlug}
-							dimStations={!(stop !== null && atTerminal)}
+							activeStation={landmark || atTerminal ? null : activeStationSlug}
+							dimStations={atTerminal || landmark !== null || phase === 0}
 							classNameOverride={`chi-map riding${landmark ? " figure-focus" : ""}`}
 						>
 							<g ref={trainRef} className="you-train" aria-hidden="true">
@@ -468,9 +473,9 @@ export default function AtlasRide() {
 					<div className="ride-progress" aria-hidden="true" />
 
 					<div className={`ride-copy${phase === 0 ? "" : " faded"}`}>
-						<span className="kicker">Facade 2: The Atlas</span>
-						<h1>The city is the navigation.</h1>
-						<p className="lede">Your train is the glowing one. Scroll to ride.</p>
+						<span className="kicker">The portfolio ride</span>
+						<h2>Take the scenic route.</h2>
+						<p className="lede">My work, one stop at a time. Scroll to ride.</p>
 						<p className="lede lede-second">Explore the projects at each stop. Get off at the terminal to ask.</p>
 						<p className="dye-note">River dye week: Chicago runs the river green ahead of St. Patrick's Day.</p>
 						<button type="button" className="skip-ride" onClick={skipRide}>

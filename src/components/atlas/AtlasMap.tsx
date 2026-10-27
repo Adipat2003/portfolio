@@ -6,7 +6,6 @@ import AtlasBuildings from "./AtlasBuildings";
 import AtlasDefs from "./AtlasDefs";
 import AtlasRiver from "./AtlasRiver";
 import AtlasRoutes from "./AtlasRoutes";
-import AtlasSky from "./AtlasSky";
 import AtlasStations from "./AtlasStations";
 import AtlasTrains from "./AtlasTrains";
 import AtlasWindowLights from "./AtlasWindowLights";
@@ -48,17 +47,16 @@ export default function AtlasMap({
     <svg
       ref={svgRef}
       viewBox={atlas.viewBox}
-      role="img"
+      role="group"
       aria-label="The Atlas: a Chicago rail-map world where projects become stations"
       className={classNameOverride ?? "chi-map"}
       style={style}
     >
       <AtlasDefs />
-      <AtlasSky />
       <AtlasBuildings selected={selected} onSelect={onSelect} />
-      <AtlasWindowLights />
-      <AtlasRiver />
-      <AtlasRoutes />
+      <g pointerEvents="none"><AtlasWindowLights /></g>
+      <g pointerEvents="none"><AtlasRiver /></g>
+      <g pointerEvents="none"><AtlasRoutes /></g>
       <AtlasTrains />
       <AtlasStations
         selected={stationSelected}

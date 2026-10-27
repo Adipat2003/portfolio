@@ -1,6 +1,6 @@
 # Atlas Live CTA Network Plan
 
-Status: Phase 0 implemented on the working branch, 2026-10-27 (issue #64). Local validation is recorded in `docs/project-state.md`; production verification follows deployment. Phases 1 through 5 remain planned. The existing skyline Atlas remains in place.
+Status: network data and live feeds shipped in PR #67 on 2026-10-27. The complete map interface, both Atlas placements and SVG/camera repairs are implemented for issue #66. Local and post-deploy checks are recorded in the PR. The skyline remains a secondary portfolio tour.
 
 ## Goal
 
@@ -127,3 +127,40 @@ The browser must never call CTA directly or receive the API key. Both Atlas map 
 - The Dispatch remains the canonical readable source for every project claim and metric.
 - No CTA key, NVIDIA key, or other secret appears in generated client code, JSON responses, logs, screenshots, Git history, or the plan document.
 - No new package is added without explicit approval.
+
+## Implementation record, 2026-10-27
+
+- `scripts/build-cta-network.py` uses Python's CSV/ZIP libraries, projects CTA
+  coordinates locally and simplifies at a 25 m projected tolerance. The current
+  official package (updated 2026-09-14, service through 2026-11-30) produces an
+  89 KB JSON with eight routes, 143 parent stations, platforms, shape references
+  and GTFS transfer edges. No historical station is fabricated into this feed.
+- `/positions` requests all eight routes together. `/transit-alerts` exposes the
+  verified CTA Route Status JSON, including Purple Express status when present.
+  Positions and alerts have separate 15-second and 60-second caches; both feeds
+  coalesce cold requests. Station arrivals now accept the generated station
+  allowlist and coalesce requests while preserving the terminal's four shortcuts.
+- The same `CtaRailMap` appears before and after the ride. One provider polls
+  positions/status for both instances. A stale or failed response clears train
+  markers and leaves the network usable. Only fixes within 500 m of a matching
+  route are drawn, snapped to that route. Ordinary updates interpolate briefly
+  along route geometry; large jumps and reduced-motion updates snap directly.
+- Route filters, native station selection, search, transfers, zoom, Loop/full
+  views and pointer panning work with equivalent HTML controls and a train list.
+  Labels are collision-checked and reveal progressively. Portfolio connections
+  live in the existing Atlas station records and are explicitly editorial links,
+  not claims about work locations.
+- The skyline camera uses untransformed layout dimensions and clamps horizontal
+  motion to its canvas. The stage supplies the sky, removing the finite SVG
+  background plate. Selection highlights the building outline without magnifying
+  stroke widths; Escape and scroll release selection. Terminal/landmark states
+  dim project labels to avoid collisions behind the overlay card.
+- Hosted verification after PR #67: `/positions`, `/transit-alerts`, and Kimball
+  arrivals (`/transit?station=41290`) each returned HTTP 200 and available data.
+  One sample had 42 live trains and eight route statuses. No coordinates are
+  invented for a route with no reporting train.
+
+Detailed per-incident Customer Alerts and the prediction-quality flags remain
+linked to CTA's own alerts page. Only the verified route-status schema is
+normalized here; no outage is inferred from missing arrivals. The live-feed
+and static-map portions of this plan are implemented without new dependencies.

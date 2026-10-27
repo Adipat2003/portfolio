@@ -57,6 +57,7 @@ export const routeSchema = z.object({
 });
 
 export const stationSchema = z.object({
+  ctaStation: z.string().regex(/^4\d{4}$/).optional(),
   label: z.string(),
   cx: z.number(),
   cy: z.number(),

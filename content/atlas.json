@@ -593,35 +593,40 @@
       "cx": 248,
       "cy": 267,
       "dx": 14,
-      "dy": -4
+      "dy": -4,
+      "ctaStation": "40380"
     },
     "inspection-platform-api": {
       "label": "Access control platform",
       "cx": 560,
       "cy": 217,
       "dx": 14,
-      "dy": -4
+      "dy": -4,
+      "ctaStation": "41700"
     },
     "legacy-report-pipeline": {
       "label": "Inspection reporting",
       "cx": 880,
       "cy": 166,
       "dx": 14,
-      "dy": -4
+      "dy": -4,
+      "ctaStation": "40730"
     },
     "cross-platform-rollout": {
       "label": "Android rollout",
       "cx": 420,
       "cy": 315,
       "dx": 14,
-      "dy": -4
+      "dy": -4,
+      "ctaStation": "40040"
     },
     "supervised-automation": {
       "label": "Supervised agent runner",
       "cx": 760,
       "cy": 294,
       "dx": 14,
-      "dy": -4
+      "dy": -4,
+      "ctaStation": "40380"
     },
     "cs411-la-crime": {
       "label": "Crime-data web app",
@@ -629,14 +634,16 @@
       "cy": 134,
       "dx": -16,
       "dy": -4,
-      "anchor": "end"
+      "anchor": "end",
+      "ctaStation": "41700"
     },
     "ece391-os-kernel": {
       "label": "Operating system kernel",
       "cx": 620,
       "cy": 303,
       "dx": 14,
-      "dy": -4
+      "dy": -4,
+      "ctaStation": "40730"
     }
   }
 }

@@ -1,5 +1,6 @@
 import rawSite from "../../content/site.json";
 import rawProjects from "../../content/projects.json";
+import railNetwork from "../../content/cta-network.json";
 import rawAtlas from "../../content/atlas.json";
 import rawSeasons from "../../content/seasons.json";
 import rawChicago from "../../content/chicago.json";
@@ -114,6 +115,9 @@ export const stations = Object.entries(atlas.labels)
       throw new Error(
         `atlas.json station '${slug}' sits on line '${project.line}', which has no route`,
       );
+    }
+    if (station.ctaStation && !railNetwork.stations.some((stop) => stop.id === station.ctaStation)) {
+      throw new Error(`Unknown CTA station for ${slug}`);
     }
     return { slug, station, project };
   })
