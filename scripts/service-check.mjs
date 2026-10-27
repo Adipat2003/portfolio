@@ -6,6 +6,9 @@
  * Plain Node ESM, no dependencies, same style as the other check scripts.
  */
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { createCtaNetworkProxy } from "../server/dist/server/cta-network.js";
+import { clampedCamera, projectCoordinate, positionOnRoute } from "../server/dist/src/content/cta-geometry.js";
 import { createCtaProxy } from "../server/dist/server/cta.js";
 import { spawn } from "node:child_process";
 import process from "node:process";
@@ -80,8 +83,79 @@ async function checkCtaNormalization() {
 	}
 }
 
+async function checkNetworkFeed() {
+	const originalFetch = globalThis.fetch;
+	const network = JSON.parse(readFileSync("content/cta-network.json", "utf8"));
+	const savedNow = Date.now;
+	let now = savedNow();
+	let calls = 0;
+	const train = { rn: "123", lat: "41.885737", lon: "-87.630886", heading: "90", destNm: "O'Hare", nextStaId: "40380", nextStaNm: "Clark/Lake", arrT: "2026-10-27T00:30:00", isApp: "1", isDly: "1" };
+	try {
+		Date.now = () => now;
+		globalThis.fetch = async (url) => {
+			calls++;
+			assert.ok(String(url).includes("rt=red,blue,brn,g,org,p,pink,y"));
+			await new Promise((resolve) => setTimeout(resolve, 5));
+			return Response.json({ ctatt: { errCd: "0", route: [{ "@name": "blue", train: [train,
+				{ ...train, rn: "124", lat: "NaN" }, { ...train, rn: "125", lon: null },
+				{ ...train, rn: "126", lat: "0" }, { ...train, rn: "127", heading: "360" },
+				{ ...train, rn: "128", isSch: "1" } ] }] } });
+		};
+		const proxy = createCtaNetworkProxy({ apiKey: "fixture", ttlMs: 100 });
+		const responses = await Promise.all([proxy.positions(), proxy.positions(), proxy.positions()]);
+		assert.equal(calls, 1, "cold concurrent readers share one CTA request");
+		assert.equal(responses[0].available, true);
+		assert.equal(responses[0].trains.length, 1, "invalid/scheduled records never become live markers");
+		assert.equal(responses[0].trains[0].isApproaching, true);
+		assert.equal(responses[0].trains[0].isDelayed, true);
+		await proxy.positions();
+		assert.equal(calls, 1);
+		now += 101;
+		await proxy.positions();
+		assert.equal(calls, 2, "positions refresh after TTL");
+		now += 101;
+		globalThis.fetch = async () => { throw new Error("upstream unavailable"); };
+		assert.equal((await proxy.positions()).available, false, "no stale live markers after failure");
+		assert.equal((await createCtaNetworkProxy({}).positions()).trains.length, 0);
+		globalThis.fetch = async () => Response.json({ ctatt: { errCd: "0", route: [] } });
+		assert.deepEqual((await proxy.positions()).trains, []);
+		globalThis.fetch = async () => Response.json({ ctatt: { errCd: "100", route: [] } });
+		now += 101;
+		assert.equal((await proxy.positions()).available, false);
+		globalThis.fetch = async () => Response.json({ CTARoutes: { ErrorCode: "0", RouteInfo: [
+			{ ServiceId: "Red", RouteStatus: "Normal Service" }, { ServiceId: "Pexp", RouteStatus: "Planned Work" }, { ServiceId: "22", RouteStatus: "Normal Service" },
+		] } });
+		assert.deepEqual((await proxy.alerts()).routes, [{ route: "red", status: "Normal Service" }, { route: "pexp", status: "Planned Work" }]);
+		let stationCalls = 0;
+		globalThis.fetch = async () => { stationCalls++; await new Promise((resolve) => setTimeout(resolve, 5)); return Response.json({ ctatt: { eta: [] } }); };
+		const arrivals = createCtaProxy({ apiKey: "fixture", mapid: "40380", ttlMs: 100, extraStations: network.stations });
+		await Promise.all([arrivals.get("41290"), arrivals.get("41290")]);
+		assert.equal(stationCalls, 1, "both map boards coalesce station arrivals");
+		assert.equal(arrivals.hasStation("41290"), true);
+		assert.equal(arrivals.hasStation("99999"), false);
+		assert.deepEqual(projectCoordinate(41.9, -87.7, network.projection), [0, -0]);
+		for (const station of network.stations) {
+			const point = projectCoordinate(station.lat, station.lon, network.projection);
+			assert.ok(Math.hypot(point[0] - station.point[0], point[1] - station.point[1]) < .01, "browser and converter projection agree within a metre");
+		}
+		const blue = network.routes.find((r) => r.id === "blue");
+		assert.ok(positionOnRoute(projectCoordinate(41.885737, -87.630886, network.projection), blue));
+		assert.equal(positionOnRoute([10000, 10000], blue), null);
+		assert.equal(positionOnRoute([NaN, 0], blue), null);
+		for (const [width, height] of [[1920,1080],[1440,900],[1366,768],[1280,800],[1024,768],[1280,600],[820,1180],[768,1024],[390,844]]) {
+			const layout = { width: width <= 860 ? width * 3 : width, height: (width <= 860 ? width * 3 : width) * .45, top: 63, left: 0 };
+			for (const x of [0, 200, 1140, 1200]) {
+				const camera = clampedCamera(layout, { width, height }, { x, y: 300, zoom: 1.3 }, { width: 1200, height: 540 }, .5);
+				assert.ok(camera.x <= 0 && camera.x + layout.width * camera.zoom >= width - .01, "camera cannot reveal a horizontal canvas edge");
+			}
+		}
+		ok("CTA positions, shared caches, station coverage, service context, projection and bounded camera", true);
+	} finally { globalThis.fetch = originalFetch; Date.now = savedNow; }
+}
+
 async function main() {
 	await checkCtaNormalization();
+	await checkNetworkFeed();
 	child = spawn("node", ["server/dist/server/index.js"], {
 		env: { ...process.env, CTA_API_KEY: "", NVIDIA_API_KEY: "", PORT: String(PORT), SERVICE_PORT: String(PORT), SERVICE_HOST: "127.0.0.1" },
 		stdout: "pipe",
@@ -187,6 +261,9 @@ async function main() {
 			stateLake.status === 200 && stateLake.json.available === false &&
 				stateLake.json.station_id === "40260" && stateLake.json.station === "State/Lake",
 		);
+		const noPositions = await get("/positions");
+		ok("positions degrade without a key", noPositions.status === 200 && noPositions.json.available === false && noPositions.json.trains.length === 0);
+		ok("positions reject unsupported query", (await get("/positions?rt=bus")).status === 400);
 		const invalidStation = await get("/transit?station=99999");
 		ok("transit rejects an unknown station", invalidStation.status === 400);
 		const transitAgain = await get("/transit");
