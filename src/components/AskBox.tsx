@@ -110,15 +110,27 @@ export default function AskBox({
   const [results, setResults] = useState<Match[] | null>(null);
   const [polished, setPolished] = useState<{ answer: string; sources: string[] } | null>(null);
   const [pending, setPending] = useState(false);
+  const [polishing, setPolishing] = useState(false);
 
   function ask(question: string) {
     setQuery(question);
     setPolished(null);
     setResults(null);
     if (SERVICE_URL) {
-      // The hosted model rephrase can take tens of seconds; the pending line
-      // is the booth's equivalent of an agent checking the records.
+      // The visitor never waits on the model. The grounded retrieval
+      // answer renders after a short grace period (a warm model usually
+      // answers within it), and the polished rephrase swaps in whenever
+      // the hosted service lands. A cold service is never a dead screen.
       setPending(true);
+      let settled = false;
+      const local = retrieve(question);
+      const grace = window.setTimeout(() => {
+        if (!settled) {
+          setResults(local);
+          setPending(false);
+          setPolishing(true);
+        }
+      }, 1800);
       fetch(`${SERVICE_URL}/ask-model`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -128,10 +140,19 @@ export default function AskBox({
           if (!res.ok) throw new Error(`service ${res.status}`);
           const data = await res.json();
           if (data?.grounded !== true) throw new Error("not grounded");
+          settled = true;
+          window.clearTimeout(grace);
           setPolished({ answer: String(data.answer), sources: Array.isArray(data.sources) ? data.sources : [] });
         })
-        .catch(() => setResults(retrieve(question)))
-        .finally(() => setPending(false));
+        .catch(() => {
+          settled = true;
+          window.clearTimeout(grace);
+          setResults(local);
+        })
+        .finally(() => {
+          setPending(false);
+          setPolishing(false);
+        });
       return;
     }
     setResults(retrieve(question));
@@ -203,7 +224,7 @@ export default function AskBox({
           ? "Ask a question, and the answer comes from the portfolio records with its source attached."
           : null}
         {declined ? NO_ANSWER : null}
-        {answered && !declined
+        {answered && !declined && !polished
           ? results.map((match, i) => (
               <div key={`${match.kind}-${i}`}>
                 <MatchBody match={match} />
@@ -211,6 +232,9 @@ export default function AskBox({
               </div>
             ))
           : null}
+        {polishing && !polished ? (
+          <span className="src booth-polishing">rephrasing the answer&hellip;</span>
+        ) : null}
         {!answered && !polished && !pending ? <span className="src">No answer yet</span> : null}
       </div>
     </>
