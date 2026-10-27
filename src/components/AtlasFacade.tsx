@@ -1,16 +1,17 @@
 import { site } from "@/content/load";
+import CtaRailMap, { CtaNetworkProvider } from "./atlas/CtaRailMap";
 import AtlasRide from "./atlas/AtlasRide";
 
-/**
- * The Atlas is one interactive experience: the ride, then the dawn at the
- * lakefront. Every fact the removed sections carried still lives on the
- * Dispatch in plain HTML, which keeps the portfolio-first rule: the Atlas
- * adds the experience, never the information.
- */
+/** The geographic CTA network opens and closes Atlas; the skyline is a
+ * secondary portfolio tour over the same project records as Dispatch. */
 export default function AtlasFacade() {
   return (
     <div className="toggle-view atlas" id="view-atlas" data-active="true" aria-label={site.facades.atlas.name}>
-      <AtlasRide />
+      <CtaNetworkProvider>
+        <CtaRailMap placement="start" />
+        <AtlasRide />
+        <CtaRailMap placement="end" />
+      </CtaNetworkProvider>
 
       <footer className="lakefront" aria-label="End of the line">
         <div className="sun" aria-hidden="true" />

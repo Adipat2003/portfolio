@@ -429,8 +429,8 @@ built. Verify with `hermes config get model` before touching it.
 ## CTA network work, 2026-10-27
 
 Phase 0 of `docs/atlas-live-cta-network-plan.md` is implemented. The geographic
-network converter, positions feed and two map placements remain future phases.
-The current skyline ride stays in place. Issue #64 tracks this deliverable.
+network and live feed implementation follows in PR #67 and issue #66 below.
+The skyline ride stays as a secondary tour. Issue #64 tracks this deliverable.
 
 - Arrival minutes use CTA `arrT` minus `prdt`, as defined in the
   [official API guide](https://www.transitchicago.com/developers/ttdocs/).
@@ -462,3 +462,47 @@ The current skyline ride stays in place. Issue #64 tracks this deliverable.
   unavailable board states. Viewport JPEGs were inspected at desktop, short
   laptop and phone sizes. Post-merge Pages geometry and hosted CTA payload
   verification remain required before calling production validated.
+
+## Full CTA Atlas, 2026-10-27
+
+Issue #66 follows Phase 0. PR #67 ships the deterministic GTFS network and
+server feeds first, so the UI only ships after hosted endpoints are verified.
+`content/cta-network.json` carries the official package's eight lines and 143
+parent stations, branches, platforms, transfer edges, coordinate projection and
+source metadata. `scripts/build-cta-network.py --help` documents regeneration;
+its check mode regenerates twice and compares the committed output.
+
+`CtaRailMap` is now Atlas's opening and closing section. The skyline remains the
+portfolio ride between them. Both maps consume a single polling provider and
+share server-cached positions, station arrivals and official route status.
+Selections, route filtering and search are local to each map. HTML station
+controls and a train list provide an equivalent to SVG interactions. Project
+connections are editorial navigation links from the existing station records;
+their copy and detail pages still come from the canonical project records.
+
+The right-edge defect came from unbounded camera translation and reading a
+transformed rectangle with a newer zoom factor. The camera now reads stable
+layout dimensions and bounds its pan. The finite SVG sky plate is removed;
+CSS provides the full-stage sky. Building strokes stay constant under zoom,
+selection is interruptible, and Escape or scrolling returns to the ride.
+
+Hosted service verification after PR #67 returned HTTP 200 and available data
+for positions (42 trains in the sampled response), route status (8 routes), and
+Kimball arrivals. Markers use live coordinates, suppress malformed/scheduled
+records and off-route fixes, and disappear on stale or unavailable responses.
+Detailed disruption notices link to CTA; missing trains do not imply outages.
+
+The canonical browser suite covers both placements, eight route paths, all
+143 station controls, native station/search controls, portfolio links and
+in-Atlas anchors. Controlled responses verify a single shared positions poll,
+marker updates, reduced motion, stale/unavailable/empty fallback and retained
+static routes. The original nine-view matrix and ride/Dispatch interaction
+checks remain mandatory, with additional selected-camera and terminal edge
+assertions. No dependency was added and no secret file was read or copied.
+
+Local release validation: typecheck, service checks, production export, content
+checks and Python rollback checks pass. The canonical browser suite passes all
+nine viewports, both map placements and the full ride/Dispatch interaction
+pass. Selected landmarks fit below measured chrome, and terminal SVG bounds
+cover both screen edges at phone and short-laptop sizes. Production geometry
+and the hosted-feed spot check are recorded in the interface PR after publish.

@@ -233,7 +233,7 @@ section{padding:76px 0}
 .ride-copy.faded{opacity:0;translate:0 -18px}
 .ride-copy::before{content:"";position:absolute;inset:-12% -45% -14% -14%;z-index:-1;pointer-events:none;background:radial-gradient(78% 66% at 30% 44%,rgba(13,15,22,.5),rgba(13,15,22,.28) 45%,transparent 78%)}
 .ride-copy .kicker{color:var(--signal)}
-.ride-copy h1{font-size:clamp(40px,6vw,74px);line-height:1.02;margin:16px 0 0;max-width:16ch;text-wrap:balance}
+.ride-copy h2{font-size:clamp(40px,6vw,74px);line-height:1.02;margin:16px 0 0;max-width:16ch;text-wrap:balance}
 .ride-copy .lede{margin-top:18px;max-width:52ch;color:var(--night-soft)}
 .skip-ride{pointer-events:auto;appearance:none;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--night-soft);background:transparent;border:1px solid var(--night-rule);border-radius:999px;padding:9px 16px;margin-top:28px;cursor:pointer}
 .skip-ride:hover{color:var(--signal);border-color:var(--signal)}
@@ -247,7 +247,7 @@ section{padding:76px 0}
 /* The terminal: the ticket booth inside the scene. A CTA ticket window:
    louver grille up top, solari departure-board sign with a duty light,
    slot-style input, and the sources as ticket fine print. */
-.terminal-overlay{left:24px;right:auto;bottom:40px;max-width:520px;max-height:calc(100dvh - var(--bar-h,64px) - 120px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.terminal-overlay{left:24px;right:auto;bottom:40px;max-width:520px;max-height:calc(100dvh - var(--bar-h,64px) - 120px);overflow-y:auto;scrollbar-width:thin}
 .ride-overlay .chi-card.terminal-card{position:relative;padding:0;background:#0b0e15;border:1px solid rgba(255,182,66,.22);border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.04);overflow:hidden;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .ride-overlay .chi-card.terminal-card::before{content:"";display:block;height:8px;background:repeating-linear-gradient(90deg,rgba(255,182,66,.28) 0 6px,transparent 6px 14px);border-bottom:1px solid rgba(255,182,66,.16)}
 .ride-overlay .chi-card.terminal-card::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 60% at 50% 0,rgba(255,182,66,.07),transparent 60%)}
@@ -443,7 +443,7 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
   /* Phase 0 is a quiet boarding screen: the index waits until you scroll,
      the headline breathes, and the map reads as background. */
   .ride-phase-0 .trip-strip{display:none}
-  .ride-copy h1{font-size:clamp(30px,8.5vw,44px)}
+  .ride-copy h2{font-size:clamp(30px,8.5vw,44px)}
   .ride-copy .lede{font-size:15px;max-width:30ch}
   .ride-overlay{left:12px;right:12px;bottom:12px;max-width:none}
   .ride-overlay .chi-card{background:rgba(21,26,40,.94);backdrop-filter:none;padding:14px 16px}
@@ -541,3 +541,96 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
    #view-dispatch .hero-action-primary,#view-dispatch .project-card{transition:none}
    #view-dispatch .hero-action-primary:hover,#view-dispatch .project-card:hover{translate:0 0}
 }
+
+/* The skyline camera stays inside its finite canvas; the stage supplies the sky. */
+.ride-stage .atlas-scroll svg.chi-map.riding{left:0;translate:none;transform-origin:0 0}
+.atlas-building{cursor:pointer}
+.atlas-building path{transition:stroke .2s ease,filter .2s ease}
+.selected-building path{stroke:var(--signal);filter:brightness(1.2)}
+.chi-map g[role="button"]:focus-visible{outline:none}
+.chi-map g[role="button"]:focus-visible path,.chi-map g[role="button"]:focus-visible circle{stroke:var(--signal);stroke-width:3}
+.cta-pink{background:#e27ea6;color:#0b0e15}
+
+.rail-network{--rail-surface:#111a26;--rail-ink:#f1eee5;--rail-soft:#b3c0cd;padding:68px 0 28px;background:#0d131e;color:var(--rail-ink);scroll-margin-top:76px}
+.rail-network[data-placement="end"]{border-top:1px solid #344454}
+.rail-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;margin-bottom:28px}
+.rail-heading h1,.rail-heading h2{font-size:clamp(34px,4vw,58px);line-height:1.07;margin:12px 0 16px;letter-spacing:-.025em}
+.rail-heading p:not(.kicker){font-size:15px;color:var(--rail-soft);max-width:56ch;margin:0;line-height:1.6}
+.rail-heading .kicker{color:#edbd69}
+.rail-feed-status{flex:0 0 auto;max-width:300px;font-family:var(--mono);font-size:12px;color:#d2ebdd;padding-bottom:4px}
+.rail-status-dot{display:inline-block;width:7px;height:7px;background:#90cda9;border-radius:50%;margin-right:9px}
+.rail-feed-status[data-state="offline"] .rail-status-dot{background:#e8b04b}
+.rail-feed-status small{display:block;margin-top:9px;color:var(--rail-soft);font-family:var(--sans);font-size:12px;line-height:1.6}
+.rail-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:24px;align-items:start}
+.rail-map-pane{min-width:0;border:1px solid #344454;border-radius:12px;overflow:hidden;background:var(--rail-surface)}
+.rail-route-filter{display:flex;flex-wrap:wrap;gap:6px;padding:14px;border-bottom:1px solid #344454;background:#0f1722}
+.rail-network button,.rail-network select,.rail-network input{font-family:var(--sans);font-size:13px;color:var(--rail-ink);background:#182330;border:1px solid #46576a;border-radius:5px;min-height:44px}
+.rail-network button{cursor:pointer;padding:8px 11px}
+.rail-network button:hover{background:#263647;border-color:#c5d2df}
+.rail-network button[aria-pressed="true"]{background:#273748;border-color:#edbd69;color:#fff}
+.rail-route-filter button{display:flex;align-items:center;gap:7px;font-size:12px}
+.rail-route-filter i{display:block;width:9px;height:9px;border-radius:50%;background:var(--rail-color)}
+.rail-map-canvas{position:relative;isolation:isolate;background:radial-gradient(ellipse at 72% 38%,#1b2b3e,#111a26 70%)}
+.rail-map-svg{display:block;width:100%;height:690px;max-height:80vh;touch-action:pan-y pinch-zoom;cursor:grab;user-select:none}
+.rail-map-svg:active{cursor:grabbing}
+.rail-geography{pointer-events:none}
+.rail-geography path{fill:#162c40;stroke:#2e4f65;stroke-width:.45}
+.rail-geography text{font-family:var(--mono);font-size:5px;letter-spacing:1.4px;fill:#87adc2}
+.rail-paths path{transition:opacity .18s ease}
+.rail-paths .rail-muted{opacity:.1}
+.rail-station{cursor:pointer}
+.rail-station circle:not(.rail-station-hit){fill:#10202d;stroke:#d3dee7;stroke-width:.6}
+.rail-station .rail-station-hit{fill:transparent;stroke:none}
+.rail-station:hover circle:not(.rail-station-hit),.rail-station.rail-selected circle:not(.rail-station-hit){fill:#ffcf77;stroke:#101a27;stroke-width:.8}
+.rail-station text{font-family:var(--sans);font-size:5px;font-weight:600;fill:#e6edf3;paint-order:stroke;stroke:#111a26;stroke-width:2;stroke-linejoin:round;pointer-events:none}
+.rail-station.rail-selected text{fill:#ffcf77}
+.rail-live-train{pointer-events:none}
+.rail-live-train circle{stroke:#0d131e;stroke-width:1}
+.rail-live-train path{fill:none;stroke:#0a111c;stroke-width:.75;stroke-linecap:round}
+.rail-map-tools{position:absolute;left:14px;top:14px;display:flex;gap:5px;flex-wrap:wrap;max-width:calc(100% - 28px)}
+.rail-network .rail-map-tools button{background:#0e1724eb;font-size:12px;box-shadow:0 2px 6px #0005}
+.rail-map-caption{display:flex;justify-content:space-between;gap:8px;padding:12px 15px;border-top:1px solid #344454;font-family:var(--mono);font-size:10px;color:var(--rail-soft)}
+.rail-map-caption span:first-child{color:#f6d490}
+.rail-map-note{font-size:12px;line-height:1.6;color:var(--rail-soft);padding:0 16px 14px;margin:0}
+.rail-station-panel{min-width:0;display:grid;gap:12px;align-content:start}
+.rail-station-panel>label{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--rail-soft)}
+.rail-network select,.rail-network input{width:100%;padding:10px 12px;min-width:0}
+.rail-network input::placeholder{color:var(--rail-soft)}
+.rail-selected-station{padding:16px 0 6px;border-top:1px solid #344454;margin-top:6px}
+.rail-selected-station .kicker{font-size:10px;color:#edbd69}
+.rail-selected-station h3{font-family:var(--sans);font-size:26px;margin:9px 0}
+.rail-selected-station p{font-size:13px;color:var(--rail-soft);line-height:1.7;margin:0}
+.rail-station-panel .transit-board{padding:14px 0;background:none;border-top:1px solid #344454;border-bottom:1px solid #344454}
+.rail-station-panel .transit-board-heading{display:none}
+.rail-station-panel .transit-arrival{grid-template-columns:54px minmax(0,1fr) auto;gap:7px}
+.rail-station-panel .transit-arrival-route span{white-space:normal;line-height:1.5}
+.rail-station-panel .transit-arrival-time span{max-width:85px}
+.rail-service h4,.rail-transfers h4,.rail-projects h4{font-family:var(--mono);font-size:11px;font-weight:600;color:#edbd69;letter-spacing:.06em;text-transform:uppercase;margin:8px 0 12px}
+.rail-service p,.rail-offline{font-size:13px;color:var(--rail-soft);line-height:1.6;margin:0 0 10px}
+.rail-service ul,.rail-train-list ul{list-style:none;padding:0;margin:0}
+.rail-service li{display:flex;gap:12px;justify-content:space-between;font-size:12px;line-height:1.5;padding:7px 0;border-bottom:1px solid #293746}
+.rail-service li span{text-align:right;color:var(--rail-soft)}
+.rail-service a,.rail-source a{color:#b5dbf1;text-underline-offset:4px;font-size:12px}
+.rail-service>a{display:inline-block;margin-top:12px}
+.rail-transfers{display:grid;gap:5px}
+.rail-projects{border-top:1px solid #344454;padding-top:10px}
+.rail-projects>a{display:block;color:var(--rail-ink);font-family:var(--serif);font-size:18px;line-height:1.35;text-decoration:none;padding:12px 0;border-bottom:1px solid #293746}
+.rail-projects>a:hover{color:#ffcf77}
+.rail-projects>a span{display:block;font-family:var(--mono);font-size:10px;color:#edbd69;margin-top:8px}
+.rail-projects small{display:block;font-size:11px;color:var(--rail-soft);line-height:1.7;margin-top:12px}
+.rail-train-list{font-size:12px;color:var(--rail-soft);border-top:1px solid #344454;padding-top:10px}
+.rail-train-list summary{cursor:pointer;padding:12px 0;min-height:44px}
+.rail-train-list ul{max-height:260px;overflow:auto}
+.rail-train-list li{padding:10px 0;border-bottom:1px solid #293746}
+.rail-train-list li b,.rail-train-list li span{display:block;line-height:1.6}
+.rail-search-results{display:grid;gap:5px}
+.rail-source{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px 24px;margin-top:24px;font-size:11px;color:var(--rail-soft);line-height:1.6}
+@media(max-width:1100px){.rail-layout{grid-template-columns:minmax(0,1fr) 300px;gap:18px}.rail-heading{align-items:start}.rail-feed-status{max-width:230px}.rail-route-filter{padding:10px;gap:5px}.rail-route-filter button{padding:6px 8px}}
+@media(max-width:760px){.rail-network{padding:38px 0 24px}.rail-heading{display:grid;gap:20px;margin-bottom:20px}.rail-layout{grid-template-columns:minmax(0,1fr);gap:24px}.rail-feed-status{max-width:none}.rail-map-svg{height:570px;max-height:70vh}.rail-map-caption{font-size:9px;gap:5px}.rail-route-filter{flex-wrap:nowrap;overflow-x:auto;touch-action:pan-x}.rail-route-filter button{flex:0 0 auto;padding:8px 11px}.rail-network .rail-map-tools button{font-size:11px;padding:6px 9px}.rail-map-tools{left:10px;top:10px}.rail-station-panel .transit-arrival{gap:9px}.rail-map-svg:not(.rail-map-detail) .rail-station text.rail-station-label{display:none}.rail-station-panel{gap:12px}.rail-heading h1,.rail-heading h2{font-size:39px}.rail-source{gap:12px}}
+@media(prefers-reduced-motion:reduce){.rail-live-train,.rail-paths path,.atlas-building path{transition:none}}
+
+.chi-map g.atlas-building[role="button"]:hover,.chi-map g.atlas-building[role="button"]:focus-visible{filter:none}
+.atlas-building .bld-selected{filter:none;stroke-width:2 !important}
+
+.rail-station:focus-visible{outline:none}
+.rail-station:focus-visible circle:not(.rail-station-hit){stroke:#ffcf77;stroke-width:1.5}

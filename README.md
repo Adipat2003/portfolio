@@ -156,3 +156,25 @@ Roadmap work is tracked as GitHub issues (1 through 6). Site changes land on
 `main` through branches and pull requests; the initial bootstrap commit is the
 only direct push. Verify the live Pages URL after any merge that changes the
 site.
+
+## CTA rail network
+
+Atlas opens and closes with the complete rail network from CTA's published
+GTFS package. The skyline between them is a secondary portfolio tour. Route
+filters, station selection, arrivals, service context and real train positions
+share the Node proxy; the static network stays available when a feed fails.
+Project connections are editorial navigation, not work-location claims.
+
+Regenerate the network from an official ZIP kept outside the repository:
+
+```sh
+python3.14 scripts/build-cta-network.py /tmp/cta-google-transit.zip --retrieved-on 2026-10-27
+python3.14 scripts/build-cta-network.py /tmp/cta-google-transit.zip --retrieved-on 2026-10-27 --check
+```
+
+Use the actual retrieval date when updating the package. Source, package date,
+archive SHA, projection, service dates and simplification method live in the
+JSON metadata. The converter uses only Python's standard library. `/positions`
+polls CTA server-side with a 15-second cache, `/transit-alerts` caches official
+route status for 60 seconds, and station arrivals have their own cache. All
+three coalesce concurrent cold requests. Never commit the source ZIP or keys.

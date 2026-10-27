@@ -31,7 +31,7 @@ export function positionOnRoute(point: Point, route: RailRoute): Point | null {
 	return best;
 }
 
-/** Keep a finite illustration covering the stage throughout a camera glide. */
+/** Keep a finite illustration covering the stage horizontally throughout a camera glide. */
 export function clampedCamera(layout: { width: number; height: number; left: number; top: number }, stage: { width: number; height: number }, focus: { x: number; y: number; zoom: number }, viewBox: { width: number; height: number }, anchorY: number) {
 	const zoom = Math.max(focus.zoom, stage.width / layout.width);
 	const fit = Math.min(layout.width / viewBox.width, layout.height / viewBox.height);

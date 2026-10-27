@@ -11,7 +11,7 @@ export default function FacadeSwitch() {
   useEffect(() => {
     const syncFromHash = () => {
       if (typeof window === "undefined") return;
-      setFacade(window.location.hash === "#atlas" ? "atlas" : "dispatch");
+      setFacade(["#atlas", "#atlas-ride", "#view-atlas"].includes(window.location.hash) ? "atlas" : "dispatch");
     };
 
     syncFromHash();
