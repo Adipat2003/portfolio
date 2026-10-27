@@ -165,7 +165,12 @@ const server = createServer(async (req, res) => {
   }
 
   if (route === "/transit" && req.method === "GET") {
-    const payload = await cta.get();
+    const stationId = url.searchParams.get("station") ?? undefined;
+    if (stationId && !cta.hasStation(stationId)) {
+      sendJson(res, 400, { error: "unknown CTA station" }, corsHeaders(origin));
+      return;
+    }
+    const payload = await cta.get(stationId);
     sendJson(res, 200, payload, corsHeaders(origin));
     return;
   }

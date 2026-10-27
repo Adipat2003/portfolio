@@ -1,5 +1,4 @@
 import { site, publishedProjects } from "@/content/load";
-import ImpactStrip from "./ImpactStrip";
 import FilterBar from "./FilterBar";
 import AskBox from "./AskBox";
 import ChicagoSpots from "./chicago/ChicagoSpots";
@@ -8,33 +7,29 @@ import LandmarksList from "./chicago/LandmarksList";
 import BiteRadar from "./chicago/BiteRadar";
 
 export default function DispatchFacade() {
-  const meta = site.impact.slice(0, 3);
   return (
-    <div className="toggle-view" id="view-dispatch" data-active="true" aria-label={site.facades.dispatch.name}>
+    <div className="toggle-view dispatch" id="view-dispatch" data-active="true" aria-label={site.facades.dispatch.name}>
       <header className="hero">
         <span className="ghost-star" aria-hidden="true" />
-        <div className="wrap">
-          <span className="kicker">
-            {site.owner} &middot; {site.role}, {site.location}
-          </span>
-          <h1>{site.tagline}</h1>
-          <p className="lede">{site.intro}</p>
-          {site.academics_line ? (
-            <p className="lede" style={{ marginTop: 18 }}>
-              {site.academics_line}
-            </p>
-          ) : null}
-          <div className="hero-meta">
-            {meta.map((i) => (
-              <span key={i.label}>
-                <b>{i.value}</b> {i.label.split(",")[0]}
-              </span>
-            ))}
+        <div className="wrap dispatch-hero">
+          <div className="dispatch-hero-copy">
+            <span className="kicker hero-kicker">
+              <span>{site.owner}</span>
+              <span aria-hidden="true">&middot;</span>
+              <span>{site.role}, {site.location}</span>
+            </span>
+            <h1>{site.tagline}</h1>
+            <p className="lede">{site.intro}</p>
+            <div className="hero-actions">
+              <a className="hero-action-primary" href="#f1-work">Browse selected work</a>
+              {site.contact?.github ? (
+                <a className="hero-action-secondary" href={site.contact.github}>GitHub profile</a>
+              ) : null}
+            </div>
+            {site.academics_line ? <p className="hero-credential">{site.academics_line}</p> : null}
           </div>
         </div>
       </header>
-
-      <ImpactStrip figures={site.impact} />
 
       <section aria-labelledby="f1-work">
         <div className="wrap">
@@ -43,7 +38,6 @@ export default function DispatchFacade() {
               <span className="kicker">Selected work</span>
               <h2 id="f1-work">Projects and what changed</h2>
             </div>
-            <span className="concept-title">{publishedProjects.length} projects</span>
           </div>
           <FilterBar projects={publishedProjects} />
         </div>

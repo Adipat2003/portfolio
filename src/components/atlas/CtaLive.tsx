@@ -3,97 +3,201 @@
 import { useEffect, useState } from "react";
 
 /**
- * Live CTA departures, when the hosted service exists. On the static Pages
- * build SERVICE_URL is empty and this renders nothing; once
- * NEXT_PUBLIC_SERVICE_URL points at the service (with a CTA key on the
- * service side), the booth gains a real departure board, credit line
- * attached, per docs/live-data-terms.md.
+ * Live CTA arrivals from the server-side proxy. The browser only sees
+ * normalized station/arrival data; the CTA key stays in the Node service.
  *
- * Where it lives: inside the terminal card, as a solari departure board
- * strip above the ask panel. The ride ends at Clark/Lake, so the live board
- * is the station's own: you ask the agent under the actual departures for
- * the station you are standing in. One compact row that wraps inside the
- * card it belongs to, never a screen-blocking block.
+ * Where it lives: the terminal station panel. People can switch between
+ * nearby Loop stations and see the next predictions with direction and
+ * quality flags, then ask the portfolio guide below the board.
  */
 
 const SERVICE_URL = process.env.NEXT_PUBLIC_SERVICE_URL ?? "";
 
-type Arrival = { line: string; destination: string; minutes: number };
-type Payload = { station: string; arrivals: Arrival[]; asOf: string };
+type Station = { id: string; name: string };
+type Arrival = {
+	line: string;
+	destination: string;
+	direction: string;
+	minutes: number;
+	isApproaching: boolean;
+	isDelayed: boolean;
+	isScheduled: boolean;
+};
+type TransitResponse = {
+	available?: boolean;
+	station?: string;
+	station_id?: string;
+	stations?: Station[];
+	arrivals?: Arrival[];
+	as_of?: string;
+};
+type BoardState = {
+	kind: "loading" | "available" | "empty" | "unavailable";
+	station: string;
+	stationId: string;
+	stations: Station[];
+	arrivals: Arrival[];
+	asOf: string;
+};
+
+const LINE_NAMES: Record<string, string> = {
+	red: "Red", blue: "Blue", brn: "Brown", g: "Green",
+	org: "Orange", p: "Purple", pnk: "Pink", y: "Yellow",
+};
+const DEFAULT_STATION = "40380";
+const STATIONS: Station[] = [
+	{ id: "40380", name: "Clark/Lake" },
+	{ id: "40260", name: "State/Lake" },
+	{ id: "40730", name: "Washington/Wells" },
+	{ id: "40040", name: "Quincy/Wells" },
+];
 
 function clockOf(iso: string): string {
 	try {
-		return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+		if (!iso || !Number.isFinite(Date.parse(iso))) return "";
+		return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", timeZone: "America/Chicago" });
 	} catch {
 		return "";
 	}
 }
 
 export default function CtaLive() {
-	const [state, setState] = useState<Payload | null>(null);
+	const [selectedStation, setSelectedStation] = useState(DEFAULT_STATION);
+	const [state, setState] = useState<BoardState>({
+		kind: "loading",
+		station: "Clark/Lake",
+		stationId: DEFAULT_STATION,
+		stations: STATIONS,
+		arrivals: [],
+		asOf: "",
+	});
 
 	useEffect(() => {
 		if (!SERVICE_URL) return;
 		let cancelled = false;
 		let timer = 0;
-		let live = false;
+		const controller = new AbortController();
 
 		async function poll() {
 			try {
-				const res = await fetch(`${SERVICE_URL}/transit`);
-				if (!res.ok) return;
-				const data = await res.json();
-				if (cancelled || data?.available !== true) return;
-				live = true;
+				const res = await fetch(`${SERVICE_URL}/transit?station=${encodeURIComponent(selectedStation)}`, {
+					signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]),
+				});
+				if (!res.ok) throw new Error(`transit service ${res.status}`);
+				const data = (await res.json()) as TransitResponse;
+				if (cancelled) return;
+				const stations = Array.isArray(data.stations) && data.stations.length ? data.stations : STATIONS;
+				const station = String(data.station ?? stations.find((entry) => entry.id === selectedStation)?.name ?? "Loop station");
+				const arrivals = data.available === true && Array.isArray(data.arrivals)
+					? data.arrivals.slice(0, 3)
+					: [];
+				const asOf = clockOf(String(data.as_of ?? ""));
 				setState({
-					station: String(data.station ?? ""),
-					arrivals: Array.isArray(data.arrivals) ? data.arrivals.slice(0, 3) : [],
-					asOf: clockOf(String(data.as_of ?? "")),
+					kind: data.available !== true ? "unavailable" : arrivals.length > 0 ? "available" : "empty",
+					station,
+					stationId: String(data.station_id ?? selectedStation),
+					stations,
+					arrivals,
+					asOf,
 				});
 			} catch {
-				/* silent: the authored experience is the fallback */
+				if (!cancelled) {
+					setState((current) => ({
+						...current,
+						kind: "unavailable",
+						stationId: selectedStation,
+						arrivals: [],
+					}));
+				}
 			} finally {
 				if (!cancelled) {
-					// Before the first success the service may be waking from
-					// a cold start, so retry quickly; once live, the CTA's own
-					// 45-second freshness horizon makes a minute the right pace.
-					timer = window.setTimeout(poll, live ? 60_000 : 10_000);
+					timer = window.setTimeout(poll, 60_000);
 				}
 			}
 		}
 
+		setState((current) => ({
+			...current, kind: "loading", stationId: selectedStation,
+			station: current.stations.find((entry) => entry.id === selectedStation)?.name ?? "Loop station",
+			arrivals: [], asOf: "",
+		}));
 		poll();
 		return () => {
 			cancelled = true;
+			controller.abort();
 			window.clearTimeout(timer);
 		};
-	}, []);
+	}, [selectedStation]);
 
 	if (!SERVICE_URL) return null;
 
-	if (!state || state.arrivals.length === 0) {
-		return (
-			<div className="departures departures-connecting" aria-live="polite">
-				<span className="departures-head">{state?.station || "CLARK/LAKE"}</span>
-				<span className="departures-note">connecting to live &rsquo;L&rsquo; departures&hellip;</span>
-			</div>
-		);
-	}
+	const message = state.kind === "loading"
+		? "Checking this station…"
+		: state.kind === "unavailable"
+			? "Live arrivals are unavailable right now. The project ride still works."
+			: "No upcoming arrivals are reported right now.";
 
 	return (
-		<div className="departures" aria-label="Live CTA departures">
-			<span className="departures-head">{state.station || "CLARK/LAKE"}</span>
-			<span className="departures-list">
-				{state.arrivals.map((a, i) => (
-					<span key={`${a.line}-${a.destination}-${i}`} className="departure">
-						<b className={`cta-line cta-${a.line}`}>{a.line.toUpperCase()}</b>
-						<span className="departure-dest">{a.destination}</span>
-						<span className="departure-min">{a.minutes <= 0 ? "due" : `${a.minutes}m`}</span>
-					</span>
-				))}
-			</span>
-			{state.asOf ? <span className="departures-asof">as of {state.asOf}</span> : null}
-			<span className="cta-credit">CTA Train Tracker data provided by Chicago Transit Authority</span>
+		<div className="transit-board" aria-label="CTA Loop station arrivals" data-state={state.kind} data-station={state.stationId} aria-busy={state.kind === "loading"}>
+			<div className="transit-board-heading">
+				<div>
+					<span className="transit-eyebrow">Loop service</span>
+					<h3>{state.station}</h3>
+				</div>
+				<span className={`transit-status transit-status-${state.kind}`}>
+					<span aria-hidden="true" />
+					{state.kind === "available"
+						? state.arrivals.every((arrival) => arrival.isScheduled) ? "Scheduled" : "Live"
+						: state.kind === "loading" ? "Updating" : state.kind === "empty" ? "No arrivals" : "Offline"}
+				</span>
+			</div>
+			{state.stations.length > 1 ? (
+				<div className="transit-stations" role="group" aria-label="Choose a Loop station">
+					{state.stations.map((station) => (
+						<button
+							key={station.id}
+							type="button"
+							aria-pressed={selectedStation === station.id}
+							onClick={() => setSelectedStation(station.id)}
+						>
+							{station.name}
+						</button>
+					))}
+				</div>
+			) : null}
+			{state.kind === "available" ? (
+				<div className="transit-arrivals" role="list" aria-label={`Next trains at ${state.station}`}>
+					{state.arrivals.map((arrival, index) => {
+						const note = [
+							arrival.isScheduled ? "Scheduled" : "Predicted",
+							arrival.isDelayed ? "Delay flagged" : "",
+							arrival.isApproaching ? "Approaching" : "",
+						].filter(Boolean).join(" · ");
+						return (
+							<div className="transit-arrival" role="listitem" key={`${arrival.line}-${arrival.destination}-${index}`}>
+								<b className={`cta-line cta-${arrival.line}`}>{LINE_NAMES[arrival.line] ?? arrival.line.toUpperCase()}</b>
+								<div className="transit-arrival-route">
+									<strong>{arrival.destination}</strong>
+									<span>{arrival.direction || note}</span>
+								</div>
+								<div className="transit-arrival-time">
+									<span className={arrival.isDelayed ? "is-delayed" : ""}>{note}</span>
+									<b>{arrival.isApproaching || arrival.minutes <= 0 ? "Due" : `${arrival.minutes} min`}</b>
+								</div>
+							</div>
+						);
+					})}
+				</div>
+			) : (
+				<div className="transit-empty" role="status" aria-live="polite">
+					<p>{message}</p>
+					{state.asOf ? <small>Checked {state.asOf}</small> : null}
+				</div>
+			)}
+			<div className="transit-board-footer">
+				{state.asOf ? <span>Updated {state.asOf} CT</span> : <span>Predictions can change</span>}
+				<span className="cta-credit">CTA Train Tracker data</span>
+			</div>
 		</div>
 	);
 }

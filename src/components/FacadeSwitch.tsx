@@ -9,10 +9,28 @@ export default function FacadeSwitch() {
   const [facade, setFacade] = useState<"dispatch" | "atlas">("dispatch");
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.location.hash === "#atlas") {
-      setFacade("atlas");
-    }
+    const syncFromHash = () => {
+      if (typeof window === "undefined") return;
+      setFacade(window.location.hash === "#atlas" ? "atlas" : "dispatch");
+    };
+
+    syncFromHash();
+    window.addEventListener("hashchange", syncFromHash);
+    return () => window.removeEventListener("hashchange", syncFromHash);
   }, []);
+
+  const setFacadeWithHash = (next: "dispatch" | "atlas") => {
+    setFacade(next);
+    if (typeof window === "undefined") return;
+    const nextHash = next === "atlas" ? "#atlas" : "";
+    if (window.location.hash !== nextHash) {
+      if (nextHash) {
+        window.history.replaceState(null, "", `${window.location.pathname}${nextHash}`);
+      } else {
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+    }
+  };
 
   useEffect(() => {
     const next =
@@ -36,13 +54,13 @@ export default function FacadeSwitch() {
     <>
       <div className="concept-bar" id="concept-bar" data-facade={facade} role="region" aria-label="Facade switch">
         <div className="concept-bar-inner">
-          <span className="concept-title">Aditya Patel: Engineering Portfolio</span>
+          <span className="concept-title">{site.owner}</span>
           <div className="seg" role="group" aria-label="Choose a facade">
             <button
               type="button"
               id="btn-dispatch"
               aria-pressed={facade === "dispatch"}
-              onClick={() => setFacade("dispatch")}
+              onClick={() => setFacadeWithHash("dispatch")}
             >
               {site.facades.dispatch.name}
             </button>
@@ -50,7 +68,7 @@ export default function FacadeSwitch() {
               type="button"
               id="btn-atlas"
               aria-pressed={facade === "atlas"}
-              onClick={() => setFacade("atlas")}
+              onClick={() => setFacadeWithHash("atlas")}
             >
               {site.facades.atlas.name}
             </button>

@@ -3,12 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build && node scripts/postbuild.mjs",
-    "start": "next start",
+    "dev": "node scripts/with-local-secrets.mjs dev:local",
+    "dev:local": "next dev",
+    "build": "node scripts/with-local-secrets.mjs build:local",
+    "build:local": "next build && node scripts/postbuild.mjs",
+    "start": "node scripts/with-local-secrets.mjs start:local",
+    "start:local": "next start",
     "typecheck": "tsc --noEmit",
     "build:service": "tsc -p server/tsconfig.json",
-    "start:service": "node server/dist/server/index.js",
+    "start:service": "node scripts/with-local-secrets.mjs start:service:local",
+    "start:service:local": "node server/dist/server/index.js",
     "check:service": "npm run build:service && node scripts/service-check.mjs"
   },
   "dependencies": {

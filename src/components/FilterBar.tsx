@@ -29,42 +29,75 @@ export default function ProjectGrid({ projects }: { projects: Project[] }) {
     [projects, query, activeTag],
   );
 
+  const hasFilters = query.trim().length > 0 || activeTag !== null;
+
   return (
     <>
       <div className="filter-bar">
-        <label className="sr-only" htmlFor="project-filter">
-          Filter projects
-        </label>
-        <input
-          type="search"
-          id="project-filter"
-          placeholder="Filter by name, tag, or skill"
-          autoComplete="off"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <div className="ask-row" role="group" aria-label="Filter by tag">
-          {tags.map((t) => (
-            <button
-              key={t}
-              type="button"
-              className="chip"
-              aria-pressed={activeTag === t}
-              onClick={() => setActiveTag(activeTag === t ? null : t)}
-            >
-              {t}
-            </button>
-          ))}
+        <div className="filter-search">
+          <label htmlFor="project-filter">Find a project</label>
+          <div className="filter-bar-top">
+            <div className="filter-control">
+              <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                <circle cx="10.8" cy="10.8" r="6.4" />
+                <path d="m15.5 15.5 4.2 4.2" />
+              </svg>
+              <input
+                type="search"
+                id="project-filter"
+                placeholder="Title, skill, or technology"
+                autoComplete="off"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+            {hasFilters ? (
+              <button
+                type="button"
+                className="chip clear-filter"
+                onClick={() => {
+                  setQuery("");
+                  setActiveTag(null);
+                }}
+              >
+                Clear filters
+              </button>
+            ) : null}
+          </div>
+        </div>
+        <div className="filter-tags">
+          <span className="filter-tags-label">Filter by tag</span>
+          <div className="filter-tag-list" role="group" aria-label="Filter by tag">
+            {tags.map((t) => (
+              <button
+                key={t}
+                type="button"
+                className="chip"
+                aria-pressed={activeTag === t}
+                onClick={() => setActiveTag(activeTag === t ? null : t)}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-      <p className="concept-title" role="status" aria-live="polite">
+      <p className="project-count" role="status" aria-live="polite">
         {shown.length} of {projects.length} projects
       </p>
-      <div className="grid-3" style={{ marginTop: 24 }}>
-        {shown.map((p) => (
-          <ProjectCard key={p.slug} project={p} />
-        ))}
-      </div>
+
+      {shown.length === 0 ? (
+        <div className="empty-state" role="status" aria-live="polite">
+          <h3>No projects match this filter</h3>
+          <p>Try a broader skill, a different tag, or clear the filters to return to the full list.</p>
+        </div>
+      ) : (
+        <div className="project-grid">
+          {shown.map((p) => (
+            <ProjectCard key={p.slug} project={p} />
+          ))}
+        </div>
+      )}
     </>
   );
 }
