@@ -1,15 +1,19 @@
 import { LINE_COLORS } from "@/content/load";
 import type { Project } from "@/content/schema";
 
+/**
+ * The Dispatch card: a broadsheet entry on the transit system. The route
+ * disc carries the line color as the accent system (not a stray banner),
+ * the title wins the hierarchy over administrative metadata, and the
+ * technology list reads as an editorial STACK line instead of SaaS pills.
+ */
 export default function ProjectCard({ project }: { project: Project }) {
   const cls = project.status === "pending-content" ? "card pending" : "card";
   return (
-    <article className={cls}>
-      <span
-        className="line-band"
-        aria-hidden="true"
-        style={{ background: LINE_COLORS[project.line] }}
-      />
+    <article
+      className={cls}
+      style={{ ["--line-color" as string]: LINE_COLORS[project.line] }}
+    >
       <span className="kicker">
         {project.line} line{project.course ? ` · ${project.course}` : ""}
       </span>
@@ -31,11 +35,12 @@ export default function ProjectCard({ project }: { project: Project }) {
           ))}
         </ul>
       ) : null}
-      <ul className="tags">
-        {project.tags.map((t) => (
-          <li key={t}>{t}</li>
-        ))}
-      </ul>
+      {project.tags.length > 0 ? (
+        <p className="stack">
+          <b>Stack</b>
+          {project.tags.join(" · ")}
+        </p>
+      ) : null}
     </article>
   );
 }

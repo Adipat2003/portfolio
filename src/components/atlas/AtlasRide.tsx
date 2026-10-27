@@ -65,7 +65,6 @@ stops.push(TERMINAL);
 type Focus = { x: number; y: number; zoom: number };
 
 const wideFocus: Focus = { x: vw / 2, y: vh / 2 - 30, zoom: 1 };
-const outroFocus: Focus = { x: vw / 2, y: vh / 2 - 40, zoom: 1 };
 
 /** Train polyline: enters from the west edge and parks at the terminal.
     The exit point used to sit past the viewBox, so the train clipped off
@@ -245,7 +244,10 @@ export default function AtlasRide() {
 				y: s.y,
 				zoom: s.kind === "terminal" ? (isMobile ? 1.15 : 1.3) : isMobile ? 1.3 : 2,
 			})),
-			outroFocus,
+			// The outro is the terminal's own camera: the ride ENDS at the
+			// agent, and the dawn sky plus the footer close it out instead
+			// of a pull-back that abandons the booth.
+			{ x: TERMINAL.x, y: TERMINAL.y, zoom: isMobile ? 1.15 : 1.3 },
 		],
 		[isMobile],
 	);
@@ -271,7 +273,18 @@ export default function AtlasRide() {
 				const rect = ride.getBoundingClientRect();
 				const total = Math.max(1, rect.height - window.innerHeight);
 				const raw = Math.min(1, Math.max(0, -rect.top / total));
-				const f = raw * (phaseCount - 1);
+				// Scroll warp: the stops run to raw 0.84, the terminal then
+				// HOLDS through raw 0.92 (the agent screen sticks while you
+				// keep scrolling), and the outro rides the last 8% with the
+				// camera parked, so the booth is never scrolled past.
+				const HOLD_END = 0.92;
+				let f =
+					raw <= 0.84
+						? (raw / 0.84) * stops.length
+						: raw <= HOLD_END
+							? stops.length
+							: stops.length + (raw - HOLD_END) / (1 - HOLD_END);
+				f = Math.min(phaseCount - 1, f);
 				const i = Math.min(phaseCount - 2, Math.floor(f));
 				const t = smooth(f - i);
 
@@ -364,9 +377,15 @@ export default function AtlasRide() {
 		if (!ride) return;
 		const total = ride.offsetHeight - window.innerHeight;
 		const top = ride.getBoundingClientRect().top + window.scrollY;
-		// Instant jump: the camera lerp in the frame loop is the glide, so
-		// the browser's smooth-scroll never fights the ride on phones.
-		window.scrollTo({ top: top + (target / (phaseCount - 1)) * total, behavior: "auto" });
+		// Instant jump, warped like the scroll mapping: stops run over the
+		// first 84% of the ride, the terminal holds to 92%, the outro beyond.
+		const p =
+			target <= stops.length
+				? (target / stops.length) * 0.84
+				: Math.min(0.94, 0.92 + (target - stops.length) * 0.02);
+		// The camera lerp in the frame loop is the glide, so the browser's
+		// smooth-scroll never fights the ride on phones.
+		window.scrollTo({ top: top + p * total, behavior: "auto" });
 	}
 
 	/** Clicking a station scrolls the ride to that phase. */
@@ -387,7 +406,7 @@ export default function AtlasRide() {
 	const nextStop = stops[Math.min(stops.length, phase)];
 	const activeStationSlug = stop && stop.kind === "station" ? stop.slug : null;
 	const activeMosaic = stop && stop.kind === "figure" ? stop.figureIndex : -1;
-	const atTerminal = stop !== null && stop.kind === "terminal";
+	const atTerminal = (stop !== null && stop.kind === "terminal") || phase > stops.length;
 
 	const stripText =
 		stop === null
@@ -399,7 +418,7 @@ export default function AtlasRide() {
 		phase >= 1 && phase <= stops.length ? ` · STOP ${phase} OF ${stops.length}` : "";
 
 	return (
-		<div className={`ride${phase === 0 ? " ride-phase-0" : ""}`} ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount }}>
+		<div className={`ride${phase === 0 ? " ride-phase-0" : ""}`} ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount + 2 }}>
 			<div className="ride-stage atlas-hero" ref={stageRef}>
 				<AtlasScene>
 					<div className="atlas-scroll">

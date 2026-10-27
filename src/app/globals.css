@@ -47,12 +47,15 @@ a{color:inherit}
 section{padding:76px 0}
 .sec-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 24px;justify-content:space-between;margin-bottom:36px}
 .sec-head h2{font-size:clamp(28px,4vw,40px)}
-.card{border:0;border-top:2px solid var(--rule);border-radius:8px;padding:28px 26px;background:var(--paper);display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;transition:translate .25s ease,box-shadow .25s ease,border-color .25s ease}
-.card:hover{translate:0 -3px;box-shadow:0 10px 28px rgba(18,16,14,.09);border-top-color:var(--accent)}
-.card .line-band{position:absolute;top:0;left:0;right:0;height:3px;display:block}
-.card h3{font-size:21px}
-.card h3 a{text-decoration:none}
-.card h3 a:hover{text-decoration:underline}
+.card{border:0;border-top:1px solid var(--rule);border-radius:8px;padding:26px 24px 22px;background:var(--paper);display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden;transition:translate .25s ease,box-shadow .25s ease,border-color .25s ease}
+.card:hover{translate:0 -3px;box-shadow:0 14px 34px rgba(29,36,51,.1);border-top-color:var(--line-color,var(--rule))}
+.card .kicker{padding-left:22px;color:var(--ink-soft)}
+.card .kicker::before{width:9px;height:9px;clip-path:none;border-radius:50%;background:var(--line-color,var(--accent));box-shadow:0 0 0 3px color-mix(in srgb,var(--line-color,var(--accent)) 16%,transparent)}
+.card h3{font-size:22px;line-height:1.16;margin:0 0 2px}
+.card h3 a{text-decoration:none;background-image:linear-gradient(var(--line-color,var(--accent)),var(--line-color,var(--accent)));background-size:0% 2px;background-position:0 100%;background-repeat:no-repeat;transition:background-size .25s ease}
+.card h3 a:hover{text-decoration:none;background-size:100% 2px}
+.stack{font-family:var(--mono);font-size:11.5px;line-height:1.5;letter-spacing:.04em;color:var(--ink-soft);margin:4px 0 0;padding-top:11px;border-top:1px dashed var(--rule)}
+.stack b{color:var(--ink);font-size:10px;letter-spacing:.18em;text-transform:uppercase;margin-right:8px}
 .card p{color:var(--ink-soft);font-size:15px}
 .card .role{font-size:14px;color:var(--ink-soft)}
 .card .role b{color:var(--ink)}
@@ -183,11 +186,26 @@ section{padding:76px 0}
 .you-halo{fill:rgba(232,176,75,.16);animation:you-pulse 2.8s ease-in-out infinite}
 @keyframes you-pulse{0%,100%{opacity:.4;r:18}50%{opacity:1;r:24}}
 .you-body{fill:#1b2133;stroke:var(--signal);stroke-width:1.1}
-/* The terminal: the ticket booth inside the scene. */
+/* The terminal: the ticket booth inside the scene. A CTA ticket window:
+   louver grille up top, solari departure-board sign with a duty light,
+   slot-style input, and the sources as ticket fine print. */
 .terminal-overlay{left:24px;right:auto;bottom:40px;max-width:520px}
-.terminal-card{padding:18px 20px}
-.terminal-card .booth-panel{border:0;background:transparent;padding:0;display:grid;gap:12px}
-.terminal-card .booth-panel .sign{align-self:flex-start}
+.ride-overlay .chi-card.terminal-card{position:relative;padding:0;background:#0b0e15;border:1px solid rgba(255,182,66,.22);border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.04);overflow:hidden;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.ride-overlay .chi-card.terminal-card::before{content:"";display:block;height:8px;background:repeating-linear-gradient(90deg,rgba(255,182,66,.28) 0 6px,transparent 6px 14px);border-bottom:1px solid rgba(255,182,66,.16)}
+.ride-overlay .chi-card.terminal-card::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 60% at 50% 0,rgba(255,182,66,.07),transparent 60%)}
+.terminal-card .booth-panel{border:0;background:transparent;padding:15px 18px 16px;display:grid;gap:12px;position:relative}
+.terminal-card .booth-panel .sign{align-self:flex-start;font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.24em;color:#ffb642;text-transform:uppercase;display:flex;align-items:center;gap:9px;text-shadow:0 0 16px rgba(255,182,66,.45)}
+.terminal-card .booth-panel .sign::before{content:"";width:8px;height:8px;border-radius:50%;background:#ffb642;box-shadow:0 0 10px rgba(255,182,66,.9);animation:duty-blink 2.4s steps(1) infinite}
+@keyframes duty-blink{0%,86%{opacity:1}86.01%,100%{opacity:.2}}
+.terminal-card .ask-input{background:#07090f;border:1px solid rgba(255,182,66,.18);border-radius:8px;color:var(--night-ink);caret-color:#ffb642}
+.terminal-card .ask-input:focus{border-color:rgba(255,182,66,.5);box-shadow:0 0 0 3px rgba(255,182,66,.09);outline:none}
+.terminal-card .ask-submit{background:#ffb642;color:#141003;font-weight:700;border:0;border-radius:8px}
+.terminal-card .chip{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:#f4e8d0;background:rgba(255,182,66,.07);border:1px solid rgba(255,182,66,.2);border-radius:6px;padding:5px 10px}
+.terminal-card .chip:hover{background:rgba(255,182,66,.16)}
+.terminal-card .chip[aria-pressed="true"]{background:#ffb642;color:#141003;border-color:#ffb642}
+.terminal-card .ask-result p{color:#f4e8d0}
+.terminal-card .answer{border-top:1px dashed rgba(255,255,255,.14);padding-top:10px}
+.terminal-card .answer .src{color:rgba(244,232,208,.6)}
 .terminal-card .booth-panel .answer{max-height:42vh;overflow:auto}
 .ride-overlay .chi-card{animation:card-in .55s cubic-bezier(.22,.61,.36,1)}
 @keyframes card-in{from{opacity:0;translate:-34px 14px}to{opacity:1;translate:0 0}}
@@ -368,6 +386,9 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
   .ride-overlay .chi-card{background:rgba(21,26,40,.94);backdrop-filter:none;padding:14px 16px}
   .ride-overlay .chi-card h3{font-size:17px}
   .ride-overlay .chi-card .chi-feature{font-size:13px}
-  .terminal-overlay{left:12px;right:12px;bottom:14px;max-width:none}
-  .terminal-card .booth-panel .answer{max-height:34vh}
+  .ride-overlay .chi-card.terminal-card{background:rgba(11,14,21,.96)}
+  .terminal-overlay{left:10px;right:10px;bottom:12px;max-width:none}
+  .terminal-card .booth-panel{padding:13px 14px 14px;gap:10px}
+  .terminal-card .booth-panel .sign{font-size:11px;letter-spacing:.2em}
+  .terminal-card .booth-panel .answer{max-height:30vh}
 }
