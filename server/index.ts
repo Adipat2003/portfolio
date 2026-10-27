@@ -26,6 +26,8 @@ import { loadContent } from "./content";
 import { handleMessage } from "./mcp";
 import { createAskModel } from "./ask-model";
 import { createCtaProxy } from "./cta";
+import { createCtaNetworkProxy } from "./cta-network";
+import { readFileSync } from "node:fs";
 
 const PORT = Number(process.env.PORT ?? process.env.SERVICE_PORT ?? 8788);
 const HOST =
@@ -44,7 +46,10 @@ const NVIDIA_ENDPOINT =
   "https://integrate.api.nvidia.com/v1/chat/completions";
 
 const content = loadContent(ROOT);
+const railNetwork = JSON.parse(readFileSync(resolve(ROOT, "content/cta-network.json"), "utf8")) as { stations: { id: string; name: string }[] };
+const ctaNetwork = createCtaNetworkProxy({ apiKey: process.env.CTA_API_KEY?.trim() });
 const cta = createCtaProxy({
+  extraStations: railNetwork.stations,
   apiKey: process.env.CTA_API_KEY?.trim(),
   mapid: process.env.CTA_MAPID ?? "40380",
   ttlMs: 45_000,
@@ -59,7 +64,9 @@ const askModel = createAskModel(content, {
 
 const RATE_LIMITS: Record<string, number> = {
   "/mcp": 60,
-  "/transit": 20,
+  "/transit": 60,
+  "/positions": 20,
+  "/transit-alerts": 20,
   "/ask-model": 10,
 };
 const buckets = new Map<string, { count: number; reset: number }>();
@@ -161,6 +168,16 @@ const server = createServer(async (req, res) => {
       },
       corsHeaders(origin),
     );
+    return;
+  }
+
+  if ((route === "/positions" || route === "/transit-alerts") && req.method === "GET") {
+    if (url.searchParams.size) {
+      sendJson(res, 400, { error: "This feed covers the full rail network; query parameters are unsupported" }, corsHeaders(origin));
+      return;
+    }
+    const payload = await (route === "/positions" ? ctaNetwork.positions() : ctaNetwork.alerts());
+    sendJson(res, 200, payload, corsHeaders(origin));
     return;
   }
 

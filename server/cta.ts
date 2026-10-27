@@ -13,7 +13,7 @@
  */
 
 const UPSTREAM = "https://lapi.transitchicago.com/api/1.0/ttarrivals.aspx";
-const CREDIT =
+export const CREDIT =
 	"CTA Train Tracker data provided by Chicago Transit Authority. The CTA Train Tracker logo is a trademark of Chicago Transit Authority.";
 
 type CtaStation = { id: string; name: string };
@@ -53,13 +53,15 @@ type TransitPayload =
 			credit: string;
 	  };
 
-export function createCtaProxy(opts: { apiKey?: string; mapid: string; ttlMs: number }) {
+export function createCtaProxy(opts: { apiKey?: string; mapid: string; ttlMs: number; extraStations?: CtaStation[] }) {
 	const stations = [
 		...(LOOP_STATIONS.some((station) => station.id === opts.mapid)
 			? []
 			: [{ id: opts.mapid, name: "Configured station" }]),
 		...LOOP_STATIONS,
 	];
+	const allowedStations = [...stations, ...(opts.extraStations ?? [])];
+	const pending = new Map<string, Promise<TransitPayload>>();
 	const cache = new Map<string, { payload: TransitPayload; expiresAt: number }>();
 
 	/** CTA clock strings come as ISO '2026-10-26T11:28:55' (the JSON feed);
@@ -122,10 +124,10 @@ export function createCtaProxy(opts: { apiKey?: string; mapid: string; ttlMs: nu
 	return {
 		stations,
 		hasStation(id: string): boolean {
-			return stations.some((station) => station.id === id);
+			return allowedStations.some((station) => station.id === id);
 		},
 		async get(stationId = opts.mapid): Promise<TransitPayload> {
-			const station = stations.find((candidate) => candidate.id === stationId);
+			const station = allowedStations.find((candidate) => candidate.id === stationId);
 			if (!station) throw new Error("unknown CTA station");
 			if (!opts.apiKey) {
 				return {
@@ -140,6 +142,8 @@ export function createCtaProxy(opts: { apiKey?: string; mapid: string; ttlMs: nu
 			const now = Date.now();
 			const cached = cache.get(station.id);
 			if (cached && cached.expiresAt > now) return cached.payload;
+			if (pending.has(station.id)) return pending.get(station.id)!;
+			const request = (async (): Promise<TransitPayload> => {
 			try {
 				const arrivals = await fetchArrivals(station);
 				const payload: TransitPayload = {
@@ -163,6 +167,9 @@ export function createCtaProxy(opts: { apiKey?: string; mapid: string; ttlMs: nu
 					reason: "CTA upstream unavailable",
 				};
 			}
+			})();
+			pending.set(station.id, request);
+			try { return await request; } finally { pending.delete(station.id); }
 		},
 	};
 }
