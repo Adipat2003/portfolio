@@ -415,7 +415,9 @@ export default function AtlasRide() {
 				? "THE TERMINAL · ASK THE AGENT"
 				: `${stop.kind === "station" ? "NOW STOPPING" : "PASSING"} · ${stop.label.toUpperCase()}`;
 	const counter =
-		phase >= 1 && phase <= stops.length ? ` · STOP ${phase} OF ${stops.length}` : "";
+		phase >= 1 && phase <= stops.length && !(stop !== null && stop.kind === "terminal")
+			? ` · STOP ${phase} OF ${stops.length}`
+			: "";
 
 	return (
 		<div className={`ride${phase === 0 ? " ride-phase-0" : ""}`} ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount + 2 }}>

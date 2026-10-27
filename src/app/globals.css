@@ -49,7 +49,7 @@ section{padding:76px 0}
 .sec-head h2{font-size:clamp(28px,4vw,40px)}
 .card{border:0;border-top:1px solid var(--rule);border-radius:8px;padding:26px 24px 22px;background:var(--paper);display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden;transition:translate .25s ease,box-shadow .25s ease,border-color .25s ease}
 .card:hover{translate:0 -3px;box-shadow:0 14px 34px rgba(29,36,51,.1);border-top-color:var(--line-color,var(--rule))}
-.card .kicker{padding-left:22px;color:var(--ink-soft)}
+.card .kicker{padding-left:22px;color:var(--ink-soft);letter-spacing:.09em;line-height:1.6}
 .card .kicker::before{width:9px;height:9px;clip-path:none;border-radius:50%;background:var(--line-color,var(--accent));box-shadow:0 0 0 3px color-mix(in srgb,var(--line-color,var(--accent)) 16%,transparent)}
 .card h3{font-size:22px;line-height:1.16;margin:0 0 2px}
 .card h3 a{text-decoration:none;background-image:linear-gradient(var(--line-color,var(--accent)),var(--line-color,var(--accent)));background-size:0% 2px;background-position:0 100%;background-repeat:no-repeat;transition:background-size .25s ease}
