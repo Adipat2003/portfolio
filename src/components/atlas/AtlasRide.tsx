@@ -477,8 +477,6 @@ export default function AtlasRide() {
 						<b className="strip-text">{stripText}{counter}</b>
 					</div>
 
-					<CtaLive />
-
 					<div className="ride-progress" aria-hidden="true" />
 
 					<div className={`ride-copy${phase === 0 ? "" : " faded"}`}>
@@ -495,6 +493,7 @@ export default function AtlasRide() {
 					<div className={`ride-overlay${atTerminal ? " terminal-overlay" : ""}`} role="status" aria-live="polite">
 						{atTerminal ? (
 							<div className="chi-card terminal-card" key="terminal">
+								<CtaLive />
 								<AskBox
 									variant="panel"
 									examples={site.ask_examples}

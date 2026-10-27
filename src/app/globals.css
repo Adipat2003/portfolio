@@ -127,8 +127,10 @@ section{padding:76px 0}
 .ride{--phase-h:100vh;position:relative;height:calc(var(--ride-phases) * var(--phase-h))}
 .ride-stage{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden}
 /* Carriage vignette: one shared darkness at the frame edges so the scene
-   reads as a place seen from inside, not stacked layers. */
-.ride-stage::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;box-shadow:inset 0 0 140px 34px rgba(8,10,16,.55);background:linear-gradient(180deg,rgba(8,10,16,.28),transparent 18%,transparent 82%,rgba(8,10,16,.4))}
+    reads as a place seen from inside, not stacked layers. The radial edge
+    darkening lets map labels slide out of frame into night instead of
+    hard-clipping at the viewport border. */
+.ride-stage::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;box-shadow:inset 0 0 140px 34px rgba(8,10,16,.55);background:linear-gradient(180deg,rgba(8,10,16,.28),transparent 18%,transparent 82%,rgba(8,10,16,.4)),radial-gradient(115% 90% at 50% 42%,transparent 62%,rgba(8,10,15,.42) 92%,rgba(8,10,15,.75) 100%)}
 .ride-stage .atlas-scroll{position:absolute;inset:0}
 /* The dawn lifts over the last stretch of the ride: a warm horizon glow
    that rises with the final phases, under the same reduced-motion rules. */
@@ -140,7 +142,8 @@ section{padding:76px 0}
 .trip-strip::-webkit-scrollbar{display:none}
 .trip-strip b{color:var(--signal)}
 /* Edge fades read the strip's overflow as intentional scrolling, never as a clip. */
-.trip-dots{mask-image:linear-gradient(90deg,transparent 0,black 14px,black calc(100% - 14px),transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0,black 14px,black calc(100% - 14px),transparent 100%)}
+.trip-dots{mask-image:none;-webkit-mask-image:none}
+.trip-strip{mask-image:linear-gradient(90deg,transparent 0,black 42px,black calc(100% - 42px),transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0,black 42px,black calc(100% - 42px),transparent 100%)}
 /* The route diagram: every stop named, colored, and tappable. */
 .trip-dots{display:flex;gap:4px;pointer-events:auto;align-items:center}
 .trip-stop{appearance:none;border:1px solid transparent;background:transparent;padding:5px 9px;display:flex;align-items:center;gap:6px;cursor:pointer;border-radius:999px;white-space:nowrap;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--night-soft)}
@@ -153,8 +156,7 @@ section{padding:76px 0}
 /* Where you are on the line: a hairline progress rail across the stage top. */
 .ride-progress{position:absolute;top:0;left:0;height:3px;width:calc(var(--ride-progress,0) * 100%);background:linear-gradient(90deg,var(--flag-red),var(--signal));z-index:7;pointer-events:none;transition:none}
 /* Live CTA arrivals, rendered only when the hosted service exists. */
-.cta-live{position:absolute;top:calc(var(--bar-h,104px) + 52px);left:50%;translate:-50% 0;z-index:6;display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none}
-.cta-chip{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--night-ink);background:rgba(13,15,22,.66);border:1px solid var(--night-rule);border-radius:999px;padding:5px 12px;white-space:nowrap}
+.cta-credit{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--night-soft);opacity:.8}
 .cta-chip b{font-weight:700}
 .cta-line{padding:1px 6px;border-radius:4px;margin-right:2px}
 .cta-red{background:#c0392b;color:#fff}
@@ -166,8 +168,17 @@ section{padding:76px 0}
 .cta-pnk{background:#d49bc4;color:#1d2433}
 .cta-y{background:#f1c40f;color:#1d2433}
 .cta-credit{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--night-soft);opacity:.8}
-.cta-asof{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--night-soft)}
-.cta-connecting{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--night-soft);animation:booth-pulse 1.6s ease-in-out infinite}
+/* The departure board inside the booth: one solari strip of real Clark/Lake
+   departures, wrapping inside the card it belongs to, never a block. */
+.departures{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:9px 18px 8px;border-bottom:1px solid rgba(255,182,66,.16);background:rgba(255,182,66,.05);font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:#f4e8d0;position:relative;z-index:1}
+.departures-head{color:#ffb642;font-weight:700;letter-spacing:.16em;text-shadow:0 0 12px rgba(255,182,66,.35)}
+.departures-list{display:inline-flex;flex-wrap:wrap;gap:4px 12px}
+.departure{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.departure-dest{color:rgba(244,232,208,.85);max-width:110px;overflow:hidden;text-overflow:ellipsis}
+.departure-min{color:#ffb642}
+.departures-asof{color:rgba(244,232,208,.5);margin-left:auto}
+.departures .cta-credit{flex-basis:100%;font-size:8px;letter-spacing:.04em;color:rgba(244,232,208,.42);text-transform:none}
+.departures-note{color:rgba(244,232,208,.55);animation:booth-pulse 1.6s ease-in-out infinite}
 .booth-waiting{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--signal);animation:booth-pulse 1.6s ease-in-out infinite}
 .booth-polishing{animation:booth-pulse 1.6s ease-in-out infinite}
 @keyframes booth-pulse{0%,100%{opacity:.45}50%{opacity:1}}
