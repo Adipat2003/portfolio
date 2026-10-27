@@ -3,16 +3,17 @@
 import { useEffect, useState } from "react";
 
 /**
- * Live CTA arrivals in the ride, when the hosted service exists. On the
- * static Pages build SERVICE_URL is empty and this renders nothing, so the
- * ride keeps its authored experience; once NEXT_PUBLIC_SERVICE_URL points at
- * the service (with a CTA key on the service side), the strip gains real
- * 'L' arrival predictions, credit line attached, per docs/live-data-terms.md.
+ * Live CTA departures, when the hosted service exists. On the static Pages
+ * build SERVICE_URL is empty and this renders nothing; once
+ * NEXT_PUBLIC_SERVICE_URL points at the service (with a CTA key on the
+ * service side), the booth gains a real departure board, credit line
+ * attached, per docs/live-data-terms.md.
  *
- * Clark/Lake is a hub where trains are often boarding, so the strip shows
- * four arrivals, not two: the spread of minutes is the proof of life. The
- * as-of clock makes the freshness legible, and until the first successful
- * poll the strip says it is connecting rather than sitting blank.
+ * Where it lives: inside the terminal card, as a solari departure board
+ * strip above the ask panel. The ride ends at Clark/Lake, so the live board
+ * is the station's own: you ask the agent under the actual departures for
+ * the station you are standing in. One compact row that wraps inside the
+ * card it belongs to, never a screen-blocking block.
  */
 
 const SERVICE_URL = process.env.NEXT_PUBLIC_SERVICE_URL ?? "";
@@ -46,7 +47,7 @@ export default function CtaLive() {
 				live = true;
 				setState({
 					station: String(data.station ?? ""),
-					arrivals: Array.isArray(data.arrivals) ? data.arrivals.slice(0, 4) : [],
+					arrivals: Array.isArray(data.arrivals) ? data.arrivals.slice(0, 3) : [],
 					asOf: clockOf(String(data.as_of ?? "")),
 				});
 			} catch {
@@ -72,25 +73,26 @@ export default function CtaLive() {
 
 	if (!state || state.arrivals.length === 0) {
 		return (
-			<div className="cta-live cta-connecting" aria-live="polite">
-				connecting to live &rsquo;L&rsquo; arrivals&hellip;
+			<div className="departures departures-connecting" aria-live="polite">
+				<span className="departures-head">{state?.station || "CLARK/LAKE"}</span>
+				<span className="departures-note">connecting to live &rsquo;L&rsquo; departures&hellip;</span>
 			</div>
 		);
 	}
 
 	return (
-		<div className="cta-live" aria-label="Live CTA arrivals">
-			{state.arrivals.map((a, i) => (
-				<span key={`${a.line}-${a.destination}-${i}`} className="cta-chip">
-					<b className={`cta-line cta-${a.line}`}>{a.line.toUpperCase()}</b> to {a.destination} ·{" "}
-					{a.minutes <= 0 ? "due" : `${a.minutes} min`}
-				</span>
-			))}
-			{state.asOf ? (
-				<span className="cta-asof">
-					{state.station} · as of {state.asOf}
-				</span>
-			) : null}
+		<div className="departures" aria-label="Live CTA departures">
+			<span className="departures-head">{state.station || "CLARK/LAKE"}</span>
+			<span className="departures-list">
+				{state.arrivals.map((a, i) => (
+					<span key={`${a.line}-${a.destination}-${i}`} className="departure">
+						<b className={`cta-line cta-${a.line}`}>{a.line.toUpperCase()}</b>
+						<span className="departure-dest">{a.destination}</span>
+						<span className="departure-min">{a.minutes <= 0 ? "due" : `${a.minutes}m`}</span>
+					</span>
+				))}
+			</span>
+			{state.asOf ? <span className="departures-asof">as of {state.asOf}</span> : null}
 			<span className="cta-credit">CTA Train Tracker data provided by Chicago Transit Authority</span>
 		</div>
 	);
