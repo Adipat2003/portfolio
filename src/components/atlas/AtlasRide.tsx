@@ -357,22 +357,6 @@ export default function AtlasRide() {
 					setPhase(next);
 					setLandmark(null);
 					landmarkFocusRef.current = null;
-					// Keep the active stop visible inside the strip's own
-					// scroll track; the page itself never moves here. The
-					// marquee text after the dots is the stop's caption, so
-					// when it would clip past the track's right edge the
-					// scroll reveals it instead of the dot alone.
-					const strip = stripRef.current;
-					const hit = strip?.querySelector<HTMLElement>(".trip-stop.hit");
-					const text = strip?.querySelector<HTMLElement>(".strip-text");
-					if (strip && hit) {
-						const maxLeft = strip.scrollWidth - strip.clientWidth;
-						const centered = Math.max(0, Math.min(maxLeft, hit.offsetLeft - strip.clientWidth / 2 + hit.offsetWidth / 2));
-						strip.scrollLeft = centered;
-						if (text && text.offsetLeft + text.offsetWidth - strip.scrollLeft > strip.clientWidth) {
-							strip.scrollLeft = Math.min(maxLeft, text.offsetLeft + text.offsetWidth - strip.clientWidth);
-						}
-					}
 				}
 			}
 			raf = requestAnimationFrame(tick);
@@ -380,6 +364,25 @@ export default function AtlasRide() {
 		raf = requestAnimationFrame(tick);
 		return () => cancelAnimationFrame(raf);
 	}, [phaseCount, focuses]);
+
+	/** After each phase renders, keep the active stop visible inside the
+	    strip's own scroll track; the page itself never moves here. The
+	    marquee caption follows the dots, so when it would clip past the
+	    track's right edge the scroll reveals it instead of the dot alone.
+	    Runs as an effect because the .hit class is committed by React
+	    after the frame loop reads the phase. */
+	useEffect(() => {
+		const strip = stripRef.current;
+		if (!strip) return;
+		const hit = strip.querySelector<HTMLElement>(".trip-stop.hit");
+		const text = strip.querySelector<HTMLElement>(".strip-text");
+		if (!hit) return;
+		const maxLeft = strip.scrollWidth - strip.clientWidth;
+		strip.scrollLeft = Math.max(0, Math.min(maxLeft, hit.offsetLeft - strip.clientWidth / 2 + hit.offsetWidth / 2));
+		if (text && text.offsetLeft + text.offsetWidth - strip.scrollLeft > strip.clientWidth) {
+			strip.scrollLeft = Math.min(maxLeft, text.offsetLeft + text.offsetWidth - strip.clientWidth);
+		}
+	}, [phase]);
 
 	function jumpToPhase(target: number) {
 		const ride = rideRef.current;
