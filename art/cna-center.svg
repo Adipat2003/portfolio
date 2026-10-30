@@ -6,11 +6,40 @@
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
+    <clipPath id="landmark-windows"><path d="M556 420 L556 215 L600 215 L600 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
     <title>CNA Center: red-banded block</title>
-      <path d="M556 215 L600 215 L600 227 L556 227 Z" fill="#8e3b2c" stroke="none"/>
       <path d="M556 420 L556 215 L600 215 L600 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+      <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
+        <rect x="569" y="227" width="2" height="3"/>
+        <rect x="585" y="227" width="2" height="3"/>
+        <rect x="577" y="242" width="2" height="3"/>
+        <rect x="593" y="242" width="2" height="3"/>
+        <rect x="561" y="257" width="2" height="3"/>
+        <rect x="585" y="257" width="2" height="3"/>
+        <rect x="569" y="272" width="2" height="3"/>
+        <rect x="593" y="272" width="2" height="3"/>
+        <rect x="561" y="287" width="2" height="3"/>
+        <rect x="577" y="287" width="2" height="3"/>
+        <rect x="569" y="302" width="2" height="3"/>
+        <rect x="585" y="302" width="2" height="3"/>
+        <rect x="577" y="317" width="2" height="3"/>
+        <rect x="593" y="317" width="2" height="3"/>
+        <rect x="561" y="332" width="2" height="3"/>
+        <rect x="585" y="332" width="2" height="3"/>
+        <rect x="569" y="347" width="2" height="3"/>
+        <rect x="593" y="347" width="2" height="3"/>
+        <rect x="561" y="362" width="2" height="3"/>
+        <rect x="577" y="362" width="2" height="3"/>
+        <rect x="569" y="377" width="2" height="3"/>
+        <rect x="585" y="377" width="2" height="3"/>
+        <rect x="577" y="392" width="2" height="3"/>
+        <rect x="593" y="392" width="2" height="3"/>
+        <rect x="561" y="407" width="2" height="3"/>
+        <rect x="585" y="407" width="2" height="3"/>
+      </g>
+      <path d="M556 215 L600 215 L600 227 L556 227 Z" fill="#8e3b2c" stroke="none"/>
   </g>
 </svg>

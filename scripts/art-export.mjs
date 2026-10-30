@@ -25,13 +25,17 @@ function stops(g) {
 
 function landmarkSvg(b) {
   const fill = `url(#${atlas.building_fill.id})`;
+  const coords = [...b.d.matchAll(/[ML]([\d.]+)\s+([\d.]+)/g)].map((match) => [Number(match[1]), Number(match[2])]);
+  const left = Math.min(...coords.map(([x]) => x)), right = Math.max(...coords.map(([x]) => x));
+  const windows = atlas.window_lights.filter(([x]) => x >= left && x <= right).map(([x, y]) => `        <rect x="${x}" y="${y}" width="${atlas.window_size[0]}" height="${atlas.window_size[1]}"/>`).join("\n");
   const paths = [
+    `      <path d="${b.d}" fill="${fill}" stroke="#3a4a6e" stroke-width="1"/>`,
+    `      <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">\n${windows}\n      </g>`,
     b.extra && b.extra_fill
       ? `      <path d="${b.extra}" fill="${b.extra_fill}" stroke="none"/>`
       : b.extra
         ? `      <path d="${b.extra}" stroke="${b.extra_stroke}" stroke-width="${b.extra_width}" fill="none"/>`
         : null,
-    `      <path d="${b.d}" fill="${fill}" stroke="#3a4a6e" stroke-width="1"/>`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -42,6 +46,7 @@ function landmarkSvg(b) {
     <linearGradient id="${atlas.building_fill.id}" x1="${atlas.building_fill.x1}" y1="${atlas.building_fill.y1}" x2="${atlas.building_fill.x2}" y2="${atlas.building_fill.y2}">
 ${stops(atlas.building_fill)}
     </linearGradient>
+    <clipPath id="landmark-windows"><path d="${b.d}"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>

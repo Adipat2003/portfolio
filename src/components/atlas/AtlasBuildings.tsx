@@ -46,7 +46,7 @@ export default function AtlasBuildings({
               fill={`url(#${atlas.building_fill.id})`}
               stroke="#3a4a6e"
               strokeWidth={1}
-              className={open ? "bld-selected" : undefined}
+              className={open ? "building-body bld-selected" : "building-body"}
             />
             {b.extra ? (
               b.extra_fill ? (

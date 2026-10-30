@@ -6,10 +6,38 @@
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
+    <clipPath id="landmark-windows"><path d="M356 420 L356 200 L373 168 L390 200 L390 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
     <title>Two Prudential Plaza: slanted top</title>
       <path d="M356 420 L356 200 L373 168 L390 200 L390 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+      <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
+        <rect x="369" y="180" width="2" height="3"/>
+        <rect x="361" y="195" width="2" height="3"/>
+        <rect x="377" y="195" width="2" height="3"/>
+        <rect x="369" y="210" width="2" height="3"/>
+        <rect x="385" y="210" width="2" height="3"/>
+        <rect x="377" y="225" width="2" height="3"/>
+        <rect x="361" y="240" width="2" height="3"/>
+        <rect x="385" y="240" width="2" height="3"/>
+        <rect x="369" y="255" width="2" height="3"/>
+        <rect x="361" y="270" width="2" height="3"/>
+        <rect x="377" y="270" width="2" height="3"/>
+        <rect x="369" y="285" width="2" height="3"/>
+        <rect x="385" y="285" width="2" height="3"/>
+        <rect x="377" y="300" width="2" height="3"/>
+        <rect x="361" y="315" width="2" height="3"/>
+        <rect x="385" y="315" width="2" height="3"/>
+        <rect x="369" y="330" width="2" height="3"/>
+        <rect x="361" y="345" width="2" height="3"/>
+        <rect x="377" y="345" width="2" height="3"/>
+        <rect x="369" y="360" width="2" height="3"/>
+        <rect x="385" y="360" width="2" height="3"/>
+        <rect x="377" y="375" width="2" height="3"/>
+        <rect x="361" y="390" width="2" height="3"/>
+        <rect x="385" y="390" width="2" height="3"/>
+        <rect x="369" y="405" width="2" height="3"/>
+      </g>
   </g>
 </svg>

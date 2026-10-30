@@ -6,11 +6,32 @@
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
+    <clipPath id="landmark-windows"><path d="M848 420 L848 176 L876 176 L876 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
     <title>Monadnock Building: broad shouldered slab with rounded bay columns</title>
-      <path d="M856 176 L856 420 M868 176 L868 420" stroke="#3a4a6e" stroke-width="1" fill="none"/>
       <path d="M848 420 L848 176 L876 176 L876 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+      <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
+        <rect x="861" y="188" width="2" height="3"/>
+        <rect x="853" y="203" width="2" height="3"/>
+        <rect x="869" y="203" width="2" height="3"/>
+        <rect x="861" y="218" width="2" height="3"/>
+        <rect x="869" y="233" width="2" height="3"/>
+        <rect x="853" y="248" width="2" height="3"/>
+        <rect x="861" y="263" width="2" height="3"/>
+        <rect x="853" y="278" width="2" height="3"/>
+        <rect x="869" y="278" width="2" height="3"/>
+        <rect x="861" y="293" width="2" height="3"/>
+        <rect x="869" y="308" width="2" height="3"/>
+        <rect x="853" y="323" width="2" height="3"/>
+        <rect x="861" y="338" width="2" height="3"/>
+        <rect x="853" y="353" width="2" height="3"/>
+        <rect x="869" y="353" width="2" height="3"/>
+        <rect x="861" y="368" width="2" height="3"/>
+        <rect x="869" y="383" width="2" height="3"/>
+        <rect x="853" y="398" width="2" height="3"/>
+      </g>
+      <path d="M856 176 L856 420 M868 176 L868 420" stroke="#3a4a6e" stroke-width="1" fill="none"/>
   </g>
 </svg>

@@ -9,6 +9,7 @@ import { markerId } from "./markerId";
 export default function AtlasDefs() {
   return (
     <defs>
+      <clipPath id="atlas-window-mask"><path d={atlas.buildings.map((building) => building.d).join(" ")} /></clipPath>
       <linearGradient
         id={atlas.building_fill.id}
         x1={atlas.building_fill.x1}

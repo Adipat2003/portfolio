@@ -6,11 +6,38 @@
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
+    <clipPath id="landmark-windows"><path d="M240 420 L252 120 L268 120 L280 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
     <title>Hancock Center: tapered body with visible cross-bracing</title>
-      <path d="M252 190 L280 250 M268 170 L240 230 M252 250 L280 310 M268 230 L240 290 M252 165 L280 225 M268 145 L240 205" stroke="#4a5c86" stroke-width="1" fill="none"/>
       <path d="M240 420 L252 120 L268 120 L280 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+      <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
+        <rect x="253" y="147" width="2" height="3"/>
+        <rect x="261" y="162" width="2" height="3"/>
+        <rect x="253" y="177" width="2" height="3"/>
+        <rect x="261" y="192" width="2" height="3"/>
+        <rect x="269" y="207" width="2" height="3"/>
+        <rect x="253" y="222" width="2" height="3"/>
+        <rect x="261" y="237" width="2" height="3"/>
+        <rect x="253" y="252" width="2" height="3"/>
+        <rect x="269" y="252" width="2" height="3"/>
+        <rect x="261" y="267" width="2" height="3"/>
+        <rect x="269" y="282" width="2" height="3"/>
+        <rect x="253" y="297" width="2" height="3"/>
+        <rect x="245" y="312" width="2" height="3"/>
+        <rect x="261" y="312" width="2" height="3"/>
+        <rect x="253" y="327" width="2" height="3"/>
+        <rect x="269" y="327" width="2" height="3"/>
+        <rect x="261" y="342" width="2" height="3"/>
+        <rect x="245" y="357" width="2" height="3"/>
+        <rect x="269" y="357" width="2" height="3"/>
+        <rect x="253" y="372" width="2" height="3"/>
+        <rect x="245" y="387" width="2" height="3"/>
+        <rect x="261" y="387" width="2" height="3"/>
+        <rect x="253" y="402" width="2" height="3"/>
+        <rect x="269" y="402" width="2" height="3"/>
+      </g>
+      <path d="M251.4 160 L271 220 M268.6 160 L249 220 M249 220 L273.4 280 M271 220 L246.6 280 M246.6 280 L275.8 340 M273.4 280 L244.2 340 M244.2 340 L278.2 400 M275.8 340 L241.8 400" stroke="#4a5c86" stroke-width="1" fill="none"/>
   </g>
 </svg>

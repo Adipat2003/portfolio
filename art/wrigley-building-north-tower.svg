@@ -6,10 +6,23 @@
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
+    <clipPath id="landmark-windows"><path d="M704 420 L704 240 L716 222 L728 240 L728 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
     <title>Wrigley Building (north tower): clock-tower crown</title>
       <path d="M704 420 L704 240 L716 222 L728 240 L728 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+      <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
+        <rect x="709" y="234" width="2" height="3"/>
+        <rect x="717" y="249" width="2" height="3"/>
+        <rect x="709" y="279" width="2" height="3"/>
+        <rect x="717" y="294" width="2" height="3"/>
+        <rect x="709" y="309" width="2" height="3"/>
+        <rect x="717" y="324" width="2" height="3"/>
+        <rect x="709" y="354" width="2" height="3"/>
+        <rect x="717" y="369" width="2" height="3"/>
+        <rect x="709" y="384" width="2" height="3"/>
+        <rect x="717" y="399" width="2" height="3"/>
+      </g>
   </g>
 </svg>
