@@ -117,3 +117,16 @@ Tools exposed, all read-only:
 - Model polish for `ask` is implemented and disabled by default; enabling it
   means setting `NVIDIA_API_KEY` in the service host environment. It stays
   server-side, keeps the citations, and must never change a figure.
+
+
+### Read-only live transit guide
+
+`POST /ask-transit` accepts a question (up to 500 characters) and an optional
+allowlisted station ID. The existing model connection selects relevant record
+IDs from fresh CTA arrivals, positions, route status and active detailed alerts.
+Only exact selected record text and official CTA links enter the response. The
+model cannot supply new factual text or links. Unknown IDs and malformed model
+output use the grounded fallback. Each source carries its data-check timestamp.
+The rate limit is six requests per minute per IP. Nothing is submitted to CTA,
+and no visitor reports or question history are stored. Missing live data is
+reported as unavailable, never interpreted as normal service or an outage.
