@@ -53,10 +53,15 @@ BASE_URL=https://adipat2003.github.io/portfolio/ SPOT_CHECK=1 npm exec --yes --p
 
 This uses the same geometry assertions at 1920x1080, 1280x600, and 390x844.
 
-The suite also verifies scenic-first ordering and one CTA map, all eight routes
-and 143 stations, route filtering, station/search controls, editorial project links,
-44 px controls, in-Atlas anchors, one polling loop, separated overview sprites, real-fix marker updates and
-stale/empty/unavailable fallbacks. To run only those checks during map work,
-use `NETWORK_ONLY=1` with the same command. Full validation still requires the
-unfiltered suite. Skyline checks additionally assert that selected/terminal
-camera bounds cover both screen edges and that scrolling releases a landmark.
+The suite verifies scenic-first ordering and a full-screen CTA ending with eight
+routes and 143 stations. It checks station words are hidden until selection,
+route filtering, search, on-demand panels, 44 px controls, Escape/focus return,
+read-only official alerts and sourced transit-guide fixtures. Map geometry is
+checked at desktop, short-laptop, tablet, phone and 320x740 widths. The positions
+fixtures verify one poll, real-fix movement, reduced motion and honest fallback.
+Skyline checks assert fixed-width focus strokes, no selection shadow, windows
+inside the authored silhouettes, and camera coverage at both screen edges.
+Desktop and phone captures also cover Dispatch sections and project details.
+
+To run only the map checks during development, set `NETWORK_ONLY=1` with the
+same command. Full validation still requires the unfiltered suite.

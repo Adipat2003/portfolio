@@ -125,59 +125,73 @@ async function checkMatrix(page, viewports) {
 
 async function checkNetwork(page) {
 	const map = page.locator(".rail-network");
-	assert.equal(await map.count(), 1, "one focused network follows the scenic ride");
+	assert.equal(await map.count(), 1);
 	assert.ok(await page.evaluate(() => document.querySelector(".ride").compareDocumentPosition(document.querySelector(".rail-network")) & Node.DOCUMENT_POSITION_FOLLOWING), "scenic route comes first");
 	await map.evaluate((element) => element.scrollIntoView({ block: "start" }));
 	assert.equal(await map.locator(".rail-paths path").count(), 8);
 	assert.equal(await map.locator(".rail-station").count(), 143);
-	await page.waitForFunction(() => document.querySelector(".rail-feed-status")?.getAttribute("data-state") !== "loading", null, { timeout: 25_000 });
-	if (await map.locator(".transit-board").count()) await page.waitForFunction(() => {
-		const board = document.querySelector(".rail-network .transit-board");
-		return board && board.getAttribute("data-state") !== "loading";
-	}, null, { timeout: 25_000 });
+	assert.equal(await map.locator(".rail-sheet").count(), 0, "map opens without a word-heavy panel");
+	assert.equal(await map.locator(".rail-station text").count(), 0, "station words appear only after selection");
+	await page.waitForFunction(() => document.querySelector(".rail-feed-status")?.getAttribute("data-state") !== "loading", null, {timeout:25000});
 	await capture(page, "network-desktop");
 	await map.getByRole("combobox", { name: "Choose a CTA line" }).selectOption("brn");
 	assert.ok(await map.locator(".rail-station").count() < 143);
-	await map.locator(".rail-more > summary").click();
-	await map.getByRole("combobox", { name: /Find a station/ }).selectOption({ label: "Kimball" });
-	await page.waitForTimeout(400);
-	assert.equal(await map.locator(".rail-selected-station h3").innerText(), "Kimball");
-	if (await map.locator(".transit-board").count()) assert.equal(await map.locator(".transit-board").getAttribute("aria-label"), "CTA station arrivals");
-	assert.equal(await map.locator('.rail-station[aria-pressed="true"]').count(), 1);
+	await map.getByRole("searchbox").fill("Kimball");
+	await map.getByRole("group", { name: "Matching stations" }).getByRole("button", { name: "Kimball" }).click();
+	assert.match(await map.locator(".rail-sheet-heading h3").innerText(), /Kimball/);
+	if (await map.locator(".transit-board").count()) await page.waitForFunction(() => document.querySelector(".rail-network .transit-board")?.getAttribute("data-state") !== "loading", null, { timeout:25_000 });
+	const stationFocus = await map.locator('.rail-station[aria-pressed="true"]').evaluate((element) => ({ outline:getComputedStyle(element).outlineStyle, width:element.querySelector(".rail-stop-dot").getBoundingClientRect().width }));
+	assert.equal(stationFocus.outline, "none", "SVG stations have no scaled native focus ring");
+	assert.ok(stationFocus.width <= 12, "selected station marker stays screen-sized");
+	await map.getByRole("button", { name: "Close map details" }).click();
 	await map.getByRole("combobox", { name: "Choose a CTA line" }).selectOption("all");
-	await map.getByRole("searchbox", { name: "Search CTA stations" }).fill("Clark/Lake");
+	await map.getByRole("searchbox").fill("Clark");
+	await map.getByRole("group", { name: "Matching stations" }).getByRole("button").first().press("Escape");
+	assert.equal(await map.getByRole("group", { name: "Matching stations" }).count(), 0);
+	await map.getByRole("searchbox").fill("Clark/Lake");
 	await map.getByRole("group", { name: "Matching stations" }).getByRole("button", { name: "Clark/Lake" }).click();
 	assert.ok(await map.locator('.rail-projects a[href$="offline-sync-engine/"]').count());
-	await map.getByRole("button", { name: "The Loop", exact: true }).click();
+	await capture(page, "network-station");
+	await map.getByRole("button", { name: "Close map details" }).click();
+	await map.getByRole("button", { name: "Loop", exact:true }).click();
 	await page.waitForTimeout(400);
-	assert.ok(await map.locator(".rail-station text").count() > 1);
-	await map.evaluate((element) => element.scrollIntoView({ block: "start" }));
+	assert.equal(await map.getByRole("button", { name: "Loop", exact:true }).getAttribute("aria-pressed"), "true");
+	assert.ok(await map.locator(".rail-station text").count() <= 1, "zoom does not bring back label clutter");
 	await capture(page, "network-loop");
-	await map.getByRole("button", { name: "Full network", exact: true }).click();
-	await map.locator(".rail-more > summary").click();
-	for (const size of [{ width: 1280, height: 600 }, { width: 820, height: 1180 }, { width: 390, height: 844 }]) {
+	await map.getByRole("button", { name: "Network", exact:true }).click();
+	for (const size of [{ width:1920,height:1080 }, { width:1280,height:600 }, { width:820,height:1180 }, { width:390,height:844 }, { width:320,height:740 }]) {
 		await page.setViewportSize(size);
-		await map.evaluate((element) => element.scrollIntoView({ block: "start" }));
-		await page.waitForTimeout(400);
-		assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
-		const controls = await map.locator("button,select,input").evaluateAll((elements) => elements.filter((e) => e.getBoundingClientRect().height > 0).map((e) => e.getBoundingClientRect().height));
-		assert.ok(controls.every((height) => height >= 44), "visible controls have 44px targets");
-		const clutter = await map.locator(".rail-live-train").evaluateAll((elements) => elements.map((element) => { const r = element.getBoundingClientRect(); return { x:r.x+r.width/2, y:r.y+r.height/2 }; }));
-		for (let i=0;i<clutter.length;i++) for(let k=i+1;k<clutter.length;k++) assert.ok(Math.hypot(clutter[i].x-clutter[k].x,clutter[i].y-clutter[k].y)>=35, "overview sprites do not overlap");
-		const coveredLabels = await map.locator(".rail-stations").evaluate((group) => {
-			const dots = [...group.querySelectorAll(".rail-stop-dot")].filter((dot) => Number(getComputedStyle(dot).opacity) > 0).map((dot) => dot.getBoundingClientRect());
-			return [...group.querySelectorAll("text")].filter((label) => {
-				const r = label.getBoundingClientRect();
-				return dots.some((dot) => r.left < dot.right && r.right > dot.left && r.top < dot.bottom && r.bottom > dot.top);
-			}).map((label) => label.textContent);
+		await map.evaluate((element) => element.scrollIntoView({ block:"start" }));
+		await page.waitForTimeout(500);
+		const geometry = await map.evaluate((element) => {
+			const r=element.getBoundingClientRect(), toolbar=element.querySelector(".rail-topbar").getBoundingClientRect(), header=document.querySelector(".concept-bar").getBoundingClientRect();
+			return { height:r.height, top:r.top, toolbar:toolbar.top, header:header.bottom, overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth };
 		});
-		assert.deepEqual(coveredLabels, [], "station dots never cover map labels");
+		assert.equal(geometry.height,size.height,"network fills the screen");
+		assert.ok(Math.abs(geometry.top)<=1 && geometry.toolbar>=geometry.header && geometry.overflow<=0,"full-screen controls clear the real header without overflow");
+		const controls = await map.locator("button,select,input").evaluateAll((elements) => elements.filter((e) => e.getBoundingClientRect().height>0).map((e) => e.getBoundingClientRect().height));
+		assert.ok(controls.every((height)=>height>=44));
+		const clutter = await map.locator(".rail-live-train").evaluateAll((elements)=>elements.map((e)=>{const r=e.getBoundingClientRect();return {x:r.x+65,y:r.y+65};}));
+		for(let i=0;i<clutter.length;i++)for(let k=i+1;k<clutter.length;k++)assert.ok(Math.hypot(clutter[i].x-clutter[k].x,clutter[i].y-clutter[k].y)>=35);
 		await capture(page, `network-${size.width}x${size.height}`);
 	}
-	await page.setViewportSize({ width: 1440, height: 900 });
-	await map.getByRole("link", { name: "Back to the scenic route ↑" }).click();
-	assert.ok(await page.locator("#view-atlas").count());
-	await page.evaluate(() => window.scrollTo(0, 0));
+	await page.route("**/disruptions",(route)=>route.fulfill({ headers:{"access-control-allow-origin":baseUrl.origin},contentType:"application/json",body:JSON.stringify({available:true,as_of:new Date().toISOString(),alerts:[{id:"1",headline:"Fixture station closure",description:"Use the adjacent station.",url:"https://www.transitchicago.com/alerts/"}]}) }));
+	await map.getByRole("button",{name:"Alerts",exact:true}).click();
+	await map.getByText("Fixture station closure",{exact:true}).waitFor();
+	await map.getByText("Fixture station closure",{exact:true}).click();
+	assert.ok(await map.getByText("Use the adjacent station.").isVisible());
+	await map.getByRole("button",{name:"Close map details"}).press("Escape");
+	await page.route("**/ask-transit",(route)=>route.fulfill({headers:{"access-control-allow-origin":baseUrl.origin},contentType:"application/json",body:JSON.stringify({answer:"Blue Line: 12 trains reporting positions.",evidence:[{id:"r1",source:"https://www.transitchicago.com/traintracker/",as_of:new Date().toISOString()}]})}));
+	await map.getByRole("button",{name:"Ask CTA",exact:true}).click();
+	await map.getByRole("textbox",{name:"Your question"}).fill("Where are Blue Line trains?");
+	await map.locator(".transit-guide form").getByRole("button",{name:"Ask CTA",exact:true}).click();
+	await map.getByText("Blue Line: 12 trains reporting positions.",{exact:true}).waitFor();
+	assert.ok(await map.getByRole("link",{name:"CTA source ↗"}).isVisible());
+	await capture(page,"network-guide-phone");
+	await map.getByRole("button",{name:"Close map details"}).click();
+	await page.setViewportSize({width:1440,height:900});
+	await map.getByRole("link",{name:"Back to the scenic route ↑"}).click();
+	await page.evaluate(()=>window.scrollTo(0,0));
 }
 
 async function checkLiveUpdates(browser) {
@@ -190,15 +204,15 @@ async function checkLiveUpdates(browser) {
 		requests++;
 		const train = { id: "blue-123", route: "blue", lat: requests === 1 ? 41.901 : requests === 2 ? 41.902 : 41.9033, lon: -87.6643, heading: 180, destination: "Forest Park", nextStation: "Washington", nextStationId: "40370", isDelayed: false };
 		await route.fulfill({ headers: { "access-control-allow-origin": baseUrl.origin }, contentType: "application/json", body: JSON.stringify({ available: requests !== 4,
-			trains: requests === 6 ? [] : [train], as_of: new Date(Date.now() + (requests === 7 ? 180_000 : requests === 5 ? -180_000 : 0)).toISOString() }) });
+			trains: requests === 6 ? [] : [train], as_of: new Date(await page.evaluate(() => Date.now()) + (requests === 7 ? 180_000 : requests === 5 ? -180_000 : 0)).toISOString() }) });
 	});
 	await page.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
 	await page.waitForSelector(".rail-network");
-	if (!(await page.locator(".transit-board").count())) { await page.close(); return; }
+	await page.waitForFunction(() => document.querySelector(".rail-feed-status")?.getAttribute("data-state") !== "loading");
+	if (!requests) { await page.close(); return; }
 	await page.locator('.rail-network .rail-feed-status[data-state="live"]').waitFor();
 	assert.equal(requests, 1, "camera and station changes do not duplicate the positions poll");
-	await page.locator(".rail-more > summary").click();
-	assert.match(await page.locator('.rail-network .rail-service').innerText(), /Purple Express/, "express status is distinguished from local Purple service");
+
 	assert.equal(await page.locator('.rail-live-train[data-train="blue-123"]').count(), 1);
 	const marker = page.locator('.rail-network .rail-live-train').first();
 	const firstPosition = await marker.getAttribute("transform");
@@ -302,7 +316,7 @@ try {
 		assert.equal(new URL(page.url()).hash, "#atlas");
 		await page.locator(".skip-ride").click();
 		await page.waitForFunction(() => window.scrollY > 1000);
-		assert.ok(await page.locator(".lakefront").count(), "Skip the ride reaches the end of the Atlas");
+		assert.ok(await page.locator(".rail-network").evaluate((element) => Math.abs(element.getBoundingClientRect().top) <= 1), "Skip the ride reaches the full-screen network ending");
 		await page.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
 		await page.waitForSelector("#view-atlas");
 
@@ -323,6 +337,16 @@ try {
 		await landmark.focus();
 		await landmark.press("Enter");
 		await page.waitForFunction(() => document.querySelector(".bld-selected") !== null);
+		assert.equal(await landmark.evaluate((element)=>getComputedStyle(element).outlineStyle),"none","landmark focus has no scaled native ring");
+		assert.equal(await page.locator(".bld-selected").evaluate((element)=>getComputedStyle(element).filter),"none","selection cannot spill a glowing shadow");
+		assert.equal(await page.locator(".window-lights").getAttribute("clip-path"),"url(#atlas-window-mask)");
+		assert.ok(await page.locator(".window-lights").evaluate((group) => {
+			const mask=document.querySelector("#atlas-window-mask path");
+			return [...group.querySelectorAll("rect")].every((rect)=>{
+				const x=Number(rect.getAttribute("x")),y=Number(rect.getAttribute("y")),w=Number(rect.getAttribute("width")),h=Number(rect.getAttribute("height"));
+				return [[x,y],[x+w,y],[x,y+h],[x+w,y+h]].every(([a,b])=>mask.isPointInFill(new DOMPoint(a,b)));
+			});
+		}),"every window fits an authored building silhouette");
 		assert.match(await page.locator(".ride-overlay .chi-card h3").innerText(), /Willis Tower/);
 		await page.waitForTimeout(700);
 		const selectedCamera = await page.locator(".chi-map.riding").evaluate((element) => {
@@ -340,6 +364,16 @@ try {
 		await page.waitForFunction(() => document.querySelector(".bld-selected") === null);
 		await landmark.press("Enter");
 		await page.waitForFunction(() => document.querySelector(".bld-selected") !== null);
+		assert.equal(await landmark.evaluate((element)=>getComputedStyle(element).outlineStyle),"none","landmark focus has no scaled native ring");
+		assert.equal(await page.locator(".bld-selected").evaluate((element)=>getComputedStyle(element).filter),"none","selection cannot spill a glowing shadow");
+		assert.equal(await page.locator(".window-lights").getAttribute("clip-path"),"url(#atlas-window-mask)");
+		assert.ok(await page.locator(".window-lights").evaluate((group) => {
+			const mask=document.querySelector("#atlas-window-mask path");
+			return [...group.querySelectorAll("rect")].every((rect)=>{
+				const x=Number(rect.getAttribute("x")),y=Number(rect.getAttribute("y")),w=Number(rect.getAttribute("width")),h=Number(rect.getAttribute("height"));
+				return [[x,y],[x+w,y],[x,y+h],[x+w,y+h]].every(([a,b])=>mask.isPointInFill(new DOMPoint(a,b)));
+			});
+		}),"every window fits an authored building silhouette");
 		await page.mouse.wheel(0, 80);
 		await page.waitForFunction(() => document.querySelector(".bld-selected") === null);
 
@@ -445,6 +479,11 @@ try {
 			page.getByRole("link", { name: "Inspection reporting that survives dead zones" }).click(),
 		]);
 		assert.equal(await page.locator("h1").innerText(), "Inspection reporting that survives dead zones");
+		await capture(page,"project-detail-desktop");
+		await page.setViewportSize({width:390,height:844});
+		assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),"project details fit phone width");
+		await capture(page,"project-detail-phone");
+		await page.setViewportSize({width:1440,height:900});
 		await Promise.all([
 			page.waitForURL(/\/portfolio\/?$/),
 			page.locator('.detail-head a[href="/portfolio/"]').click(),
@@ -463,6 +502,19 @@ try {
 			"none",
 			"phone Dispatch keeps the decorative star clear of the headline",
 		);
+
+		for (const size of [{width:1440,height:900},{width:390,height:844}]) {
+			await page.setViewportSize(size);
+			for (const section of ["f1-work","f1-about","f1-chicago","f1-landmarks","f1-ask"]) {
+				const heading=page.locator(`#${section}`);
+				if (!(await heading.count())) continue;
+				await heading.evaluate((element)=>element.closest("section").scrollIntoView({block:"start"}));
+				assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth));
+				await capture(page,`dispatch-${section}-${size.width}`);
+			}
+			await page.locator(".site-foot").scrollIntoViewIfNeeded();
+			await capture(page,`dispatch-footer-${size.width}`);
+		}
 
 		const touchContext = await browser.newContext({
 			viewport: { width: 390, height: 844 },
@@ -525,6 +577,17 @@ try {
 			if (closingMapVisible) break;
 		}
 		assert.ok(closingMapVisible, "phone can scroll out of the terminal to the closing network");
+		await touchPage.locator(".rail-network").evaluate((element)=>element.scrollIntoView({block:"start"}));
+		await touchPage.locator('.rail-network[data-ready="true"]').waitFor();
+		const beforePan = await touchPage.locator(".rail-map-svg").getAttribute("viewBox");
+		const panOrigin = await touchPage.locator(".rail-map-svg").evaluate((svg)=>{const r=svg.getBoundingClientRect();return {x:r.x+65,y:r.y+65};});
+		const scrollBeforePan=await touchPage.evaluate(()=>scrollY);
+		await touchSession.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[{id:2,x:panOrigin.x,y:panOrigin.y}]});
+		await touchSession.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[{id:2,x:panOrigin.x-45,y:panOrigin.y-55}]});
+		await touchSession.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
+		await touchPage.waitForTimeout(100);
+		assert.notEqual(await touchPage.locator(".rail-map-svg").getAttribute("viewBox"),beforePan,"full-screen map pans with a touch drag");
+		assert.equal(await touchPage.evaluate(()=>scrollY),scrollBeforePan,"map drag does not move the page");
 		await capture(touchPage, "network-end-phone");
 		await touchContext.close();
 

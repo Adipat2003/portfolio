@@ -159,10 +159,10 @@ site.
 
 ## CTA rail network
 
-Atlas opens with the scenic portfolio ride, followed by one complete rail
-network from CTA's published GTFS package. Route
-filters, station selection, arrivals, service context and real train positions
-share the Node proxy; the static network stays available when a feed fails.
+Atlas opens with the scenic portfolio ride, followed by a full-screen, read-only rail
+network from CTA's published GTFS package. Station labels and details appear on
+selection; official disruptions and a sourced transit guide open on demand.
+Route filters, arrivals and real train positions share the Node proxy; the static network stays available when a feed fails.
 Project connections are editorial navigation, not work-location claims.
 
 Regenerate the network from an official ZIP kept outside the repository:
@@ -177,4 +177,8 @@ archive SHA, projection, service dates and simplification method live in the
 JSON metadata. The converter uses only Python's standard library. `/positions`
 polls CTA server-side with a 15-second cache, `/transit-alerts` caches official
 route status for 60 seconds, and station arrivals have their own cache. All
-three coalesce concurrent cold requests. Never commit the source ZIP or keys.
+three coalesce concurrent cold requests. `/disruptions` caches active detailed
+CTA notices for 60 seconds. `/ask-transit` uses the existing model connection to
+select current evidence records and returns their exact text with source links
+and check times. It stores no visitor reports or question history. Never commit
+the source ZIP or keys.

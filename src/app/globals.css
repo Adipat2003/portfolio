@@ -120,7 +120,6 @@ section{padding:76px 0}
 .atlas .card.pending{border-color:var(--night-rule)}
 .atlas :focus-visible{outline-color:var(--signal)}
 .atlas-hero{position:relative;min-height:clamp(520px,92vh,980px);overflow:hidden;border-bottom:1px solid var(--night-rule);background:linear-gradient(180deg,var(--atlas-sky-1),var(--atlas-sky-2) 60%,var(--atlas-sky-3))}
-.atlas-hero::before{content:"";position:absolute;left:0;right:0;bottom:0;height:46%;z-index:1;pointer-events:none;background:radial-gradient(90% 70% at 50% 100%,rgba(232,176,75,.16),transparent 72%)}
 .atlas-scene{position:absolute;inset:0}
 .atlas-hero .chi-explorer{position:absolute;inset:0}
 .atlas-hero .chi-explorer svg.chi-map{position:absolute;left:50%;bottom:-1px;translate:-50% 0;transform:scale(var(--zoom,1));transform-origin:var(--fox,50%) var(--foy,50%);transition:transform .9s cubic-bezier(.22,.61,.36,1);width:100%;max-width:2200px;height:auto}
@@ -292,8 +291,6 @@ section{padding:76px 0}
 .swipe-cue{display:none}
 .atlas-hero .chi-card{margin:0;max-width:400px;background:rgba(21,26,40,.86);border-color:var(--night-rule);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .atlas-hero .chi-hint{font-size:13px;opacity:.85}
-.cursor-light{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(320px circle at var(--mx,50%) var(--my,32%),rgba(232,176,75,.13),transparent 72%);opacity:0;transition:opacity .45s}
-.atlas-scene:hover .cursor-light{opacity:1}
 .atlas-copy{position:relative;padding:40px 0 0}
 /* The sky tells the truth: condition-driven overlays from the baked snapshot.
    Decorative only; the badge carries the facts. */
@@ -361,15 +358,12 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 .chi-landmarks dd{margin:3px 0 0;font-size:14px;color:var(--ink-soft)}
 .chi-map g[role="button"]{cursor:pointer;transition:filter .35s ease}
 .chi-map g[role="button"]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.chi-map g[role="button"]:hover,.chi-map g[role="button"]:focus-visible{filter:brightness(1.22) drop-shadow(0 0 5px rgba(232,176,75,.45))}
+.chi-map g[role="button"]:hover,.chi-map g[role="button"]:focus-visible{filter:none}
 /* A selected landmark reads as opened: warm edge, steady glow. */
-.bld-selected{stroke:var(--signal) !important;stroke-width:2 !important;filter:drop-shadow(0 0 10px rgba(232,176,75,.55)) brightness(1.28)}
+.bld-selected{stroke:var(--signal) !important;stroke-width:2 !important;filter:none}
 .chi-map .station circle{transition:filter .25s ease}
-.chi-map .station:hover circle{filter:drop-shadow(0 0 6px rgba(233,230,223,.85)) brightness(1.3)}
-@keyframes window-twinkle{0%,100%{opacity:.75}50%{opacity:1}}
-.chi-map .window-lights rect{animation:window-twinkle 7s ease-in-out infinite}
-.chi-map .window-lights rect:nth-child(3n){animation-delay:2.3s}
-.chi-map .window-lights rect:nth-child(3n+1){animation-delay:4.6s}
+.chi-map .station:hover circle{filter:none}
+.chi-map .window-lights rect{opacity:.82}
 /* 'L' trains: decorative, pointer-transparent, and gone under reduced motion. */
 .chi-map .train{pointer-events:none}
 .train-body{fill:#141926;stroke:#2a3348;stroke-width:.8}
@@ -391,7 +385,7 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 .mosaic-dim{opacity:.26}
 .routes-layer{transition:opacity .45s ease}
 .chi-map.figure-focus .routes-layer{opacity:.3}
-.station-active circle{stroke-width:6;filter:drop-shadow(0 0 14px rgba(233,230,223,.95))}
+.station-active circle{stroke-width:6;filter:none}
 @media (min-width:861px){
   .focus-scrim{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(circle at var(--fox,50%) var(--foy,50%),transparent 0 13%,rgba(13,15,22,.42) 36%)}
 }
@@ -546,121 +540,124 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 .ride-stage .atlas-scroll svg.chi-map.riding{left:0;translate:none;transform-origin:0 0}
 .atlas-building{cursor:pointer}
 .atlas-building path{transition:stroke .2s ease,filter .2s ease}
-.selected-building path{stroke:var(--signal);filter:brightness(1.2)}
-.chi-map g[role="button"]:focus-visible{outline:none}
-.chi-map g[role="button"]:focus-visible path,.chi-map g[role="button"]:focus-visible circle{stroke:var(--signal);stroke-width:3}
+.selected-building .building-body{stroke:var(--signal);filter:none}
+.chi-map g[role="button"]:focus,.chi-map g[role="button"]:focus-visible{outline:none !important}
+.chi-map .atlas-building:focus-visible .building-body,.chi-map .station:focus-visible circle{stroke:var(--signal);stroke-width:3}
 .cta-pink{background:#e27ea6;color:#0b0e15}
 
-/* A quiet transit chart, with the departure board kept outside the map. */
-.rail-network{--rail-ink:#f1eee5;--rail-soft:#b5c3d1;padding:64px 0 28px;background:#0c1420;color:var(--rail-ink);scroll-margin-top:76px;border-top:1px solid #2b3d50}
-.rail-heading{display:flex;align-items:center;justify-content:space-between;gap:28px;margin-bottom:28px}
-.rail-heading h2{font-size:clamp(34px,4vw,52px);line-height:1.1;margin:10px 0 12px;letter-spacing:-.025em}
-.rail-heading p:not(.kicker){font-size:15px;color:var(--rail-soft);margin:0;line-height:1.6}
-.rail-heading .kicker{color:#a7cbe0;font-size:11px;letter-spacing:.13em}
-.rail-feed-status{flex:0 0 auto;font:12px var(--mono);color:#cbe6d6}
-.rail-status-dot{display:inline-block;width:6px;height:6px;background:#8fd4b0;border-radius:50%;margin-right:8px}
-.rail-feed-status[data-state="offline"] .rail-status-dot{background:#edbd69}
-.rail-feed-status small{display:block;margin:8px 0 0 14px;color:var(--rail-soft);font:11px var(--sans)}
-.rail-layout{display:grid;grid-template-columns:minmax(0,1fr) 292px;gap:24px;align-items:start}
-.rail-map-pane{min-width:0;border:1px solid #31465b;border-radius:18px;overflow:hidden;background:#111e2c;box-shadow:0 16px 60px #0002}
-.rail-network button,.rail-network select,.rail-network input{font:14px var(--sans);color:var(--rail-ink);background:#152335;border:1px solid #64829b;border-radius:9px;min-height:44px}
-.rail-network button{cursor:pointer;padding:8px 12px;transition:background .18s,border-color .18s,transform .18s}
-.rail-network button:hover{background:#253c50;border-color:#9bbfd7}
-.rail-network button:active{transform:scale(.97)}
-.rail-network select,.rail-network input{width:100%;padding:10px 12px;min-width:0}
-.rail-network input::placeholder{color:#b5c3d1}
-.rail-control-bar{display:grid;grid-template-columns:190px minmax(0,1fr);gap:12px;padding:14px;background:#101b29;border-bottom:1px solid #2a3e51;position:relative;z-index:3}
-.rail-line-picker{display:flex;align-items:center;gap:10px;color:#b5c3d1;font:11px var(--mono)}
-.rail-line-picker select{background:#192c3e;border-color:transparent;font-size:13px}
-.rail-search-control{position:relative;min-width:0}
-.rail-search-control input{background:#0d1826;border-color:transparent;padding-left:14px}
-.rail-search-results{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:8;background:#152537;border:1px solid #526d85;border-radius:12px;padding:6px;box-shadow:0 12px 30px #0008;display:grid;gap:3px}
-.rail-search-results button{display:flex;align-items:center;justify-content:space-between;text-align:left;border-color:transparent;background:transparent}
-.rail-search-results span{color:#edbd69}
-.rail-search-results p{margin:12px;font-size:13px;color:var(--rail-soft)}
-.rail-map-canvas{position:relative;isolation:isolate;background:radial-gradient(ellipse at 70% 35%,#1b3042,#101d2b 75%)}
-.rail-map-svg{display:block;width:100%;height:620px;max-height:76vh;touch-action:pan-y pinch-zoom;cursor:grab;user-select:none}
+/* The read-only network is the full-screen ending of the scenic ride. */
+.rail-network{--rail-ink:#f1eee5;--rail-soft:#b6c4d0;--rail-rule:#34485a;--rail-ease:cubic-bezier(.23,1,.32,1);position:relative;height:100svh;height:100dvh;min-height:480px;overflow:clip;background:#101c29;color:var(--rail-ink);scroll-margin-top:0}
+.rail-map-pane{position:absolute;inset:calc(var(--bar-h,64px) + 72px) 0 68px}
+.rail-map-svg{display:block;width:100%;height:100%;touch-action:pan-y pinch-zoom;cursor:grab;user-select:none}
+.rail-network[data-ready="true"] .rail-map-svg{touch-action:pinch-zoom}
 .rail-map-svg:active{cursor:grabbing}
+.rail-network button,.rail-network select,.rail-network input,.rail-network textarea,.rail-back{font:14px var(--sans);color:var(--rail-ink);background:#172737;border:1px solid #64829b;border-radius:10px;min-height:44px}
+.rail-network button{padding:10px 14px;cursor:pointer;transition:background 160ms ease,transform 160ms var(--rail-ease)}
+.rail-network button:active{transform:scale(.97)}
+.rail-network button:disabled{opacity:.55;cursor:default}
+.rail-network input,.rail-network select,.rail-network textarea{width:100%;min-width:0;padding:10px 12px;font-size:16px}
+.rail-network input::placeholder,.rail-network textarea::placeholder{color:var(--rail-soft)}
+.rail-topbar{position:absolute;z-index:4;top:calc(var(--bar-h,64px) + 16px);left:24px;right:24px;display:flex;gap:14px;align-items:center;pointer-events:none}
+.rail-topbar>*{pointer-events:auto}
+.rail-back{display:grid;place-items:center;width:44px;flex:0 0 44px;text-decoration:none;font-size:20px;background:#142231}
+.rail-topbar h2{font:600 18px var(--sans);letter-spacing:-.025em;white-space:nowrap;margin:0}
+.rail-control-bar{display:grid;grid-template-columns:130px minmax(0,1fr);gap:8px;flex:1;max-width:460px;min-width:0}
+.rail-line-picker{position:relative;display:flex;min-width:0}
+.rail-line-picker select{padding-left:28px;font-size:14px}
+.rail-line-swatch{position:absolute;left:12px;top:18px;width:7px;height:7px;border-radius:50%;z-index:1;pointer-events:none;background:conic-gradient(#f25b70,#36b9ee,#48c17b,#ff814d,#b49be4,#ed9fc5,#f9e300,#f25b70)}
+.rail-search-control{position:relative;min-width:0}
+.rail-search-control>svg{position:absolute;width:17px;height:17px;left:12px;top:14px;fill:none;stroke:var(--rail-soft);stroke-width:1.5;pointer-events:none}
+.rail-search-control input{padding-left:36px;background:#142231}
+.rail-search-results{position:absolute;left:0;right:0;top:calc(100% + 8px);padding:6px;z-index:6;background:#172737;border:1px solid #64829b;border-radius:12px;box-shadow:0 12px 32px #0007;display:grid;gap:4px}
+.rail-search-results button{display:flex;justify-content:space-between;align-items:center;gap:6px;text-align:left;border-color:transparent;background:none;font-size:13px}
+.rail-search-results p{margin:10px;font-size:13px}
+.rail-top-actions{margin-left:auto;display:flex;gap:8px}
+.rail-network .rail-ask-button{color:#151817;background:#edc781;border-color:#edc781;font-weight:600}
 .rail-geography{pointer-events:none}
-.rail-geography path{fill:#18364b;stroke:#35566d;stroke-width:.3}
-.rail-geography text{font:5px var(--mono);letter-spacing:1.4px;fill:#88b1c7}
-.rail-paths path{transition:opacity .25s ease;opacity:.9}
-.rail-paths .rail-muted{opacity:.08}
+.rail-geography path{fill:#183347;stroke:#35566d;stroke-width:.3}
+.rail-paths path{opacity:.9;transition:opacity 160ms ease}
+.rail-paths .rail-muted{opacity:.1}
 .rail-station{cursor:pointer}
-.rail-stop-dot{fill:#102030;stroke:#9ab3c6;stroke-width:1;vector-effect:non-scaling-stroke;transition:opacity .2s,fill .2s}
-.rail-station .rail-station-hit{fill:transparent;stroke:none}
+.rail-stop-dot{fill:#102030;stroke:#9ab3c6;stroke-width:1;vector-effect:non-scaling-stroke}
+.rail-station-hit{fill:transparent;stroke:none}
 .rail-overview .rail-minor:not(.rail-selected) .rail-stop-dot{opacity:0}
-.rail-station:hover .rail-stop-dot,.rail-station:focus-visible .rail-stop-dot{opacity:1;fill:#d3e5f1}
 .rail-station.rail-selected .rail-stop-dot{fill:#f6ce86;stroke:#101a27;stroke-width:2}
-.rail-station text{font-family:var(--sans);font-weight:550;fill:#d5e4ed;paint-order:stroke;stroke:#111e2c;stroke-width:3;stroke-linejoin:round;pointer-events:none}
-.rail-station.rail-selected text{fill:#ffe0a6;font-weight:700}
+.rail-station text{font-family:var(--sans);font-weight:600;fill:#ffe0a6;paint-order:stroke;stroke:#101c29;stroke-width:3;stroke-linejoin:round;pointer-events:none;vector-effect:non-scaling-stroke}
 .rail-live-train{pointer-events:none}
-.sprite-shadow{fill:#000;opacity:.35;filter:blur(1px)}
+.sprite-shadow{fill:#000;opacity:.25}
 .sprite-car{fill:#d7e4ed;stroke:#162c40;stroke-width:1}
 .sprite-roof{fill:none;stroke-width:3;stroke-linecap:round}
 .sprite-window{fill:#e0bc7d;stroke:none}
 .sprite-track{fill:none;stroke:#d7e4ed;stroke-width:1}
 .sprite-lamp{fill:#ffd890;stroke:none}
-.rail-map-tools{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid #2b4053;background:#101b29}
-.rail-network .rail-map-tools button{background:#0e1928ee;border-color:#466079;font-size:12px;box-shadow:0 3px 12px #0003}
-.rail-map-caption{display:flex;justify-content:space-between;gap:10px;padding:14px 16px;border-top:1px solid #2b4053;font:11px var(--mono);color:#a9c0d3}
-.rail-map-caption span:first-child{color:#f6d490}
-.rail-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 16px;padding:16px 12px;background:#101b29}
-.rail-legend span{display:flex;align-items:center;gap:6px;font-size:11px;color:#c4d4e1}
-.rail-legend i{display:block;width:12px;height:3px;border-radius:2px}
-.rail-station-panel{min-width:0;display:grid;gap:0;border:1px solid #31465b;border-radius:16px;padding:20px;background:linear-gradient(145deg,#1b2b3d,#111d2c)}
-.rail-selected-station .kicker{font:10px var(--mono);color:#e7c18a;letter-spacing:.12em}
-.rail-selected-station h3{font:600 24px var(--sans);margin:10px 0}
-.rail-selected-station>p{font-size:12px;color:#b5c3d1;line-height:1.7;margin:0}
-.rail-station-panel .transit-board{padding:16px 0 4px;background:none;border:0}
+.rail-map-tools{position:absolute;left:24px;bottom:20px;display:flex;gap:12px;align-items:center;z-index:2}
+.rail-view-switch,.rail-zoom{display:flex;gap:2px;padding:3px;background:#111e2d;border:1px solid var(--rail-rule);border-radius:12px}
+.rail-network .rail-map-tools button{border-color:transparent;background:none;color:var(--rail-soft);font-size:12px}
+.rail-network .rail-map-tools button[aria-pressed="true"]{background:#263a4d;color:#fff;border-color:#64829b}
+.rail-network .rail-zoom button{width:44px;padding:0;font-size:21px}
+.rail-map-credit{position:absolute;right:24px;bottom:24px;display:flex;align-items:center;gap:16px;font-size:11px;color:var(--rail-soft)}
+.rail-network .rail-map-credit button{font-size:11px;background:none;border:0;padding:0 8px}
+.rail-feed-status{display:inline-flex;align-items:center;gap:7px}
+.rail-status-dot{width:5px;height:5px;border-radius:50%;background:#8fd4b0}
+.rail-feed-status[data-state="offline"] .rail-status-dot{background:#edbd69}
+.rail-sheet{position:absolute;z-index:3;right:24px;top:calc(var(--bar-h,64px) + 80px);bottom:88px;width:360px;max-width:calc(100% - 48px);overflow:auto;overscroll-behavior:contain;padding:22px;background:#172635;border:1px solid #526b80;border-radius:18px;box-shadow:0 20px 70px #0005}
+.rail-sheet-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.rail-sheet-heading h3{font:600 22px/1.2 var(--sans);letter-spacing:-.025em;margin:0}
+.rail-sheet-heading h3:focus{outline:none}
+.rail-sheet-heading button{flex:0 0 44px;font-size:24px;padding:0;background:none;border:0}
+.rail-station-lines,.rail-legend{display:flex;flex-wrap:wrap;gap:10px 12px}
+.rail-station-lines span,.rail-legend span{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--rail-soft)}
+.rail-station-lines i,.rail-legend i{width:6px;height:6px;border-radius:50%}
+.rail-station-panel .transit-board{padding:16px 0;background:none;border:0}
 .rail-station-panel .transit-board-heading{display:none}
-.rail-station-panel .transit-arrival{grid-template-columns:46px minmax(0,1fr) auto;gap:8px;padding:14px 0}
+.rail-station-panel .transit-arrival{grid-template-columns:48px minmax(0,1fr) auto;gap:9px;padding:16px 0}
 .rail-station-panel .transit-arrival .cta-line{font-size:11px;padding:3px 5px}
-.rail-station-panel .transit-arrival-route strong{font-size:13px}
-.rail-station-panel .transit-arrival-route span{font-size:11px;white-space:normal;line-height:1.45}
+.rail-station-panel .transit-arrival-route strong{font-size:14px;line-height:1.4}
+.rail-station-panel .transit-arrival-route span{font-size:12px;line-height:1.5;white-space:normal}
 .rail-station-panel .transit-arrival-time span:not(.arrival-quality){display:none}
-.rail-station-panel .transit-arrival-time span{font-size:9px;max-width:68px}
-.rail-station-panel .transit-arrival-time b{font-size:15px;color:#f4cf91}
-.rail-station-panel .transit-board-footer{font-size:10px;flex-wrap:wrap;row-gap:6px;padding-bottom:12px}
-.rail-station-panel .transit-board-footer .cta-credit{font-size:10px}
-.rail-more{border-top:1px solid #344b60;margin-top:12px}
-.rail-more>summary{display:flex;align-items:center;justify-content:space-between;cursor:pointer;list-style:none;padding:16px 0 0;min-height:44px;font-size:13px;color:#c7d9e7}
-.rail-more>summary::-webkit-details-marker{display:none}
-.rail-more>summary span{transition:transform .2s;color:#e7c18a;font-size:20px}
-.rail-more[open]>summary span{transform:rotate(45deg)}
-.rail-more>label{display:block;color:#b5c3d1;font:11px var(--mono);margin:22px 0 10px}
-.rail-service h4,.rail-transfers h4,.rail-projects h4{font:600 11px var(--mono);color:#e7c18a;letter-spacing:.06em;text-transform:uppercase;margin:24px 0 12px}
-.rail-service p,.rail-offline{font-size:13px;color:var(--rail-soft);line-height:1.6;margin:16px 0}
-.rail-service ul,.rail-train-list ul{list-style:none;padding:0;margin:0}
-.rail-service li{display:flex;gap:10px;justify-content:space-between;font-size:12px;line-height:1.6;padding:8px 0;border-bottom:1px solid #2c4054}
-.rail-service li span{text-align:right;color:var(--rail-soft)}
-.rail-service a,.rail-source a{color:#b5dbf1;text-underline-offset:4px;font-size:12px}
-.rail-service>a{display:inline-block;margin-top:12px}
-.rail-transfers{display:grid;gap:6px}
-.rail-projects>a{display:block;color:var(--rail-ink);font:17px/1.5 var(--serif);text-decoration:none;padding:12px 0;border-bottom:1px solid #304458}
-.rail-projects>a span{display:block;font:10px var(--mono);color:#e7c18a;margin-top:6px}
-.rail-projects small{display:block;font-size:11px;color:var(--rail-soft);line-height:1.7;margin-top:12px}
-.rail-train-list{font-size:12px;color:var(--rail-soft);margin-top:20px;border-top:1px solid #344b60}
-.rail-train-list summary{cursor:pointer;padding:14px 0;min-height:44px}
-.rail-train-list ul{max-height:240px;overflow:auto}
-.rail-train-list li{padding:10px 0;border-bottom:1px solid #2c4054}
-.rail-train-list li b,.rail-train-list li span{display:block;line-height:1.7}
-.rail-source{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px 24px;margin-top:24px;font-size:11px;color:var(--rail-soft);line-height:1.6}
-@media(max-width:1000px){.rail-layout{grid-template-columns:minmax(0,1fr) 270px;gap:16px}.rail-station-panel{padding:16px}.rail-control-bar{grid-template-columns:160px minmax(0,1fr)}}
+.rail-station-panel .transit-arrival-time span{font-size:10px;max-width:70px}
+.rail-station-panel .transit-arrival-time b{font:600 17px var(--sans);font-variant-numeric:tabular-nums;color:#f3c77f}
+.rail-station-panel .transit-board-footer{font-size:11px;flex-wrap:wrap;gap:8px}
+.rail-station-panel .transit-board-footer .cta-credit{font-size:11px}
+.rail-station-ask{width:100%;text-align:left;margin-top:16px}
+.rail-sheet p,.rail-map-info,.transit-disruptions{font-size:14px;line-height:1.65;color:var(--rail-soft)}
+.rail-sheet a{color:#c5e4f6;text-underline-offset:3px}
+.rail-sheet details{border-top:1px solid var(--rail-rule);margin-top:14px}
+.rail-sheet summary{font:500 14px/1.5 var(--sans);color:var(--rail-ink);cursor:pointer;min-height:44px;padding:14px 0}
+.rail-projects>a{display:block;font-size:14px;padding:10px 0}
+.rail-train-list ul{padding:0;list-style:none}
+.rail-train-list li{font-size:12px;padding:10px 0;border-top:1px solid var(--rail-rule)}
+.rail-train-list li span{display:block;color:var(--rail-soft)}
+.rail-panel-note{font-size:12px !important;color:var(--rail-soft)}
+.transit-guide form{display:grid;gap:10px}
+.transit-guide label{font-size:12px;color:var(--rail-soft)}
+.transit-guide textarea{resize:vertical;line-height:1.5}
+.transit-guide-prompts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.rail-network .transit-guide-prompts button{font-size:12px;padding:8px 10px;background:none}
+.transit-guide-answer p{white-space:pre-line;color:var(--rail-ink)}
+.transit-guide-answer a{display:inline-block;margin:4px 12px 8px 0;font-size:12px}
+.transit-guide-answer small{display:block;font-size:11px;line-height:1.6;color:var(--rail-soft)}
+@media(hover:hover) and (pointer:fine){.rail-network button:hover{background:#263d50}.rail-network .rail-ask-button:hover{background:#f7d798}.rail-station:hover .rail-stop-dot{opacity:1;fill:#d3e5f1}}
 @media(max-width:760px){
- .rail-network{padding:36px 0 24px}.rail-heading{display:grid;gap:18px;margin-bottom:22px}.rail-heading h2{font-size:34px;margin-bottom:10px}.rail-heading p:not(.kicker){font-size:14px;max-width:32ch}.rail-feed-status{display:flex;align-items:center;flex-wrap:wrap;font-size:11px;gap:0}.rail-feed-status small{margin:0 0 0 12px;font-size:11px}
- .rail-layout{grid-template-columns:minmax(0,1fr);gap:14px}.rail-map-pane{border-radius:16px}.rail-control-bar{grid-template-columns:130px minmax(0,1fr);gap:8px;padding:10px}.rail-line-picker{font-size:0;gap:0}.rail-line-picker select{font-size:12px;padding:10px 7px}.rail-search-control input{font-size:13px;padding:10px}
- .rail-map-svg{height:500px;max-height:64svh}.rail-map-caption{font:10px var(--sans);padding:12px;gap:6px}.rail-map-tools{justify-content:space-between;padding:10px;gap:4px}.rail-network .rail-map-tools button{font-size:11px;padding:8px 9px}.rail-legend{gap:10px 14px;padding:14px 12px}.rail-legend span{font-size:11px}
- .rail-station-panel{padding:18px 20px;border-radius:16px}.rail-selected-station h3{font-size:23px}.rail-selected-station>p{font-size:12px}.rail-station-panel .transit-arrival{grid-template-columns:48px minmax(0,1fr) auto;padding:12px 0}.rail-station-panel .transit-arrival-route strong{font-size:14px}.rail-source{font-size:10px;gap:12px}.rail-source>span{flex-basis:100%}
+ .rail-topbar{left:14px;right:14px;gap:10px;flex-wrap:wrap;top:calc(var(--bar-h,64px) + 12px)}
+ .rail-topbar h2{flex:1;font-size:16px}.rail-top-actions{gap:6px}.rail-top-actions button{font-size:12px;padding:8px 12px}
+ .rail-control-bar{order:3;flex:1 0 100%;max-width:none;grid-template-columns:122px minmax(0,1fr)}.rail-line-picker select{font-size:16px}
+ .rail-map-pane{top:calc(var(--bar-h,64px) + 126px);bottom:70px}
+ .rail-map-tools{left:14px;bottom:14px;gap:8px}.rail-map-tools button{padding:8px 10px}
+ .rail-map-credit{right:10px;bottom:18px;gap:0}.rail-map-credit .rail-feed-status{display:none}
+ .rail-sheet{left:10px;right:10px;bottom:10px;top:auto;width:auto;max-width:none;height:45svh;padding:18px 20px;border-radius:18px;max-height:calc(100svh - var(--bar-h,64px) - 134px)}
+ .rail-network:has(.rail-sheet) .rail-map-tools,.rail-network:has(.rail-sheet) .rail-map-credit{visibility:hidden}
+ .rail-sheet-heading h3{font-size:21px}.rail-guide-sheet{height:65svh}
+ #view-dispatch input[type="search"],#view-dispatch .ask-input{font-size:16px}
 }
-@media(prefers-reduced-motion:reduce){.rail-network button,.rail-paths path,.rail-stop-dot,.rail-more>summary span,.atlas-building path{transition:none}}
+@media(prefers-reduced-motion:reduce){.rail-network button,.rail-paths path{transition:none}}
 
 .chi-map g.atlas-building[role="button"]:hover,.chi-map g.atlas-building[role="button"]:focus-visible{filter:none}
 .atlas-building .bld-selected{filter:none;stroke-width:2 !important}
 
-.rail-station:focus-visible{outline:none}
+.rail-station:focus,.rail-station:focus-visible{outline:none !important}
 .rail-station:focus-visible circle:not(.rail-station-hit){stroke:#ffcf77;stroke-width:1.5}
 
-.rail-selected .rail-stop-dot{transform-box:fill-box;transform-origin:center;animation:rail-selection .3s ease-out}
-@keyframes rail-selection{from{opacity:.3;transform:scale(.65)}to{opacity:1;transform:scale(1)}}
+.rail-selected .rail-stop-dot{transform-box:fill-box;transform-origin:center;animation:rail-selection 180ms var(--rail-ease)}
+@keyframes rail-selection{from{opacity:.3;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.rail-selected .rail-stop-dot{animation:none}}
