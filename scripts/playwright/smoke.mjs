@@ -164,6 +164,14 @@ async function checkNetwork(page) {
 		assert.ok(controls.every((height) => height >= 44), "visible controls have 44px targets");
 		const clutter = await map.locator(".rail-live-train").evaluateAll((elements) => elements.map((element) => { const r = element.getBoundingClientRect(); return { x:r.x+r.width/2, y:r.y+r.height/2 }; }));
 		for (let i=0;i<clutter.length;i++) for(let k=i+1;k<clutter.length;k++) assert.ok(Math.hypot(clutter[i].x-clutter[k].x,clutter[i].y-clutter[k].y)>=35, "overview sprites do not overlap");
+		const coveredLabels = await map.locator(".rail-stations").evaluate((group) => {
+			const dots = [...group.querySelectorAll(".rail-stop-dot")].filter((dot) => Number(getComputedStyle(dot).opacity) > 0).map((dot) => dot.getBoundingClientRect());
+			return [...group.querySelectorAll("text")].filter((label) => {
+				const r = label.getBoundingClientRect();
+				return dots.some((dot) => r.left < dot.right && r.right > dot.left && r.top < dot.bottom && r.bottom > dot.top);
+			}).map((label) => label.textContent);
+		});
+		assert.deepEqual(coveredLabels, [], "station dots never cover map labels");
 		await capture(page, `network-${size.width}x${size.height}`);
 	}
 	await page.setViewportSize({ width: 1440, height: 900 });
