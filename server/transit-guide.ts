@@ -15,7 +15,7 @@ export function createTransitGuide(opts: {
   return async (question: string, selectedStation?: string) => {
     const deadline = Date.now() + 45_000;
     const q = normalize(question);
-    const names = opts.stations.filter((station) => q.includes(normalize(station.name.replace(/ \(.*\)$/, ""))) && !(station.name.startsWith("Chicago (") && /\bin chicago\b/.test(q))).sort((a, b) => b.name.length - a.name.length);
+    const names = opts.stations.filter((station) => q.replace(/ /g, "").includes(normalize(station.name.replace(/ \(.*\)$/, "")).replace(/ /g, "")) && !(station.name.startsWith("Chicago (") && /\bin chicago\b/.test(q))).sort((a, b) => b.name.length - a.name.length);
     const chosen = opts.stations.find((entry) => entry.id === selectedStation);
     const sameName = names.filter((entry) => normalize(entry.name.replace(/ \(.*\)$/, "")) === normalize(names[0]?.name.replace(/ \(.*\)$/, "") ?? ""));
     const routeNames = Object.entries(LINES).filter(([, name]) => new RegExp(`\\b${name.toLowerCase()}\\b`).test(q)).map(([id]) => id);

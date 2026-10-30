@@ -138,10 +138,13 @@ selection has a 45-second server ceiling and 55-second browser ceiling; portfoli
 polish retains its 60-second ceiling. Raw reasoning is never rendered. Provider
 reference: https://docs.nvidia.com/nim/large-language-models/latest/get-started/advanced/get-started-glm-5.3-flash.html.
 
-The live transit selector defaults to `meta/llama-3.1-8b-instruct` on the same
+The live transit selector defaults to `nvidia/nemotron-3.5-lightning-30b-a3b` on the same
 NVIDIA endpoint and existing key. `NVIDIA_TRANSIT_MODEL` can override that choice
 independently of the portfolio-polish model. The transit model only selects
 evidence IDs; exact-record rendering and validation remain the same. The
 public health response identifies both non-secret model IDs. This avoids using
 a large reasoning model for a small evidence-selection task. Model reference:
-https://docs.api.nvidia.com/nim/reference/meta-llama-3_1-8b.
+https://build.nvidia.com/nvidia/nemotron-3.5-lightning-30b-a3b/modelcard.
+Thinking is disabled with the documented `enable_thinking: false` parameter.
+The endpoint was checked against the live `/v1/models` catalog; its unauthenticated
+inference preflight returns 401, while the retired Llama endpoint returns 410.
