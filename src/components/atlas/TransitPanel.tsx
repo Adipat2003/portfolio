@@ -45,7 +45,7 @@ export function TransitGuide({ station }: { station?: string }) {
     setQuestion(value); setBusy(true); setResult(null);
     try {
       if (!SERVICE) throw new Error("Unavailable");
-      const response = await fetch(`${SERVICE}/ask-transit`, { method: "POST", headers: { "Content-Type": "application/json" }, signal: AbortSignal.timeout(40_000), body: JSON.stringify({ question: value, ...(station ? { station } : {}) }) });
+      const response = await fetch(`${SERVICE}/ask-transit`, { method: "POST", headers: { "Content-Type": "application/json" }, signal: AbortSignal.timeout(55_000), body: JSON.stringify({ question: value, ...(station ? { station } : {}) }) });
       if (!response.ok) throw new Error("Unavailable");
       const data = await response.json();
       if (typeof data.answer !== "string" || !Array.isArray(data.evidence)) throw new Error("Invalid response");

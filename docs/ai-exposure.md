@@ -130,3 +130,10 @@ output use the grounded fallback. Each source carries its data-check timestamp.
 The rate limit is six requests per minute per IP. Nothing is submitted to CTA,
 and no visitor reports or question history are stored. Missing live data is
 reported as unavailable, never interpreted as normal service or an outage.
+
+
+GLM-5.3 requests use low reasoning effort and a 4,096-token ceiling that includes
+reasoning. Its reasoning cannot be disabled with a thinking flag. Transit
+selection has a 45-second server ceiling and 55-second browser ceiling; portfolio
+polish retains its 60-second ceiling. Raw reasoning is never rendered. Provider
+reference: https://docs.nvidia.com/nim/large-language-models/latest/get-started/advanced/get-started-glm-5.3-flash.html.

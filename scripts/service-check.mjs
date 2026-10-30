@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createCtaNetworkProxy } from "../server/dist/server/cta-network.js";
 import { clampedCamera, projectCoordinate, positionOnRoute } from "../server/dist/src/content/cta-geometry.js";
+import { modelRequestOptions } from "../server/dist/server/model-options.js";
 import { createTransitGuide } from "../server/dist/server/transit-guide.js";
 import { createCtaProxy } from "../server/dist/server/cta.js";
 import { spawn } from "node:child_process";
@@ -44,6 +45,11 @@ function rpc(method, params, id = 1) {
 }
 
 async function checkTransitGuide() {
+	const glm=modelRequestOptions("z-ai/glm-5.3-flash",350);
+	assert.equal(glm.reasoning_effort,"low");
+	assert.equal(glm.max_tokens,4096);
+	assert.equal(glm.chat_template_kwargs.clear_thinking,true);
+	assert.equal(modelRequestOptions("other-model",350).max_tokens,350);
 	const originalFetch = globalThis.fetch;
 	const now = new Date().toISOString();
 	const opts = { stations:[{id:"40380",name:"Clark/Lake",routes:["blue"]}], network:{
