@@ -126,12 +126,17 @@ export default function CtaRailMap() {
 	const labels = useMemo(() => {
 		const font = units * 12;
 		const placed = visibleTrains.map((train) => ({ x: train.point[0] - units * 11, y: train.point[1] - units * 11, w: units * 22, h: units * 22 }));
+		// Visible station dots also need clear space around their labels.
+		for (const entry of availableStations) {
+			if (routeId === "all" && box[2] >= 180 && entry.id !== selectedId && entry.routes.length === 1 && !termini.has(entry.id)) continue;
+			placed.push({ x: entry.point[0] - units * 6, y: entry.point[1] - units * 6, w: units * 12, h: units * 12 });
+		}
 		const result = new Map<string, { x: number; y: number; anchor: "start" | "end" }>();
 		const candidates = [...availableStations].sort((a, b) => Number(b.id === selectedId) - Number(a.id === selectedId) || Number(termini.has(b.id)) - Number(termini.has(a.id)));
 		for (const entry of candidates) {
 			if (entry.id !== selectedId && !termini.has(entry.id) && box[2] >= 100) continue;
 			const [x, y] = entry.point;
-			const width = entry.name.replace(/ \(.*\)$/, "").length * font * .54;
+			const width = entry.name.replace(/ \(.*\)$/, "").length * font * .62;
 			for (const side of [1, -1]) {
 				const left = side === 1 ? x + units * 15 : x - units * 15 - width;
 				const area = { x: left, y: y - font * 1.6, w: width + units * 4, h: font * 1.8 };
@@ -143,7 +148,7 @@ export default function CtaRailMap() {
 			}
 		}
 		return result;
-	}, [availableStations, selectedId, box, units, visibleTrains]);
+	}, [availableStations, selectedId, routeId, box, units, visibleTrains]);
 	useEffect(() => {
 		const svg = svgRef.current;
 		if (!svg) return;

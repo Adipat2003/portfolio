@@ -536,3 +536,8 @@ interaction pass, including phone touch scrolling, keyboard focus, reduced motio
 and the no-JavaScript view. Visual review covers desktop, tablet, short laptop
 and phone captures. The ride uses clipping rather than a scroll container so
 keyboard focus cannot shift the skyline sideways and expose a screen edge.
+
+Issue #72: overview label placement also reserves space around visible station
+dots and uses a wider text estimate. The canonical suite measures actual text
+and dot rectangles on desktop, tablet and phone to prevent covered labels.
+The full nine-viewport and interaction suite passes after this follow-up.
