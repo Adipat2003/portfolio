@@ -121,7 +121,8 @@ export default function CtaRailMap() {
 	const station = network.stations.find((entry) => entry.id === selectedId) ?? network.stations.find((entry) => entry.id === "40380")!;
 	const route = network.routes.find((entry) => entry.id === routeId);
 	const availableStations = network.stations.filter((entry) => routeId === "all" || entry.routes.includes(routeId));
-	const matches = availableStations.filter((entry) => entry.name.toLowerCase().includes(query.trim().toLowerCase()));
+	const searchKey = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+	const matches = availableStations.filter((entry) => searchKey(entry.name).includes(searchKey(query)));
 	const connections = portfolioStations.filter((entry) => entry.station.ctaStation === selectedId);
 	const trains = useMemo(() => feed.trains.flatMap((train) => {
 		const line = network.routes.find((entry) => entry.id === train.route);
@@ -249,7 +250,7 @@ export default function CtaRailMap() {
 						</svg>
 			</div>
 			<div className="rail-topbar">
-				<a className="rail-back" href="#view-atlas" aria-label="Back to the scenic route ↑">←</a>
+				<a className="rail-back" href="#view-atlas" onClick={() => { setSheet(null); setQuery(""); }} aria-label="Back to the scenic route ↑">←</a>
 				<h2 id={`${id}-title`}>Chicago ‘L’</h2>
 				<div className="rail-control-bar">
 					<label className="rail-line-picker"><span className="sr-only">Line</span><i className="rail-line-swatch" aria-hidden="true" style={{ background: route ? routeColors[route.id] : undefined }} /><select aria-label="Choose a CTA line" value={routeId} onChange={(event) => selectRoute(event.target.value)}><option value="all">All lines</option>{network.routes.map((line) => <option key={line.id} value={line.id}>{line.name}</option>)}</select></label>
