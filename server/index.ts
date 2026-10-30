@@ -9,10 +9,7 @@
  *   PORTFOLIO_ROOT           content root (default: the repository root)
  *   SERVICE_ALLOWED_ORIGINS  comma-separated allowed Origin values
  *   NVIDIA_API_KEY          optional; enables model polish on /ask-model
- *   NVIDIA_MODEL            model id for the ask layer (default
- *                           nvidia/llama-3.1-nemotron-70b-instruct; the
- *                           rephrase task wants a fast instruct model,
- *                           not a hybrid reasoner)
+ *   NVIDIA_MODEL            model id (default z-ai/glm-5.3-flash)
  *   NVIDIA_ENDPOINT         chat completions endpoint (default
  *                           https://integrate.api.nvidia.com/v1/chat/completions)
  */

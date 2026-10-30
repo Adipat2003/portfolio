@@ -11,6 +11,7 @@
  * The key is read from the environment, never from a file or a commit, and
  * is never logged or returned.
  */
+import { modelRequestOptions } from "./model-options";
 import type { Content } from "./content";
 import { renderMatch } from "./mcp";
 import type { Match } from "../src/content/retrieval";
@@ -91,12 +92,7 @@ export function createAskModel(
         body: JSON.stringify({
           model,
           temperature: 0,
-          max_tokens: 500,
-          // GLM and Qwen hybrid models think by default; a 120-word grounded
-          // rephrase does not need it, and the thinking phase is what pushed
-          // generation past the timeout. Models that do not know the flag
-          // ignore it.
-          chat_template_kwargs: { thinking: false },
+          ...modelRequestOptions(model, 500),
           messages: [
             { role: "system", content: SYSTEM_CONTRACT },
             {
@@ -107,7 +103,7 @@ export function createAskModel(
             },
           ],
         }),
-        signal: AbortSignal.timeout(60_000), // ceiling only; with thinking disabled the answer lands in seconds
+        signal: AbortSignal.timeout(60_000),
       });
       if (!res.ok) throw new Error(`model endpoint ${res.status}`);
       const data: any = await res.json();
