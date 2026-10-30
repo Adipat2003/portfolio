@@ -541,3 +541,54 @@ Issue #72: overview label placement also reserves space around visible station
 dots and uses a wider text estimate. The canonical suite measures actual text
 and dot rectangles on desktop, tablet and phone to prevent covered labels.
 The full nine-viewport and interaction suite passes after this follow-up.
+
+## Full-screen Atlas review, 2026-10-29
+
+Issues #74, #75 and #76 replace the preliminary card-polish direction. The
+scenic route still opens Atlas, and the ending is now a full-screen geographic
+CTA viewer. The default view has no station words or open detail card. Selection
+reveals one station and its arrivals; Alerts, Ask CTA and Info open read-only
+panels. Phone panels sit below the map controls. The visitor-report feature was
+explicitly dropped by Aditya before implementation.
+
+The component references were the official Base UI toolbar, select and accordion
+patterns, adapted with native controls and existing React/CSS. Only the selected
+`emil-design-eng` skill remains installed from that repository. No dependency was
+added. Sources: https://base-ui.com/react/components/toolbar,
+https://base-ui.com/react/components/select, and
+https://base-ui.com/react/components/accordion.
+
+SVG review found scaled native focus outlines and shadow filters that obscured
+artwork. SVG groups now use fixed-width shape strokes for visible focus. Window
+lights use a smaller regular facade grid, checked against and clipped to the
+building silhouettes. Hancock bracing now stays inside its tapered walls;
+Fisher's crown connects to its roof. All 17 standalone SVGs include their window
+lights and render facade details over the body. Decorative cursor lighting and
+window twinkling were removed. No building-selection glow spills below the city.
+
+The service adds `/disruptions`, a 60-second cache of active detailed official
+CTA rail alerts, and `/ask-transit`, limited to six questions per minute per IP.
+The existing NVIDIA connection selects up to six current evidence record IDs;
+the response text is rendered from those records, not model-written facts.
+Records include arrivals, scheduled/delayed flags, live positions, route status
+and detailed disruptions with CTA source links and check times. Invalid model
+output, unavailable feeds and missing model credentials have grounded fallbacks.
+Ambiguous station names ask for clarification. No reports or question history are
+stored by this service. The browser requests disruption details only when their panel opens.
+
+The site review covers Dispatch entry, project search/tag filters, sourced guide,
+about/Chicago/landmark sections, footer, project detail/return navigation, Atlas
+intro/ride/terminal, selected buildings and the new network. Phone search and
+ask fields use 16 px text. The canonical suite records desktop and phone section
+captures, all nine ride geometries, full-screen map geometry at five widths,
+station focus bounds, window containment, overlays, live-feed fallbacks and
+read-only transit-guide fixtures. Physical phones still need a hardware check.
+
+Release validation: production export, service checks, content modules, all 17
+SVG exports and the Python rollback renderer pass. The canonical browser suite
+passes all nine ride sizes and the full interaction pass. The full-screen map
+also passes five widths down to 320 px; touch dragging pans only after entry
+into the map, while the page can scroll through the transition. SVG focus has
+no native outline or selection filter, and all window corners fit silhouettes.
+Desktop and phone section captures were reviewed. Production results are
+recorded in the PR after deployment; physical devices remain untested.

@@ -6,11 +6,35 @@
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
+    <clipPath id="landmark-windows"><path d="M1040 420 L1040 214 L1074 214 L1074 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
     <title>Aqua Tower: irregular cantilevered balconies like rolling water</title>
-      <path d="M1040 246 L1074 240 M1040 280 L1074 272 M1040 314 L1074 308" stroke="#3a4a6e" stroke-width="1" fill="none"/>
       <path d="M1040 420 L1040 214 L1074 214 L1074 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+      <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
+        <rect x="1045" y="226" width="2" height="3"/>
+        <rect x="1069" y="226" width="2" height="3"/>
+        <rect x="1053" y="241" width="2" height="3"/>
+        <rect x="1045" y="256" width="2" height="3"/>
+        <rect x="1061" y="256" width="2" height="3"/>
+        <rect x="1053" y="271" width="2" height="3"/>
+        <rect x="1069" y="271" width="2" height="3"/>
+        <rect x="1061" y="286" width="2" height="3"/>
+        <rect x="1045" y="301" width="2" height="3"/>
+        <rect x="1069" y="301" width="2" height="3"/>
+        <rect x="1053" y="316" width="2" height="3"/>
+        <rect x="1045" y="331" width="2" height="3"/>
+        <rect x="1061" y="331" width="2" height="3"/>
+        <rect x="1053" y="346" width="2" height="3"/>
+        <rect x="1069" y="346" width="2" height="3"/>
+        <rect x="1061" y="361" width="2" height="3"/>
+        <rect x="1045" y="376" width="2" height="3"/>
+        <rect x="1069" y="376" width="2" height="3"/>
+        <rect x="1053" y="391" width="2" height="3"/>
+        <rect x="1045" y="406" width="2" height="3"/>
+        <rect x="1061" y="406" width="2" height="3"/>
+      </g>
+      <path d="M1040 246 L1074 240 M1040 280 L1074 272 M1040 314 L1074 308" stroke="#3a4a6e" stroke-width="1" fill="none"/>
   </g>
 </svg>

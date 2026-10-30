@@ -6,10 +6,24 @@
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
+    <clipPath id="landmark-windows"><path d="M620 420 L620 235 L628 235 L628 220 L632 208 L636 220 L636 235 L644 235 L644 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
     <title>One Eleven (former Wolf Point): stepped crown</title>
       <path d="M620 420 L620 235 L628 235 L628 220 L632 208 L636 220 L636 235 L644 235 L644 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+      <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
+        <rect x="633" y="220" width="2" height="3"/>
+        <rect x="625" y="235" width="2" height="3"/>
+        <rect x="633" y="250" width="2" height="3"/>
+        <rect x="625" y="280" width="2" height="3"/>
+        <rect x="633" y="295" width="2" height="3"/>
+        <rect x="625" y="310" width="2" height="3"/>
+        <rect x="633" y="325" width="2" height="3"/>
+        <rect x="625" y="355" width="2" height="3"/>
+        <rect x="633" y="370" width="2" height="3"/>
+        <rect x="625" y="385" width="2" height="3"/>
+        <rect x="633" y="400" width="2" height="3"/>
+      </g>
   </g>
 </svg>

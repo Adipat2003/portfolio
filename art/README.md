@@ -11,7 +11,10 @@ recognizable massing matters more than detail:
 - Wrigley / Tribune: clock-tower crowns and buttressed crowns
 
 Standalone files exist so each landmark can be opened and edited alone. The
-concept page inlines the same geometry so it stays self-contained.
+concept page inlines the same geometry so it stays self-contained. Standalone
+exports also include the shared window grid, clipped to each building body.
+Facade details render over the silhouette, including Hancock bracing and
+Fisher's connected crown.
 
 ## Source of truth
 

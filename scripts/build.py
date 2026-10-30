@@ -560,6 +560,7 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
             f'<circle cx="{s["cx"]}" cy="{s["cy"]}" r="{atlas["station_style"]["r"]}" fill="{atlas["station_style"]["fill"]}" stroke="{color}" stroke-width="{atlas["station_style"]["stroke_width"]}"/>'
             f'<text x="{s["cx"] + s["dx"]}" y="{s["cy"] + s["dy"]}">{e(s["label"])}</text></g>'
         )
+    window_mask = " ".join(b["d"] for b in atlas["buildings"])
     sky, fill = atlas["sky"], atlas["building_fill"]
     sky_stops = "".join(
         f'<stop offset="{s["offset"]}" style="stop-color:var(--atlas-sky-{i + 1}, {s["color"]})"/>'
@@ -568,6 +569,7 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
     fill_stops = "".join(f'<stop offset="{s["offset"]}" stop-color="{s["color"]}"/>' for s in fill["stops"])
     return f"""    <svg viewBox="{atlas['viewBox']}" role="img" aria-label="The Atlas: a Chicago rail-map world where projects become stations">
       <defs>
+        <clipPath id="atlas-window-mask"><path d="{window_mask}"/></clipPath>
         <linearGradient id="{sky['id']}" x1="{sky['x1']}" y1="{sky['y1']}" x2="{sky['x2']}" y2="{sky['y2']}">
           {sky_stops}
         </linearGradient>
@@ -585,7 +587,7 @@ def render_atlas_svg(atlas: dict, projects: dict) -> str:
       <g>
 {chr(10).join("        " + b for b in buildings)}
       </g>
-      <g style="fill:var(--atlas-lights, #e8b04b)" opacity="0.75">
+      <g style="fill:var(--atlas-lights, #e8b04b)" opacity="0.7" clip-path="url(#atlas-window-mask)">
 {chr(10).join("        " + r for r in light_rects)}
       </g>
       <g>

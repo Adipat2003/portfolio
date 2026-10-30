@@ -30,8 +30,12 @@ export type TrainPosition = {
 	destination: string; nextStation: string; nextStationId: string; arrivalTime: string;
 	isApproaching: boolean; isDelayed: boolean; isScheduled: boolean;
 };
-type Positions = { available: boolean; trains: TrainPosition[]; as_of: string; credit: string };
-type Alerts = { available: boolean; routes: { route: string; status: string }[]; as_of: string; credit: string };
+export type Positions = { available: boolean; trains: TrainPosition[]; as_of: string; credit: string };
+export type Alerts = { available: boolean; routes: { route: string; status: string }[]; as_of: string; credit: string };
+
+export type Disruption = { id: string; headline: string; description: string; impact: string; severity: number; routes: string[]; stations: string[]; url: string };
+export type Disruptions = { available: boolean; alerts: Disruption[]; as_of: string };
+const plain = (value: unknown) => String(typeof value === "object" && value ? (value as Record<string, unknown>)["#cdata-section"] ?? "" : value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 
 export function createCtaNetworkProxy(opts: { apiKey?: string; ttlMs?: number }) {
 	const positions = cachedFeed<Positions>(async () => {
@@ -63,5 +67,19 @@ export function createCtaNetworkProxy(opts: { apiKey?: string; ttlMs?: number })
 		})).filter((r) => ROUTES.includes(r.route) || r.route === "pexp");
 		return { available: true, routes, as_of: new Date().toISOString(), credit: "Service status: Chicago Transit Authority" };
 	}, 60_000, { available: false, routes: [], as_of: "", credit: "Service status: Chicago Transit Authority" });
-	return { positions, alerts };
+	const disruptions = cachedFeed<Disruptions>(async () => {
+		const data = await request(`https://lapi.transitchicago.com/api/1.0/alerts.aspx?routeid=${ROUTES.join(",")},pexp&activeonly=true&outputType=JSON`);
+		if (!data?.CTAAlerts || Number(data.CTAAlerts.ErrorCode) !== 0) throw new Error("CTA disruptions unavailable");
+		const entries = list(data.CTAAlerts.Alert).slice(0, 100).map((raw) => {
+			const services = list(raw.ImpactedService?.Service);
+			const id = String(raw.AlertId ?? raw.AlertID ?? "");
+			return { id, headline: plain(raw.Headline).slice(0, 180), description: plain(raw.ShortDescription).slice(0, 1200),
+				impact: plain(raw.Impact).slice(0, 80), severity: Math.max(0, Math.min(99, Number(raw.SeverityScore) || 0)),
+				routes: services.filter((service) => service.ServiceType === "R").map((service) => String(service.ServiceId).toLowerCase()),
+				stations: services.filter((service) => service.ServiceType === "T").map((service) => String(service.ServiceId)),
+				url: `https://www.transitchicago.com/travel_information/alert_detail.aspx?AlertId=${encodeURIComponent(id)}` };
+		}).filter((entry) => /^\d{1,10}$/.test(entry.id) && entry.headline).sort((a, b) => b.severity - a.severity);
+		return { available: true, alerts: entries, as_of: new Date().toISOString() };
+	}, 60_000, { available: false, alerts: [], as_of: "" });
+	return { positions, alerts, disruptions };
 }

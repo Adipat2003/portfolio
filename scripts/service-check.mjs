@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createCtaNetworkProxy } from "../server/dist/server/cta-network.js";
 import { clampedCamera, projectCoordinate, positionOnRoute } from "../server/dist/src/content/cta-geometry.js";
+import { createTransitGuide } from "../server/dist/server/transit-guide.js";
 import { createCtaProxy } from "../server/dist/server/cta.js";
 import { spawn } from "node:child_process";
 import process from "node:process";
@@ -40,6 +41,50 @@ async function get(path, headers = {}) {
 
 function rpc(method, params, id = 1) {
 	return { jsonrpc: "2.0", id, method, params };
+}
+
+async function checkTransitGuide() {
+	const originalFetch = globalThis.fetch;
+	const now = new Date().toISOString();
+	const opts = { stations:[{id:"40380",name:"Clark/Lake",routes:["blue"]}], network:{
+		positions:async()=>({available:true,trains:[],as_of:now}),
+		alerts:async()=>({available:true,routes:[{route:"blue",status:"Minor Delays"}],as_of:now}),
+		disruptions:async()=>({available:true,alerts:[{headline:"Station closure",description:"Use adjacent stations.",routes:["blue"],url:"https://www.transitchicago.com/alerts/"}],as_of:now}),
+	}, cta:{ get:async()=>({available:true,station:"Clark/Lake",as_of:now,arrivals:[{line:"blue",destination:"Forest Park",minutes:7,isScheduled:true,isDelayed:true}]}) }, model:"fixture",endpoint:"https://model.invalid" };
+	try {
+		const fallback = await createTransitGuide(opts)("When is the next train?","40380");
+		assert.match(fallback.answer,/7 min.*scheduled.*delay flagged/);
+		assert.equal(fallback.model_used,false);
+		assert.equal((await createTransitGuide(opts)("Tell me a cake recipe")).evidence.length,0);
+		const blue = await createTransitGuide(opts)("Where are Blue Line trains?");
+		assert.ok(blue.evidence.length > 0 && blue.evidence.every((record)=>record.text.startsWith("Blue")), "explicit line questions do not include other lines");
+		const chicagoOpts={...opts,stations:[{id:"40710",name:"Chicago (Brown/Purple)",routes:["brn","p"]},{id:"41410",name:"Chicago (Blue)",routes:["blue"]}]};
+		assert.match((await createTransitGuide(chicagoOpts)("Next train at Chicago?")).answer,/Which station/);
+		assert.ok(!(await createTransitGuide(chicagoOpts)("How many trains in Chicago?")).answer.includes("Which station"));
+		const alerts = await createTransitGuide(opts)("Any closures?");
+		assert.match(alerts.answer,/Station closure/);
+		globalThis.fetch=async()=>Response.json({choices:[{message:{content:'{"record_ids":["r0"]}'}}]});
+		const answer=await createTransitGuide({...opts,apiKey:"fixture"})("Next train?","40380");
+		assert.equal(answer.model_used,true);
+		assert.equal(answer.evidence.length,1);
+		assert.match(answer.answer,/scheduled/);
+		globalThis.fetch=async()=>Response.json({choices:[{message:{content:'{"record_ids":["invented"],"answer":"Made-up blockade"}'}}]});
+		const rejected=await createTransitGuide({...opts,apiKey:"fixture"})("Any closures?");
+		assert.equal(rejected.model_used,false);
+		assert.ok(!rejected.answer.includes("Made-up"));
+		globalThis.fetch=async()=>Response.json({CTAAlerts:{ErrorCode:"0",Alert:{AlertId:"123",Headline:"<b>Closure</b>",ShortDescription:"<p>Use another station.</p>",SeverityScore:"12",ImpactedService:{Service:[{ServiceType:"R",ServiceId:"Blue"},{ServiceType:"T",ServiceId:"40380"}]},AlertURL:{"#cdata-section":"javascript:invalid"}}}});
+		const proxy=createCtaNetworkProxy({ttlMs:0});
+		const feed=await proxy.disruptions();
+		assert.equal(feed.alerts[0].headline,"Closure");
+		assert.deepEqual(feed.alerts[0].routes,["blue"]);
+		assert.deepEqual(feed.alerts[0].stations,["40380"]);
+		assert.match(feed.alerts[0].url,/^https:\/\/www\.transitchicago\.com\//);
+		globalThis.fetch=async()=>{throw new Error("Offline");};
+		const failed=await createCtaNetworkProxy({}).disruptions();
+		assert.equal(failed.available,false);
+		assert.deepEqual(failed.alerts,[]);
+		ok("Transit guide uses current evidence, preserves uncertainty and rejects invented model facts; official alerts normalize safely",true);
+	} finally {globalThis.fetch=originalFetch;}
 }
 
 async function checkCtaNormalization() {
@@ -154,6 +199,7 @@ async function checkNetworkFeed() {
 }
 
 async function main() {
+	await checkTransitGuide();
 	await checkCtaNormalization();
 	await checkNetworkFeed();
 	child = spawn("node", ["server/dist/server/index.js"], {

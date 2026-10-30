@@ -6,10 +6,32 @@
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
+    <clipPath id="landmark-windows"><path d="M508 420 L508 190 L518 190 L518 150 L522 128 L526 150 L526 190 L536 190 L536 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
     <title>Trump International Hotel and Tower: spire</title>
       <path d="M508 420 L508 190 L518 190 L518 150 L522 128 L526 150 L526 190 L536 190 L536 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+      <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
+        <rect x="521" y="155" width="2" height="3"/>
+        <rect x="521" y="185" width="2" height="3"/>
+        <rect x="529" y="200" width="2" height="3"/>
+        <rect x="513" y="215" width="2" height="3"/>
+        <rect x="521" y="230" width="2" height="3"/>
+        <rect x="513" y="245" width="2" height="3"/>
+        <rect x="529" y="245" width="2" height="3"/>
+        <rect x="521" y="260" width="2" height="3"/>
+        <rect x="529" y="275" width="2" height="3"/>
+        <rect x="513" y="290" width="2" height="3"/>
+        <rect x="521" y="305" width="2" height="3"/>
+        <rect x="513" y="320" width="2" height="3"/>
+        <rect x="529" y="320" width="2" height="3"/>
+        <rect x="521" y="335" width="2" height="3"/>
+        <rect x="529" y="350" width="2" height="3"/>
+        <rect x="513" y="365" width="2" height="3"/>
+        <rect x="521" y="380" width="2" height="3"/>
+        <rect x="513" y="395" width="2" height="3"/>
+        <rect x="529" y="395" width="2" height="3"/>
+      </g>
   </g>
 </svg>

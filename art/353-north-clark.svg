@@ -6,11 +6,34 @@
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
+    <clipPath id="landmark-windows"><path d="M952 420 L952 224 L986 224 L986 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
     <title>353 North Clark: stepped modern slab with setback shoulders</title>
-      <path d="M952 258 L986 258 M952 292 L986 292 M952 326 L986 326" stroke="#2c3a58" stroke-width="1" fill="none"/>
       <path d="M952 420 L952 224 L986 224 L986 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+      <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
+        <rect x="957" y="236" width="2" height="3"/>
+        <rect x="973" y="236" width="2" height="3"/>
+        <rect x="965" y="251" width="2" height="3"/>
+        <rect x="981" y="251" width="2" height="3"/>
+        <rect x="973" y="266" width="2" height="3"/>
+        <rect x="957" y="281" width="2" height="3"/>
+        <rect x="981" y="281" width="2" height="3"/>
+        <rect x="965" y="296" width="2" height="3"/>
+        <rect x="957" y="311" width="2" height="3"/>
+        <rect x="973" y="311" width="2" height="3"/>
+        <rect x="965" y="326" width="2" height="3"/>
+        <rect x="981" y="326" width="2" height="3"/>
+        <rect x="973" y="341" width="2" height="3"/>
+        <rect x="957" y="356" width="2" height="3"/>
+        <rect x="981" y="356" width="2" height="3"/>
+        <rect x="965" y="371" width="2" height="3"/>
+        <rect x="957" y="386" width="2" height="3"/>
+        <rect x="973" y="386" width="2" height="3"/>
+        <rect x="965" y="401" width="2" height="3"/>
+        <rect x="981" y="401" width="2" height="3"/>
+      </g>
+      <path d="M952 258 L986 258 M952 292 L986 292 M952 326 L986 326" stroke="#2c3a58" stroke-width="1" fill="none"/>
   </g>
 </svg>

@@ -6,11 +6,58 @@
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
+    <clipPath id="landmark-windows"><path d="M120 420 L120 250 L136 250 L136 210 L152 210 L152 175 L168 175 L168 210 L184 210 L184 250 L200 250 L200 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
     <title>Willis Tower: bundled setback tubes with twin antennas</title>
-      <path d="M156 175 L156 128 M164 175 L164 128" stroke="#2a3a5c" stroke-width="2" fill="none"/>
       <path d="M120 420 L120 250 L136 250 L136 210 L152 210 L152 175 L168 175 L168 210 L184 210 L184 250 L200 250 L200 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+      <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
+        <rect x="165" y="187" width="2" height="3"/>
+        <rect x="141" y="217" width="2" height="3"/>
+        <rect x="157" y="217" width="2" height="3"/>
+        <rect x="181" y="217" width="2" height="3"/>
+        <rect x="149" y="232" width="2" height="3"/>
+        <rect x="165" y="232" width="2" height="3"/>
+        <rect x="157" y="247" width="2" height="3"/>
+        <rect x="173" y="247" width="2" height="3"/>
+        <rect x="125" y="262" width="2" height="3"/>
+        <rect x="141" y="262" width="2" height="3"/>
+        <rect x="165" y="262" width="2" height="3"/>
+        <rect x="181" y="262" width="2" height="3"/>
+        <rect x="133" y="277" width="2" height="3"/>
+        <rect x="149" y="277" width="2" height="3"/>
+        <rect x="173" y="277" width="2" height="3"/>
+        <rect x="189" y="277" width="2" height="3"/>
+        <rect x="141" y="292" width="2" height="3"/>
+        <rect x="157" y="292" width="2" height="3"/>
+        <rect x="181" y="292" width="2" height="3"/>
+        <rect x="125" y="307" width="2" height="3"/>
+        <rect x="149" y="307" width="2" height="3"/>
+        <rect x="165" y="307" width="2" height="3"/>
+        <rect x="189" y="307" width="2" height="3"/>
+        <rect x="133" y="322" width="2" height="3"/>
+        <rect x="157" y="322" width="2" height="3"/>
+        <rect x="173" y="322" width="2" height="3"/>
+        <rect x="125" y="337" width="2" height="3"/>
+        <rect x="141" y="337" width="2" height="3"/>
+        <rect x="165" y="337" width="2" height="3"/>
+        <rect x="181" y="337" width="2" height="3"/>
+        <rect x="133" y="352" width="2" height="3"/>
+        <rect x="149" y="352" width="2" height="3"/>
+        <rect x="173" y="352" width="2" height="3"/>
+        <rect x="189" y="352" width="2" height="3"/>
+        <rect x="141" y="367" width="2" height="3"/>
+        <rect x="157" y="367" width="2" height="3"/>
+        <rect x="181" y="367" width="2" height="3"/>
+        <rect x="125" y="382" width="2" height="3"/>
+        <rect x="149" y="382" width="2" height="3"/>
+        <rect x="165" y="382" width="2" height="3"/>
+        <rect x="189" y="382" width="2" height="3"/>
+        <rect x="133" y="397" width="2" height="3"/>
+        <rect x="157" y="397" width="2" height="3"/>
+        <rect x="173" y="397" width="2" height="3"/>
+      </g>
+      <path d="M156 175 L156 128 M164 175 L164 128" stroke="#2a3a5c" stroke-width="2" fill="none"/>
   </g>
 </svg>

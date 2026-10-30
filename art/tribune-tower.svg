@@ -6,10 +6,19 @@
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
+    <clipPath id="landmark-windows"><path d="M752 420 L752 200 L760 180 L768 200 L768 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
     <title>Tribune Tower: crown with buttresses</title>
       <path d="M752 420 L752 200 L760 180 L768 200 L768 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+      <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
+        <rect x="757" y="192" width="2" height="3"/>
+        <rect x="757" y="222" width="2" height="3"/>
+        <rect x="757" y="267" width="2" height="3"/>
+        <rect x="757" y="297" width="2" height="3"/>
+        <rect x="757" y="342" width="2" height="3"/>
+        <rect x="757" y="372" width="2" height="3"/>
+      </g>
   </g>
 </svg>

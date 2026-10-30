@@ -27,6 +27,7 @@ import { handleMessage } from "./mcp";
 import { createAskModel } from "./ask-model";
 import { createCtaProxy } from "./cta";
 import { createCtaNetworkProxy } from "./cta-network";
+import { createTransitGuide } from "./transit-guide";
 import { readFileSync } from "node:fs";
 
 const PORT = Number(process.env.PORT ?? process.env.SERVICE_PORT ?? 8788);
@@ -46,7 +47,7 @@ const NVIDIA_ENDPOINT =
   "https://integrate.api.nvidia.com/v1/chat/completions";
 
 const content = loadContent(ROOT);
-const railNetwork = JSON.parse(readFileSync(resolve(ROOT, "content/cta-network.json"), "utf8")) as { stations: { id: string; name: string }[] };
+const railNetwork = JSON.parse(readFileSync(resolve(ROOT, "content/cta-network.json"), "utf8")) as { stations: { id: string; name: string; routes: string[] }[] };
 const ctaNetwork = createCtaNetworkProxy({ apiKey: process.env.CTA_API_KEY?.trim() });
 const cta = createCtaProxy({
   extraStations: railNetwork.stations,
@@ -60,6 +61,9 @@ const askModel = createAskModel(content, {
   endpoint: NVIDIA_ENDPOINT,
 });
 
+const transitGuide = createTransitGuide({ stations: railNetwork.stations, network: ctaNetwork, cta,
+  apiKey: NVIDIA_API_KEY, model: NVIDIA_MODEL, endpoint: NVIDIA_ENDPOINT });
+
 /* --------------------------------------------------------- rate limiting */
 
 const RATE_LIMITS: Record<string, number> = {
@@ -68,6 +72,8 @@ const RATE_LIMITS: Record<string, number> = {
   "/positions": 20,
   "/transit-alerts": 20,
   "/ask-model": 10,
+  "/ask-transit": 6,
+  "/disruptions": 20,
 };
 const buckets = new Map<string, { count: number; reset: number }>();
 
@@ -178,6 +184,25 @@ const server = createServer(async (req, res) => {
     }
     const payload = await (route === "/positions" ? ctaNetwork.positions() : ctaNetwork.alerts());
     sendJson(res, 200, payload, corsHeaders(origin));
+    return;
+  }
+
+  if (route === "/disruptions" && req.method === "GET") {
+    sendJson(res, 200, await ctaNetwork.disruptions(), corsHeaders(origin));
+    return;
+  }
+  if (route === "/ask-transit" && req.method === "POST") {
+    try {
+      const body = JSON.parse(await readBody(req, 4_000));
+      if (typeof body?.question !== "string" || !body.question.trim() || body.question.length > 500 ||
+          (body.station !== undefined && (typeof body.station !== "string" || !cta.hasStation(body.station)))) {
+        sendJson(res, 400, { error: "Use a question up to 500 characters and a valid station" }, corsHeaders(origin));
+        return;
+      }
+      sendJson(res, 200, await transitGuide(body.question.trim(), body.station), corsHeaders(origin));
+    } catch {
+      sendJson(res, 400, { error: "Unable to read this transit question" }, corsHeaders(origin));
+    }
     return;
   }
 
