@@ -137,7 +137,7 @@ section{padding:76px 0}
    Phones use dynamic viewport units and shorter phases so the ride stays
    smooth and the address bar never fights the sticky stage. */
 .ride{--phase-h:100vh;overflow-anchor:none;position:relative;height:calc(var(--ride-phases) * var(--phase-h))}
-.ride-stage{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden}
+.ride-stage{position:sticky;top:0;height:100vh;height:100dvh;min-height:0;overflow:clip}
 /* Carriage vignette: one shared darkness at the frame edges so the scene
     reads as a place seen from inside, not stacked layers. The radial edge
     darkening lets map labels slide out of frame into night instead of
@@ -233,7 +233,7 @@ section{padding:76px 0}
 .ride-copy.faded{opacity:0;translate:0 -18px}
 .ride-copy::before{content:"";position:absolute;inset:-12% -45% -14% -14%;z-index:-1;pointer-events:none;background:radial-gradient(78% 66% at 30% 44%,rgba(13,15,22,.5),rgba(13,15,22,.28) 45%,transparent 78%)}
 .ride-copy .kicker{color:var(--signal)}
-.ride-copy h2{font-size:clamp(40px,6vw,74px);line-height:1.02;margin:16px 0 0;max-width:16ch;text-wrap:balance}
+.ride-copy h1{font-size:clamp(40px,6vw,74px);line-height:1.02;margin:16px 0 0;max-width:16ch;text-wrap:balance}
 .ride-copy .lede{margin-top:18px;max-width:52ch;color:var(--night-soft)}
 .skip-ride{pointer-events:auto;appearance:none;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--night-soft);background:transparent;border:1px solid var(--night-rule);border-radius:999px;padding:9px 16px;margin-top:28px;cursor:pointer}
 .skip-ride:hover{color:var(--signal);border-color:var(--signal)}
@@ -443,7 +443,7 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
   /* Phase 0 is a quiet boarding screen: the index waits until you scroll,
      the headline breathes, and the map reads as background. */
   .ride-phase-0 .trip-strip{display:none}
-  .ride-copy h2{font-size:clamp(30px,8.5vw,44px)}
+  .ride-copy h1{font-size:clamp(30px,8.5vw,44px)}
   .ride-copy .lede{font-size:15px;max-width:30ch}
   .ride-overlay{left:12px;right:12px;bottom:12px;max-width:none}
   .ride-overlay .chi-card{background:rgba(21,26,40,.94);backdrop-filter:none;padding:14px 16px}
@@ -551,86 +551,116 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 .chi-map g[role="button"]:focus-visible path,.chi-map g[role="button"]:focus-visible circle{stroke:var(--signal);stroke-width:3}
 .cta-pink{background:#e27ea6;color:#0b0e15}
 
-.rail-network{--rail-surface:#111a26;--rail-ink:#f1eee5;--rail-soft:#b3c0cd;padding:68px 0 28px;background:#0d131e;color:var(--rail-ink);scroll-margin-top:76px}
-.rail-network[data-placement="end"]{border-top:1px solid #344454}
-.rail-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;margin-bottom:28px}
-.rail-heading h1,.rail-heading h2{font-size:clamp(34px,4vw,58px);line-height:1.07;margin:12px 0 16px;letter-spacing:-.025em}
-.rail-heading p:not(.kicker){font-size:15px;color:var(--rail-soft);max-width:56ch;margin:0;line-height:1.6}
-.rail-heading .kicker{color:#edbd69}
-.rail-feed-status{flex:0 0 auto;max-width:300px;font-family:var(--mono);font-size:12px;color:#d2ebdd;padding-bottom:4px}
-.rail-status-dot{display:inline-block;width:7px;height:7px;background:#90cda9;border-radius:50%;margin-right:9px}
-.rail-feed-status[data-state="offline"] .rail-status-dot{background:#e8b04b}
-.rail-feed-status small{display:block;margin-top:9px;color:var(--rail-soft);font-family:var(--sans);font-size:12px;line-height:1.6}
-.rail-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:24px;align-items:start}
-.rail-map-pane{min-width:0;border:1px solid #344454;border-radius:12px;overflow:hidden;background:var(--rail-surface)}
-.rail-route-filter{display:flex;flex-wrap:wrap;gap:6px;padding:14px;border-bottom:1px solid #344454;background:#0f1722}
-.rail-network button,.rail-network select,.rail-network input{font-family:var(--sans);font-size:13px;color:var(--rail-ink);background:#182330;border:1px solid #46576a;border-radius:5px;min-height:44px}
-.rail-network button{cursor:pointer;padding:8px 11px}
-.rail-network button:hover{background:#263647;border-color:#c5d2df}
-.rail-network button[aria-pressed="true"]{background:#273748;border-color:#edbd69;color:#fff}
-.rail-route-filter button{display:flex;align-items:center;gap:7px;font-size:12px}
-.rail-route-filter i{display:block;width:9px;height:9px;border-radius:50%;background:var(--rail-color)}
-.rail-map-canvas{position:relative;isolation:isolate;background:radial-gradient(ellipse at 72% 38%,#1b2b3e,#111a26 70%)}
-.rail-map-svg{display:block;width:100%;height:690px;max-height:80vh;touch-action:pan-y pinch-zoom;cursor:grab;user-select:none}
+/* A quiet transit chart, with the departure board kept outside the map. */
+.rail-network{--rail-ink:#f1eee5;--rail-soft:#b5c3d1;padding:64px 0 28px;background:#0c1420;color:var(--rail-ink);scroll-margin-top:76px;border-top:1px solid #2b3d50}
+.rail-heading{display:flex;align-items:center;justify-content:space-between;gap:28px;margin-bottom:28px}
+.rail-heading h2{font-size:clamp(34px,4vw,52px);line-height:1.1;margin:10px 0 12px;letter-spacing:-.025em}
+.rail-heading p:not(.kicker){font-size:15px;color:var(--rail-soft);margin:0;line-height:1.6}
+.rail-heading .kicker{color:#a7cbe0;font-size:11px;letter-spacing:.13em}
+.rail-feed-status{flex:0 0 auto;font:12px var(--mono);color:#cbe6d6}
+.rail-status-dot{display:inline-block;width:6px;height:6px;background:#8fd4b0;border-radius:50%;margin-right:8px}
+.rail-feed-status[data-state="offline"] .rail-status-dot{background:#edbd69}
+.rail-feed-status small{display:block;margin:8px 0 0 14px;color:var(--rail-soft);font:11px var(--sans)}
+.rail-layout{display:grid;grid-template-columns:minmax(0,1fr) 292px;gap:24px;align-items:start}
+.rail-map-pane{min-width:0;border:1px solid #31465b;border-radius:18px;overflow:hidden;background:#111e2c;box-shadow:0 16px 60px #0002}
+.rail-network button,.rail-network select,.rail-network input{font:14px var(--sans);color:var(--rail-ink);background:#152335;border:1px solid #64829b;border-radius:9px;min-height:44px}
+.rail-network button{cursor:pointer;padding:8px 12px;transition:background .18s,border-color .18s,transform .18s}
+.rail-network button:hover{background:#253c50;border-color:#9bbfd7}
+.rail-network button:active{transform:scale(.97)}
+.rail-network select,.rail-network input{width:100%;padding:10px 12px;min-width:0}
+.rail-network input::placeholder{color:#b5c3d1}
+.rail-control-bar{display:grid;grid-template-columns:190px minmax(0,1fr);gap:12px;padding:14px;background:#101b29;border-bottom:1px solid #2a3e51;position:relative;z-index:3}
+.rail-line-picker{display:flex;align-items:center;gap:10px;color:#b5c3d1;font:11px var(--mono)}
+.rail-line-picker select{background:#192c3e;border-color:transparent;font-size:13px}
+.rail-search-control{position:relative;min-width:0}
+.rail-search-control input{background:#0d1826;border-color:transparent;padding-left:14px}
+.rail-search-results{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:8;background:#152537;border:1px solid #526d85;border-radius:12px;padding:6px;box-shadow:0 12px 30px #0008;display:grid;gap:3px}
+.rail-search-results button{display:flex;align-items:center;justify-content:space-between;text-align:left;border-color:transparent;background:transparent}
+.rail-search-results span{color:#edbd69}
+.rail-search-results p{margin:12px;font-size:13px;color:var(--rail-soft)}
+.rail-map-canvas{position:relative;isolation:isolate;background:radial-gradient(ellipse at 70% 35%,#1b3042,#101d2b 75%)}
+.rail-map-svg{display:block;width:100%;height:620px;max-height:76vh;touch-action:pan-y pinch-zoom;cursor:grab;user-select:none}
 .rail-map-svg:active{cursor:grabbing}
 .rail-geography{pointer-events:none}
-.rail-geography path{fill:#162c40;stroke:#2e4f65;stroke-width:.45}
-.rail-geography text{font-family:var(--mono);font-size:5px;letter-spacing:1.4px;fill:#87adc2}
-.rail-paths path{transition:opacity .18s ease}
-.rail-paths .rail-muted{opacity:.1}
+.rail-geography path{fill:#18364b;stroke:#35566d;stroke-width:.3}
+.rail-geography text{font:5px var(--mono);letter-spacing:1.4px;fill:#88b1c7}
+.rail-paths path{transition:opacity .25s ease;opacity:.9}
+.rail-paths .rail-muted{opacity:.08}
 .rail-station{cursor:pointer}
-.rail-station circle:not(.rail-station-hit){fill:#10202d;stroke:#d3dee7;stroke-width:.6}
+.rail-stop-dot{fill:#102030;stroke:#9ab3c6;stroke-width:1;vector-effect:non-scaling-stroke;transition:opacity .2s,fill .2s}
 .rail-station .rail-station-hit{fill:transparent;stroke:none}
-.rail-station:hover circle:not(.rail-station-hit),.rail-station.rail-selected circle:not(.rail-station-hit){fill:#ffcf77;stroke:#101a27;stroke-width:.8}
-.rail-station text{font-family:var(--sans);font-size:5px;font-weight:600;fill:#e6edf3;paint-order:stroke;stroke:#111a26;stroke-width:2;stroke-linejoin:round;pointer-events:none}
-.rail-station.rail-selected text{fill:#ffcf77}
+.rail-overview .rail-minor:not(.rail-selected) .rail-stop-dot{opacity:0}
+.rail-station:hover .rail-stop-dot,.rail-station:focus-visible .rail-stop-dot{opacity:1;fill:#d3e5f1}
+.rail-station.rail-selected .rail-stop-dot{fill:#f6ce86;stroke:#101a27;stroke-width:2}
+.rail-station text{font-family:var(--sans);font-weight:550;fill:#d5e4ed;paint-order:stroke;stroke:#111e2c;stroke-width:3;stroke-linejoin:round;pointer-events:none}
+.rail-station.rail-selected text{fill:#ffe0a6;font-weight:700}
 .rail-live-train{pointer-events:none}
-.rail-live-train circle{stroke:#0d131e;stroke-width:1}
-.rail-live-train path{fill:none;stroke:#0a111c;stroke-width:.75;stroke-linecap:round}
-.rail-map-tools{position:absolute;left:14px;top:14px;display:flex;gap:5px;flex-wrap:wrap;max-width:calc(100% - 28px)}
-.rail-network .rail-map-tools button{background:#0e1724eb;font-size:12px;box-shadow:0 2px 6px #0005}
-.rail-map-caption{display:flex;justify-content:space-between;gap:8px;padding:12px 15px;border-top:1px solid #344454;font-family:var(--mono);font-size:10px;color:var(--rail-soft)}
+.sprite-shadow{fill:#000;opacity:.35;filter:blur(1px)}
+.sprite-car{fill:#d7e4ed;stroke:#162c40;stroke-width:1}
+.sprite-roof{fill:none;stroke-width:3;stroke-linecap:round}
+.sprite-window{fill:#e0bc7d;stroke:none}
+.sprite-track{fill:none;stroke:#d7e4ed;stroke-width:1}
+.sprite-lamp{fill:#ffd890;stroke:none}
+.rail-map-tools{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid #2b4053;background:#101b29}
+.rail-network .rail-map-tools button{background:#0e1928ee;border-color:#466079;font-size:12px;box-shadow:0 3px 12px #0003}
+.rail-map-caption{display:flex;justify-content:space-between;gap:10px;padding:14px 16px;border-top:1px solid #2b4053;font:11px var(--mono);color:#a9c0d3}
 .rail-map-caption span:first-child{color:#f6d490}
-.rail-map-note{font-size:12px;line-height:1.6;color:var(--rail-soft);padding:0 16px 14px;margin:0}
-.rail-station-panel{min-width:0;display:grid;gap:12px;align-content:start}
-.rail-station-panel>label{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--rail-soft)}
-.rail-network select,.rail-network input{width:100%;padding:10px 12px;min-width:0}
-.rail-network input::placeholder{color:var(--rail-soft)}
-.rail-selected-station{padding:16px 0 6px;border-top:1px solid #344454;margin-top:6px}
-.rail-selected-station .kicker{font-size:10px;color:#edbd69}
-.rail-selected-station h3{font-family:var(--sans);font-size:26px;margin:9px 0}
-.rail-selected-station p{font-size:13px;color:var(--rail-soft);line-height:1.7;margin:0}
-.rail-station-panel .transit-board{padding:14px 0;background:none;border-top:1px solid #344454;border-bottom:1px solid #344454}
+.rail-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 16px;padding:16px 12px;background:#101b29}
+.rail-legend span{display:flex;align-items:center;gap:6px;font-size:11px;color:#c4d4e1}
+.rail-legend i{display:block;width:12px;height:3px;border-radius:2px}
+.rail-station-panel{min-width:0;display:grid;gap:0;border:1px solid #31465b;border-radius:16px;padding:20px;background:linear-gradient(145deg,#1b2b3d,#111d2c)}
+.rail-selected-station .kicker{font:10px var(--mono);color:#e7c18a;letter-spacing:.12em}
+.rail-selected-station h3{font:600 24px var(--sans);margin:10px 0}
+.rail-selected-station>p{font-size:12px;color:#b5c3d1;line-height:1.7;margin:0}
+.rail-station-panel .transit-board{padding:16px 0 4px;background:none;border:0}
 .rail-station-panel .transit-board-heading{display:none}
-.rail-station-panel .transit-arrival{grid-template-columns:54px minmax(0,1fr) auto;gap:7px}
-.rail-station-panel .transit-arrival-route span{white-space:normal;line-height:1.5}
-.rail-station-panel .transit-arrival-time span{max-width:85px}
-.rail-service h4,.rail-transfers h4,.rail-projects h4{font-family:var(--mono);font-size:11px;font-weight:600;color:#edbd69;letter-spacing:.06em;text-transform:uppercase;margin:8px 0 12px}
-.rail-service p,.rail-offline{font-size:13px;color:var(--rail-soft);line-height:1.6;margin:0 0 10px}
+.rail-station-panel .transit-arrival{grid-template-columns:46px minmax(0,1fr) auto;gap:8px;padding:14px 0}
+.rail-station-panel .transit-arrival .cta-line{font-size:11px;padding:3px 5px}
+.rail-station-panel .transit-arrival-route strong{font-size:13px}
+.rail-station-panel .transit-arrival-route span{font-size:11px;white-space:normal;line-height:1.45}
+.rail-station-panel .transit-arrival-time span:not(.arrival-quality){display:none}
+.rail-station-panel .transit-arrival-time span{font-size:9px;max-width:68px}
+.rail-station-panel .transit-arrival-time b{font-size:15px;color:#f4cf91}
+.rail-station-panel .transit-board-footer{font-size:10px;flex-wrap:wrap;row-gap:6px;padding-bottom:12px}
+.rail-station-panel .transit-board-footer .cta-credit{font-size:10px}
+.rail-more{border-top:1px solid #344b60;margin-top:12px}
+.rail-more>summary{display:flex;align-items:center;justify-content:space-between;cursor:pointer;list-style:none;padding:16px 0 0;min-height:44px;font-size:13px;color:#c7d9e7}
+.rail-more>summary::-webkit-details-marker{display:none}
+.rail-more>summary span{transition:transform .2s;color:#e7c18a;font-size:20px}
+.rail-more[open]>summary span{transform:rotate(45deg)}
+.rail-more>label{display:block;color:#b5c3d1;font:11px var(--mono);margin:22px 0 10px}
+.rail-service h4,.rail-transfers h4,.rail-projects h4{font:600 11px var(--mono);color:#e7c18a;letter-spacing:.06em;text-transform:uppercase;margin:24px 0 12px}
+.rail-service p,.rail-offline{font-size:13px;color:var(--rail-soft);line-height:1.6;margin:16px 0}
 .rail-service ul,.rail-train-list ul{list-style:none;padding:0;margin:0}
-.rail-service li{display:flex;gap:12px;justify-content:space-between;font-size:12px;line-height:1.5;padding:7px 0;border-bottom:1px solid #293746}
+.rail-service li{display:flex;gap:10px;justify-content:space-between;font-size:12px;line-height:1.6;padding:8px 0;border-bottom:1px solid #2c4054}
 .rail-service li span{text-align:right;color:var(--rail-soft)}
 .rail-service a,.rail-source a{color:#b5dbf1;text-underline-offset:4px;font-size:12px}
 .rail-service>a{display:inline-block;margin-top:12px}
-.rail-transfers{display:grid;gap:5px}
-.rail-projects{border-top:1px solid #344454;padding-top:10px}
-.rail-projects>a{display:block;color:var(--rail-ink);font-family:var(--serif);font-size:18px;line-height:1.35;text-decoration:none;padding:12px 0;border-bottom:1px solid #293746}
-.rail-projects>a:hover{color:#ffcf77}
-.rail-projects>a span{display:block;font-family:var(--mono);font-size:10px;color:#edbd69;margin-top:8px}
+.rail-transfers{display:grid;gap:6px}
+.rail-projects>a{display:block;color:var(--rail-ink);font:17px/1.5 var(--serif);text-decoration:none;padding:12px 0;border-bottom:1px solid #304458}
+.rail-projects>a span{display:block;font:10px var(--mono);color:#e7c18a;margin-top:6px}
 .rail-projects small{display:block;font-size:11px;color:var(--rail-soft);line-height:1.7;margin-top:12px}
-.rail-train-list{font-size:12px;color:var(--rail-soft);border-top:1px solid #344454;padding-top:10px}
-.rail-train-list summary{cursor:pointer;padding:12px 0;min-height:44px}
-.rail-train-list ul{max-height:260px;overflow:auto}
-.rail-train-list li{padding:10px 0;border-bottom:1px solid #293746}
-.rail-train-list li b,.rail-train-list li span{display:block;line-height:1.6}
-.rail-search-results{display:grid;gap:5px}
+.rail-train-list{font-size:12px;color:var(--rail-soft);margin-top:20px;border-top:1px solid #344b60}
+.rail-train-list summary{cursor:pointer;padding:14px 0;min-height:44px}
+.rail-train-list ul{max-height:240px;overflow:auto}
+.rail-train-list li{padding:10px 0;border-bottom:1px solid #2c4054}
+.rail-train-list li b,.rail-train-list li span{display:block;line-height:1.7}
 .rail-source{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px 24px;margin-top:24px;font-size:11px;color:var(--rail-soft);line-height:1.6}
-@media(max-width:1100px){.rail-layout{grid-template-columns:minmax(0,1fr) 300px;gap:18px}.rail-heading{align-items:start}.rail-feed-status{max-width:230px}.rail-route-filter{padding:10px;gap:5px}.rail-route-filter button{padding:6px 8px}}
-@media(max-width:760px){.rail-network{padding:38px 0 24px}.rail-heading{display:grid;gap:20px;margin-bottom:20px}.rail-layout{grid-template-columns:minmax(0,1fr);gap:24px}.rail-feed-status{max-width:none}.rail-map-svg{height:570px;max-height:70vh}.rail-map-caption{font-size:9px;gap:5px}.rail-route-filter{flex-wrap:nowrap;overflow-x:auto;touch-action:pan-x}.rail-route-filter button{flex:0 0 auto;padding:8px 11px}.rail-network .rail-map-tools button{font-size:11px;padding:6px 9px}.rail-map-tools{left:10px;top:10px}.rail-station-panel .transit-arrival{gap:9px}.rail-map-svg:not(.rail-map-detail) .rail-station text.rail-station-label{display:none}.rail-station-panel{gap:12px}.rail-heading h1,.rail-heading h2{font-size:39px}.rail-source{gap:12px}}
-@media(prefers-reduced-motion:reduce){.rail-live-train,.rail-paths path,.atlas-building path{transition:none}}
+@media(max-width:1000px){.rail-layout{grid-template-columns:minmax(0,1fr) 270px;gap:16px}.rail-station-panel{padding:16px}.rail-control-bar{grid-template-columns:160px minmax(0,1fr)}}
+@media(max-width:760px){
+ .rail-network{padding:36px 0 24px}.rail-heading{display:grid;gap:18px;margin-bottom:22px}.rail-heading h2{font-size:34px;margin-bottom:10px}.rail-heading p:not(.kicker){font-size:14px;max-width:32ch}.rail-feed-status{display:flex;align-items:center;flex-wrap:wrap;font-size:11px;gap:0}.rail-feed-status small{margin:0 0 0 12px;font-size:11px}
+ .rail-layout{grid-template-columns:minmax(0,1fr);gap:14px}.rail-map-pane{border-radius:16px}.rail-control-bar{grid-template-columns:130px minmax(0,1fr);gap:8px;padding:10px}.rail-line-picker{font-size:0;gap:0}.rail-line-picker select{font-size:12px;padding:10px 7px}.rail-search-control input{font-size:13px;padding:10px}
+ .rail-map-svg{height:500px;max-height:64svh}.rail-map-caption{font:10px var(--sans);padding:12px;gap:6px}.rail-map-tools{justify-content:space-between;padding:10px;gap:4px}.rail-network .rail-map-tools button{font-size:11px;padding:8px 9px}.rail-legend{gap:10px 14px;padding:14px 12px}.rail-legend span{font-size:11px}
+ .rail-station-panel{padding:18px 20px;border-radius:16px}.rail-selected-station h3{font-size:23px}.rail-selected-station>p{font-size:12px}.rail-station-panel .transit-arrival{grid-template-columns:48px minmax(0,1fr) auto;padding:12px 0}.rail-station-panel .transit-arrival-route strong{font-size:14px}.rail-source{font-size:10px;gap:12px}.rail-source>span{flex-basis:100%}
+}
+@media(prefers-reduced-motion:reduce){.rail-network button,.rail-paths path,.rail-stop-dot,.rail-more>summary span,.atlas-building path{transition:none}}
 
 .chi-map g.atlas-building[role="button"]:hover,.chi-map g.atlas-building[role="button"]:focus-visible{filter:none}
 .atlas-building .bld-selected{filter:none;stroke-width:2 !important}
 
 .rail-station:focus-visible{outline:none}
 .rail-station:focus-visible circle:not(.rail-station-hit){stroke:#ffcf77;stroke-width:1.5}
+
+.rail-selected .rail-stop-dot{transform-box:fill-box;transform-origin:center;animation:rail-selection .3s ease-out}
+@keyframes rail-selection{from{opacity:.3;transform:scale(.65)}to{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.rail-selected .rail-stop-dot{animation:none}}

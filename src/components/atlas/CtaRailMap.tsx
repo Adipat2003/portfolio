@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode, type PointerEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type PointerEvent } from "react";
 import rawNetwork from "../../../content/cta-network.json";
 import { stations as portfolioStations } from "@/content/load";
 import { positionOnRoute, projectCoordinate, type RailNetwork, type RailStation, type RailRoute, type Point } from "@/content/cta-geometry";
@@ -12,10 +12,9 @@ const routeColors: Record<string, string> = { red: "#f25b70", blue: "#36b9ee", b
 type Train = { id: string; route: string; lat: number; lon: number; heading: number; destination: string; nextStation: string; nextStationId: string; isDelayed: boolean; isScheduled?: boolean };
 type Feed = { kind: "loading" | "live" | "empty" | "offline"; trains: Train[]; asOf: string; statuses: { route: string; status: string }[]; alertsAvailable: boolean };
 const initialFeed: Feed = { kind: SERVICE_URL ? "loading" : "offline", trains: [], asOf: "", statuses: [], alertsAvailable: false };
-const FeedContext = createContext<Feed>(initialFeed);
 
-/** Both map placements share one polling loop and one response. */
-export function CtaNetworkProvider({ children }: { children: ReactNode }) {
+/** Keep the live network feed independent of station and camera changes. */
+function useCtaNetwork() {
 	const [feed, setFeed] = useState(initialFeed);
 	useEffect(() => {
 		if (!SERVICE_URL) return;
@@ -43,7 +42,7 @@ export function CtaNetworkProvider({ children }: { children: ReactNode }) {
 		poll();
 		return () => { controller.abort(); window.clearTimeout(timer); };
 	}, []);
-	return <FeedContext.Provider value={feed}>{children}</FeedContext.Provider>;
+	return feed;
 }
 
 type Box = [number, number, number, number];
@@ -58,7 +57,7 @@ function fitBox(points: number[][]): Box {
 	return [x - 18, y - 18, width + 36, height + 36];
 }
 
-function TrainMarker({ train, point, route }: { train: Train; point: Point; route: RailRoute }) {
+function TrainMarker({ train, point, route, size }: { train: Train; point: Point; route: RailRoute; size: number }) {
 	const ref = useRef<SVGGElement>(null);
 	const previous = useRef<Point>(point);
 	useEffect(() => {
@@ -79,18 +78,25 @@ function TrainMarker({ train, point, route }: { train: Train; point: Point; rout
 	}, [point[0], point[1], route]);
 	return <g ref={ref} className="rail-live-train" data-train={train.id} transform={`translate(${previous.current[0]} ${previous.current[1]})`}>
 		<title>{route.name}: {train.destination}, next {train.nextStation}{train.isDelayed ? ", delay flagged" : ""}</title>
-		<circle r="3.1" fill={routeColors[train.route]} /><path d="M-1.3 -1.2h2.6v1.6h-2.6zM-.9 1.4h1.8" />
+		<g className="rail-train-sprite" transform={`scale(${size})`}>
+			<rect className="sprite-shadow" x="-11" y="-3" width="22" height="11" rx="4" />
+			<rect className="sprite-car" x="-10" y="-5" width="20" height="10" rx="3" />
+			<path className="sprite-roof" d="M-7-5h14" stroke={routeColors[train.route]} />
+			<rect className="sprite-window" x="-7" y="-2.5" width="4" height="3" rx=".6" /><rect className="sprite-window" x="-1.5" y="-2.5" width="4" height="3" rx=".6" /><rect className="sprite-window" x="4" y="-2.5" width="4" height="3" rx=".6" />
+			<path className="sprite-track" d="M-6 5v1m12-1v1" />
+			<circle className="sprite-lamp" cx="-8" cy="2.5" r="1" /><circle className="sprite-lamp" cx="8" cy="2.5" r="1" />
+		</g>
 	</g>;
 }
 
-export default function CtaRailMap({ placement }: { placement: "start" | "end" }) {
+export default function CtaRailMap() {
 	const id = useId();
-	const Heading = placement === "start" ? "h1" : "h2";
-	const feed = useContext(FeedContext);
+	const feed = useCtaNetwork();
 	const [routeId, setRouteId] = useState("all");
 	const [selectedId, setSelectedId] = useState("40380");
 	const [query, setQuery] = useState("");
 	const [box, setBox] = useState<Box>(network.viewBox);
+	const [canvas, setCanvas] = useState({ width: 700, height: 600 });
 	const svgRef = useRef<SVGSVGElement>(null);
 	const currentBox = useRef<Box>(network.viewBox);
 	const drag = useRef<{ x: number; y: number; box: Box; moved: boolean } | null>(null);
@@ -98,28 +104,6 @@ export default function CtaRailMap({ placement }: { placement: "start" | "end" }
 	const route = network.routes.find((entry) => entry.id === routeId);
 	const availableStations = network.stations.filter((entry) => routeId === "all" || entry.routes.includes(routeId));
 	const matches = availableStations.filter((entry) => entry.name.toLowerCase().includes(query.trim().toLowerCase()));
-	// Keep labels apart while the station selector retains the complete list.
-	const labels = useMemo(() => {
-		const placed: { x: number; y: number; w: number; h: number }[] = [];
-		const result = new Map<string, { x: number; y: number; anchor: "start" | "end" }>();
-		const font = box[3] / 55;
-		const candidates = [...availableStations].sort((a, b) => Number(b.id === selectedId) - Number(a.id === selectedId) || Number(termini.has(b.id)) - Number(termini.has(a.id)));
-		for (const entry of candidates) {
-			if (entry.id !== selectedId && !termini.has(entry.id) && !(box[2] < 160)) continue;
-			const [x, y] = entry.point;
-			const width = entry.name.replace(/ \(.*\)$/, "").length * font * .53;
-			for (const side of [1, -1]) {
-				const left = side === 1 ? x + 4 : x - 4 - width;
-				const area = { x: left, y: y - font * 1.5, w: width + 3, h: font * 1.6 };
-				if (left < box[0] + 2 || left + width > box[0] + box[2] - 2 || y < box[1] || y > box[1] + box[3]) continue;
-				if (placed.some((p) => area.x < p.x + p.w && area.x + area.w > p.x && area.y < p.y + p.h && area.y + area.h > p.y)) continue;
-				result.set(entry.id, { x: side === 1 ? x + 4 : x - 4, y: y - font * .35, anchor: side === 1 ? "start" : "end" });
-				placed.push(area);
-				break;
-			}
-		}
-		return result;
-	}, [routeId, selectedId, box]);
 	const connections = portfolioStations.filter((entry) => entry.station.ctaStation === selectedId);
 	const trains = useMemo(() => feed.trains.flatMap((train) => {
 		const line = network.routes.find((entry) => entry.id === train.route);
@@ -127,6 +111,46 @@ export default function CtaRailMap({ placement }: { placement: "start" | "end" }
 		const point = positionOnRoute(projectCoordinate(train.lat, train.lon, network.projection), line);
 		return point ? [{ ...train, point }] : [];
 	}), [feed.trains, routeId]);
+
+	const units = Math.max(box[2] / canvas.width, box[3] / canvas.height);
+	const visibleTrains = useMemo(() => {
+		const visible: typeof trains = [];
+		for (const train of trains) {
+			if (train.point[0] < box[0] || train.point[0] > box[0] + box[2] || train.point[1] < box[1] || train.point[1] > box[1] + box[3]) continue;
+			if (Math.hypot(train.point[0] - station.point[0], train.point[1] - station.point[1]) < units * 22) continue;
+			if (visible.every((other) => Math.hypot(other.point[0] - train.point[0], other.point[1] - train.point[1]) >= units * 36)) visible.push(train);
+		}
+		return visible;
+	}, [trains, box, units, station]);
+	// Keep labels and sprites apart in screen pixels at every zoom level.
+	const labels = useMemo(() => {
+		const font = units * 12;
+		const placed = visibleTrains.map((train) => ({ x: train.point[0] - units * 11, y: train.point[1] - units * 11, w: units * 22, h: units * 22 }));
+		const result = new Map<string, { x: number; y: number; anchor: "start" | "end" }>();
+		const candidates = [...availableStations].sort((a, b) => Number(b.id === selectedId) - Number(a.id === selectedId) || Number(termini.has(b.id)) - Number(termini.has(a.id)));
+		for (const entry of candidates) {
+			if (entry.id !== selectedId && !termini.has(entry.id) && box[2] >= 100) continue;
+			const [x, y] = entry.point;
+			const width = entry.name.replace(/ \(.*\)$/, "").length * font * .54;
+			for (const side of [1, -1]) {
+				const left = side === 1 ? x + units * 15 : x - units * 15 - width;
+				const area = { x: left, y: y - font * 1.6, w: width + units * 4, h: font * 1.8 };
+				if (left < box[0] + units * 8 || left + width > box[0] + box[2] - units * 8 || y < box[1] + units * 20 || y > box[1] + box[3] - units * 20) continue;
+				if (placed.some((p) => area.x < p.x + p.w && area.x + area.w > p.x && area.y < p.y + p.h && area.y + area.h > p.y)) continue;
+				result.set(entry.id, { x: side === 1 ? x + units * 15 : x - units * 15, y: y - font * .35, anchor: side === 1 ? "start" : "end" });
+				placed.push(area);
+				break;
+			}
+		}
+		return result;
+	}, [availableStations, selectedId, box, units, visibleTrains]);
+	useEffect(() => {
+		const svg = svgRef.current;
+		if (!svg) return;
+		const observer = new ResizeObserver(() => setCanvas({ width: svg.clientWidth, height: svg.clientHeight }));
+		observer.observe(svg);
+		return () => observer.disconnect();
+	}, []);
 
 	useEffect(() => {
 		const svg = svgRef.current;
@@ -176,21 +200,22 @@ export default function CtaRailMap({ placement }: { placement: "start" | "end" }
 	}
 	const statusText = feed.kind === "live" ? `${feed.trains.length} trains reporting` : feed.kind === "loading" ? "Connecting to CTA" : feed.kind === "empty" ? "No trains reported" : "Live feed unavailable";
 	return (
-		<section className="rail-network" aria-labelledby={`${id}-title`} data-placement={placement}>
+		<section className="rail-network" id="cta-network" aria-labelledby={`${id}-title`}>
 			<div className="rail-heading wrap">
-				<div><p className="kicker">The Atlas · Chicago in motion</p><Heading id={`${id}-title`}>{placement === "start" ? "Every line. One city." : "Back on the network."}</Heading>
-				<p>The whole ‘L’, from O’Hare to the South Side. Pick a line, find a station, follow a train.</p></div>
-				<div className="rail-feed-status" role={placement === "start" ? "status" : undefined} data-state={feed.kind}><span className="rail-status-dot" />{statusText}
-					<small aria-live="off">{feed.asOf ? `Updated ${new Date(feed.asOf).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", second: "2-digit", timeZone: "America/Chicago" })} CT · every 15 seconds` : "The geographic map stays available."}</small></div>
+				<div><p className="kicker">Live transit atlas</p><h2 id={`${id}-title`}>Chicago, in motion.</h2>
+				<p>All eight lines, in real time.</p></div>
+				<div className="rail-feed-status" role="status" data-state={feed.kind}><span className="rail-status-dot" />{statusText}
+					<small aria-live="off">{feed.asOf ? `Updated ${new Date(feed.asOf).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Chicago" })} CT` : "The map is always here."}</small></div>
 			</div>
 			<div className="rail-layout wrap">
 				<div className="rail-map-pane">
-					<div className="rail-route-filter" role="group" aria-label="Filter CTA routes">
-						<button type="button" aria-pressed={routeId === "all"} onClick={() => selectRoute("all")}>All lines</button>
-						{network.routes.map((line) => <button type="button" key={line.id} aria-pressed={routeId === line.id} style={{ "--rail-color": routeColors[line.id] } as React.CSSProperties} onClick={() => selectRoute(line.id)}><i aria-hidden="true" />{line.name}</button>)}
+					<div className="rail-control-bar">
+						<label className="rail-line-picker">Line<select aria-label="Choose a CTA line" value={routeId} onChange={(event) => selectRoute(event.target.value)}><option value="all">All eight lines</option>{network.routes.map((line) => <option key={line.id} value={line.id}>{line.name} Line</option>)}</select></label>
+						<div className="rail-search-control"><label htmlFor={`${id}-search`} className="sr-only">Search CTA stations</label><input id={`${id}-search`} type="search" placeholder="Find a station" value={query} onChange={(event) => setQuery(event.target.value)} />
+						{query.trim() ? <div className="rail-search-results" role="group" aria-label="Matching stations">{matches.slice(0, 6).map((entry) => <button key={entry.id} type="button" onClick={() => { selectStation(entry); setQuery(""); }}>{entry.name}<span>↗</span></button>)}{matches.length === 0 ? <p>No stations found. Try another name.</p> : null}</div> : null}</div>
 					</div>
 					<div className="rail-map-canvas">
-						<svg ref={svgRef} className={box[2] < 160 ? "rail-map-svg rail-map-detail" : "rail-map-svg"} viewBox={network.viewBox.join(" ")} role="group" aria-label="Geographic CTA rail network" onPointerDown={(event) => {
+						<svg ref={svgRef} className={`rail-map-svg${routeId === "all" && box[2] >= 180 ? " rail-overview" : " rail-map-detail"}`} viewBox={network.viewBox.join(" ")} role="group" aria-label="Geographic CTA rail network" onPointerDown={(event) => {
 							if (!event.isPrimary || event.button !== 0 || (event.target as Element).closest('[role="button"]')) return;
 							drag.current = { x: event.clientX, y: event.clientY, box: [...currentBox.current], moved: false };
 							event.currentTarget.setPointerCapture(event.pointerId);
@@ -200,47 +225,48 @@ export default function CtaRailMap({ placement }: { placement: "start" | "end" }
 							{/* Illustrative lake edge, not a surveyed shoreline. */}
 							<g className="rail-geography" aria-hidden="true"><path d="M80 -1000 L1000 -1000 L1000 1000 L110 1000 L110 240 L100 180 L81 125 L68 75 L65 22 L57 -16 L45 -50 L44 -100 L49 -143 L55 -170 Z" /><text x="80" y="-75" transform="rotate(90 80 -75)">LAKE MICHIGAN</text></g>
 							<g fill="none" strokeLinecap="round" strokeLinejoin="round" className="rail-paths">
-								{network.routes.map((line) => <path key={line.id} data-route={line.id} className={routeId === "all" || routeId === line.id ? "" : "rail-muted"} d={paths.get(line.id)} stroke={routeColors[line.id]} strokeWidth={routeId === line.id ? 2 : 1.5} />)}
+								{network.routes.map((line) => <path key={line.id} data-route={line.id} className={routeId === "all" || routeId === line.id ? "" : "rail-muted"} d={paths.get(line.id)} stroke={routeColors[line.id]} strokeWidth={units * (routeId === line.id ? 3 : 2)} />)}
 							</g>
 							<g className="rail-stations">
 								{availableStations.map((entry) => {
 									const selected = selectedId === entry.id;
 									const label = labels.get(entry.id);
-									return <g key={entry.id} role="button" tabIndex={selected ? 0 : -1} aria-label={`${entry.name} CTA station`} aria-pressed={selected} data-station={entry.id} className={selected ? "rail-station rail-selected" : "rail-station"} onClick={() => selectStation(entry)} onKeyDown={(event) => {
+									return <g key={entry.id} role="button" tabIndex={selected ? 0 : -1} aria-label={`${entry.name} CTA station`} aria-pressed={selected} data-station={entry.id} className={`rail-station${selected ? " rail-selected" : ""}${entry.routes.length === 1 && !termini.has(entry.id) ? " rail-minor" : ""}`} onClick={() => selectStation(entry)} onKeyDown={(event) => {
 										if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectStation(entry); }
 										if (event.key === "Escape") setBox(network.viewBox);
 									}}>
-										<circle className="rail-station-hit" cx={entry.point[0]} cy={entry.point[1]} r={4} />
-										<circle cx={entry.point[0]} cy={entry.point[1]} r={selected ? 3 : entry.routes.length > 1 || entry.transfers.length ? 2 : 1.3} />
-										{label ? <text x={label.x} y={label.y} textAnchor={label.anchor} style={{ fontSize: box[3] / 55 }} className={selected ? "rail-selected-label" : "rail-station-label"}>{entry.name.replace(/ \(.*\)$/, "")}</text> : null}
+										<circle className="rail-station-hit" cx={entry.point[0]} cy={entry.point[1]} r={units * 9} />
+										<circle className="rail-stop-dot" cx={entry.point[0]} cy={entry.point[1]} r={units * (selected ? 5 : entry.routes.length > 1 || entry.transfers.length ? 3 : 2)} />
+										{label ? <text x={label.x} y={label.y} textAnchor={label.anchor} style={{ fontSize: units * 12 }} className={selected ? "rail-selected-label" : "rail-station-label"}>{entry.name.replace(/ \(.*\)$/, "")}</text> : null}
 									</g>;
 								})}
 							</g>
 							<g className="rail-live-trains" aria-label="Live train positions">
-								{trains.map((train) => <TrainMarker key={train.id} train={train} point={train.point} route={network.routes.find((line) => line.id === train.route)!} />)}
+								{visibleTrains.map((train) => <TrainMarker key={train.id} train={train} point={train.point} size={units} route={network.routes.find((line) => line.id === train.route)!} />)}
 							</g>
 						</svg>
 						<div className="rail-map-tools" role="group" aria-label="Map view"><button type="button" onClick={() => setBox(network.viewBox)}>Full network</button><button type="button" onClick={() => setBox([37, -4, 66, 79])}>The Loop</button><button type="button" aria-label="Zoom in" onClick={() => zoom(.65)}>+</button><button type="button" aria-label="Zoom out" onClick={() => zoom(1.5)}>−</button></div>
-						<div className="rail-map-caption"><span>N ↑</span><span>Geographic network · drag to pan</span><span>{network.stations.length} stations / 8 lines</span></div>
+						<div className="rail-map-caption"><span>N ↑</span><span>{visibleTrains.length} trains in view · zoom for more</span><span>{network.stations.length} stations</span></div>
 					</div>
-					<p className="rail-map-note">Rings mark transfers. Train symbols use reported coordinates; no simulated movement. Labels expand as you explore.</p>
+					<div className="rail-legend" aria-label="CTA line colors">{network.routes.map((line) => <span key={line.id}><i style={{ background: routeColors[line.id] }} />{line.name}</span>)}</div>
 				</div>
 				<aside className="rail-station-panel" aria-label="Station details">
+
+					<div className="rail-selected-station"><span className="kicker">Next departures</span><h3>{station.name}</h3><p>{station.routes.map((rid) => network.routes.find((entry) => entry.id === rid)!.name).join(" · ")}</p></div>
+					{SERVICE_URL ? <CtaLive stationId={selectedId} showStations={false} /> : <p className="rail-offline">Live arrivals are unavailable. Explore every line and station on the map.</p>}
+					<details className="rail-more"><summary>Station guide <span aria-hidden="true">+</span></summary>
 					<label htmlFor={`${id}-station`}>Find a station{route ? ` · ${route.name} Line` : ""}</label>
 					<select id={`${id}-station`} value={station.id} onChange={(event) => selectStation(network.stations.find((entry) => entry.id === event.target.value)!)}>
 						{[...availableStations].sort((a, b) => a.name.localeCompare(b.name)).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
 					</select>
-					<label htmlFor={`${id}-search`} className="sr-only">Search CTA stations</label><input id={`${id}-search`} type="search" placeholder="Search stations…" value={query} onChange={(event) => setQuery(event.target.value)} />
-					{query.trim() ? <div className="rail-search-results" role="group" aria-label="Matching stations">{matches.slice(0, 8).map((entry) => <button key={entry.id} type="button" onClick={() => { selectStation(entry); setQuery(""); }}>{entry.name}</button>)}{matches.length === 0 ? <p>No matching stations. Try another name.</p> : null}</div> : null}
-					<div className="rail-selected-station"><span className="kicker">At the platform</span><h3>{station.name}</h3><p>{station.routes.map((rid) => network.routes.find((entry) => entry.id === rid)!.name).join(" · ")}</p></div>
-					{SERVICE_URL ? <CtaLive stationId={selectedId} showStations={false} /> : <p className="rail-offline">Live arrivals are unavailable. Explore every line and station on the map.</p>}
 					<div className="rail-service"><h4>Service context</h4>{!feed.alertsAvailable ? <p>CTA service status is unavailable. Missing trains do not mean a service outage.</p> : <ul>{station.routes.flatMap((rid) => feed.statuses.filter((entry) => entry.route === rid || (rid === "p" && entry.route === "pexp")).map((entry) => <li key={entry.route}><b>{network.routes.find((line) => line.id === rid)!.name}{entry.route === "pexp" ? " Express" : ""}</b><span>{entry.status}</span></li>))}</ul>}<a href="https://www.transitchicago.com/alerts/" target="_blank" rel="noreferrer">Current CTA alerts ↗</a></div>
 					{station.transfers.length ? <div className="rail-transfers"><h4>Transfer connections</h4>{station.transfers.map((sid) => { const next = network.stations.find((entry) => entry.id === sid)!; return <button key={sid} type="button" onClick={() => selectStation(next)}>{next.name} ↗</button>; })}</div> : null}
 					{connections.length ? <div className="rail-projects"><h4>Portfolio connections</h4>{connections.map(({ slug, project }) => <a href={`/portfolio/projects/${slug}/`} key={slug}>{project.title}<span>Read project ↗</span></a>)}<small>Editorial stops, not work locations. Project details also live in The Dispatch.</small></div> : null}
 					<details className="rail-train-list"><summary>{trains.length} trains {route ? `on the ${route.name} Line` : "on the network"}</summary><ul>{trains.map((train) => <li key={train.id}><b>{network.routes.find((entry) => entry.id === train.route)!.name} · {train.destination}</b><span>Next: {train.nextStation}{train.isDelayed ? " · Delay flagged" : ""}</span></li>)}</ul></details>
+					</details>
 				</aside>
 			</div>
-			<div className="rail-source wrap"><span>CTA GTFS · updated {network.metadata.packageUpdated}. Positions: CTA Train Tracker. No CTA endorsement.</span><a href={network.metadata.source}>Network data ↗</a>{placement === "start" ? <a href="#atlas-ride">Ride through the portfolio ↓</a> : <a href="#view-atlas">Back to the start ↑</a>}</div>
+			<div className="rail-source wrap"><span>CTA GTFS · updated {network.metadata.packageUpdated}. Positions: CTA Train Tracker. No CTA endorsement.</span><a href={network.metadata.source}>Network data ↗</a><a href="#view-atlas">Back to the scenic route ↑</a></div>
 		</section>
 	);
 }

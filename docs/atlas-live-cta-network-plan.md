@@ -1,5 +1,9 @@
 # Atlas Live CTA Network Plan
 
+Placement update, 2026-10-29: issue #70 follows Aditya's direction to show the
+scenic ride first and one redesigned CTA map afterward. This supersedes the
+original two-map placement described below.
+
 Status: network data and live feeds shipped in PR #67 on 2026-10-27. The complete map interface, both Atlas placements and SVG/camera repairs are implemented for issue #66. Local and post-deploy checks are recorded in the PR. The skyline remains a secondary portfolio tour.
 
 ## Goal

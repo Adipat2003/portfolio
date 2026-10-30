@@ -183,7 +183,7 @@ export default function CtaLive({ stationId, showStations = true }: { stationId?
 									<span>{arrival.direction || note}</span>
 								</div>
 								<div className="transit-arrival-time">
-									<span className={arrival.isDelayed ? "is-delayed" : ""}>{note}</span>
+									<span className={`${arrival.isDelayed ? "is-delayed " : ""}${arrival.isDelayed || arrival.isScheduled ? "arrival-quality" : ""}`}>{note}</span>
 									<b>{arrival.isApproaching || arrival.minutes <= 0 ? "Due" : `${arrival.minutes} min`}</b>
 								</div>
 							</div>

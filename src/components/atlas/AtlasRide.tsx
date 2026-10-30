@@ -257,7 +257,7 @@ export default function AtlasRide() {
 		const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 		const narrow = window.matchMedia("(max-width: 860px)");
 		const cam = { ...focuses[0] };
-		let anchorY = narrow.matches ? .36 : .5;
+		let anchorY = narrow.matches ? .6 : .5;
 		const pos = { ...rail[0] };
 		const rootCs = getComputedStyle(document.documentElement);
 		const dusk = (["--atlas-sky-1", "--atlas-sky-2", "--atlas-sky-3"] as const).map((key) =>
@@ -302,7 +302,7 @@ export default function AtlasRide() {
 					zoom: lerp(focuses[i].zoom, focuses[i + 1].zoom, t),
 				};
 				const ease = reduce.matches ? 1 : 0.08;
-				const targetAnchor = landmarkFocus ? (stageHeight + chromeBottom - 16) / (2 * stageHeight) : narrow.matches ? .36 : .5;
+				const targetAnchor = landmarkFocus ? (stageHeight + chromeBottom - 16) / (2 * stageHeight) : narrow.matches ? (phaseRef.current === 0 ? .6 : .42) : .5;
 				anchorY += (targetAnchor - anchorY) * ease;
 				cam.x += (tgt.x - cam.x) * ease;
 				cam.y += (tgt.y - cam.y) * ease;
@@ -474,12 +474,11 @@ export default function AtlasRide() {
 
 					<div className={`ride-copy${phase === 0 ? "" : " faded"}`}>
 						<span className="kicker">The portfolio ride</span>
-						<h2>Take the scenic route.</h2>
+						<h1>Take the scenic route.</h1>
 						<p className="lede">My work, one stop at a time. Scroll to ride.</p>
-						<p className="lede lede-second">Explore the projects at each stop. Get off at the terminal to ask.</p>
 						<p className="dye-note">River dye week: Chicago runs the river green ahead of St. Patrick's Day.</p>
 						<button type="button" className="skip-ride" onClick={skipRide}>
-							Skip the ride
+							Skip to the live map
 						</button>
 					</div>
 
