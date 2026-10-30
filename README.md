@@ -159,8 +159,8 @@ site.
 
 ## CTA rail network
 
-Atlas opens and closes with the complete rail network from CTA's published
-GTFS package. The skyline between them is a secondary portfolio tour. Route
+Atlas opens with the scenic portfolio ride, followed by one complete rail
+network from CTA's published GTFS package. Route
 filters, station selection, arrivals, service context and real train positions
 share the Node proxy; the static network stays available when a feed fails.
 Project connections are editorial navigation, not work-location claims.

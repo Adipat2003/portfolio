@@ -53,9 +53,9 @@ BASE_URL=https://adipat2003.github.io/portfolio/ SPOT_CHECK=1 npm exec --yes --p
 
 This uses the same geometry assertions at 1920x1080, 1280x600, and 390x844.
 
-The suite also verifies both CTA map placements, all eight routes and 143
-stations, route filtering, station/search controls, editorial project links,
-44 px controls, in-Atlas anchors, shared polling, real-fix marker updates and
+The suite also verifies scenic-first ordering and one CTA map, all eight routes
+and 143 stations, route filtering, station/search controls, editorial project links,
+44 px controls, in-Atlas anchors, one polling loop, separated overview sprites, real-fix marker updates and
 stale/empty/unavailable fallbacks. To run only those checks during map work,
 use `NETWORK_ONLY=1` with the same command. Full validation still requires the
 unfiltered suite. Skyline checks additionally assert that selected/terminal

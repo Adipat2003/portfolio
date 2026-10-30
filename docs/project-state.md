@@ -506,3 +506,33 @@ nine viewports, both map placements and the full ride/Dispatch interaction
 pass. Selected landmarks fit below measured chrome, and terminal SVG bounds
 cover both screen edges at phone and short-laptop sizes. Production geometry
 and the hosted-feed spot check are recorded in the interface PR after publish.
+
+## Scenic-first Atlas redesign, 2026-10-29
+
+Issue #70 supersedes the two-map placement from October 27. Atlas now starts
+with the scenic portfolio ride and has one live CTA map afterward. The opening
+ride is the page's primary heading; Skip to the live map goes straight to CTA.
+On phones the introductory skyline sits lower in the stage, and project phases
+leave a smaller empty gap above their cards.
+
+The CTA surface is a quieter night chart with a compact line picker and station
+search, a separate departure card, and a collapsed Station guide for the full
+station selector, service context, transfers, project links and train list.
+View controls sit outside the drawing. All eight routes and all 143 station
+records remain available; ordinary dots recede at overview scale.
+
+Authored silver train sprites retain real coordinates and interruptible route
+interpolation. At a given zoom, displayed sprites are at least 36 screen pixels
+apart and leave the selected station clear. Labels avoid sprites and other
+labels using screen-sized geometry, and both text and sprites stay readable
+as the camera zooms. More vehicles and stations appear with zoom or filtering;
+the train list keeps every valid route-matched feed record. Nothing is moved to
+an invented coordinate to avoid a collision. Reduced motion disables selection
+pop and interpolation. No package or backend API changes were needed.
+
+Validation: the production export and service checks pass. The canonical browser
+suite passes all nine viewport geometries and the full ride, map and Dispatch
+interaction pass, including phone touch scrolling, keyboard focus, reduced motion
+and the no-JavaScript view. Visual review covers desktop, tablet, short laptop
+and phone captures. The ride uses clipping rather than a scroll container so
+keyboard focus cannot shift the skyline sideways and expose a screen edge.

@@ -124,53 +124,51 @@ async function checkMatrix(page, viewports) {
 }
 
 async function checkNetwork(page) {
-	const start = page.locator('.rail-network[data-placement="start"]');
-	const end = page.locator('.rail-network[data-placement="end"]');
-	assert.equal(await page.locator(".rail-network").count(), 2, "same map appears at both ends");
-	assert.equal(await start.locator(".rail-paths path").count(), 8, "all eight rail routes render");
-	assert.equal(await start.locator(".rail-station").count(), 143, "whole rail station network renders");
+	const map = page.locator(".rail-network");
+	assert.equal(await map.count(), 1, "one focused network follows the scenic ride");
+	assert.ok(await page.evaluate(() => document.querySelector(".ride").compareDocumentPosition(document.querySelector(".rail-network")) & Node.DOCUMENT_POSITION_FOLLOWING), "scenic route comes first");
+	await map.evaluate((element) => element.scrollIntoView({ block: "start" }));
+	assert.equal(await map.locator(".rail-paths path").count(), 8);
+	assert.equal(await map.locator(".rail-station").count(), 143);
 	await page.waitForFunction(() => document.querySelector(".rail-feed-status")?.getAttribute("data-state") !== "loading", null, { timeout: 25_000 });
+	if (await map.locator(".transit-board").count()) await page.waitForFunction(() => {
+		const board = document.querySelector(".rail-network .transit-board");
+		return board && board.getAttribute("data-state") !== "loading";
+	}, null, { timeout: 25_000 });
 	await capture(page, "network-desktop");
-	await start.getByRole("button", { name: "Brown", exact: true }).click();
-	assert.equal(await start.getByRole("button", { name: "Brown", exact: true }).getAttribute("aria-pressed"), "true");
-	assert.ok(await start.locator(".rail-station").count() < 143);
-	await start.getByRole("combobox").selectOption({ label: "Kimball" });
+	await map.getByRole("combobox", { name: "Choose a CTA line" }).selectOption("brn");
+	assert.ok(await map.locator(".rail-station").count() < 143);
+	await map.locator(".rail-more > summary").click();
+	await map.getByRole("combobox", { name: /Find a station/ }).selectOption({ label: "Kimball" });
 	await page.waitForTimeout(400);
-	assert.equal(await start.locator(".rail-selected-station h3").innerText(), "Kimball");
-	if (await start.locator(".transit-board").count()) {
-		assert.equal(await start.locator(".transit-board").getAttribute("aria-label"), "CTA station arrivals", "station boards outside the Loop have a network-wide accessible label");
-	}
-	assert.equal(await start.locator('.rail-station[aria-pressed="true"]').count(), 1);
-	await start.getByRole("button", { name: "All lines", exact: true }).click();
-	await start.getByRole("searchbox", { name: "Search CTA stations" }).fill("Clark/Lake");
-	await start.getByRole("group", { name: "Matching stations" }).getByRole("button", { name: "Clark/Lake", exact: true }).click();
-	assert.ok(await start.locator('.rail-projects a[href$="offline-sync-engine/"]').count(), "project station connects to the shared project");
-	await start.getByRole("button", { name: "The Loop", exact: true }).click();
+	assert.equal(await map.locator(".rail-selected-station h3").innerText(), "Kimball");
+	if (await map.locator(".transit-board").count()) assert.equal(await map.locator(".transit-board").getAttribute("aria-label"), "CTA station arrivals");
+	assert.equal(await map.locator('.rail-station[aria-pressed="true"]').count(), 1);
+	await map.getByRole("combobox", { name: "Choose a CTA line" }).selectOption("all");
+	await map.getByRole("searchbox", { name: "Search CTA stations" }).fill("Clark/Lake");
+	await map.getByRole("group", { name: "Matching stations" }).getByRole("button", { name: "Clark/Lake" }).click();
+	assert.ok(await map.locator('.rail-projects a[href$="offline-sync-engine/"]').count());
+	await map.getByRole("button", { name: "The Loop", exact: true }).click();
 	await page.waitForTimeout(400);
-	assert.ok(await start.locator(".rail-station text").count() > 1, "zoomed Loop reveals station labels");
-	await start.getByRole("button", { name: "Full network", exact: true }).click();
-	await page.waitForTimeout(400);
-	await end.scrollIntoViewIfNeeded();
-	await capture(page, "network-end-desktop");
+	assert.ok(await map.locator(".rail-station text").count() > 1);
+	await map.evaluate((element) => element.scrollIntoView({ block: "start" }));
+	await capture(page, "network-loop");
+	await map.getByRole("button", { name: "Full network", exact: true }).click();
+	await map.locator(".rail-more > summary").click();
 	for (const size of [{ width: 1280, height: 600 }, { width: 820, height: 1180 }, { width: 390, height: 844 }]) {
 		await page.setViewportSize(size);
-		await start.evaluate((element) => element.scrollIntoView({ block: "start" }));
+		await map.evaluate((element) => element.scrollIntoView({ block: "start" }));
 		await page.waitForTimeout(400);
-		assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), "network fits viewport");
-		const controls = await start.locator("button,select,input").evaluateAll((elements) => elements.map((e) => e.getBoundingClientRect().height));
-		assert.ok(controls.every((height) => height >= 44), "network controls have 44px targets");
+		assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
+		const controls = await map.locator("button,select,input").evaluateAll((elements) => elements.filter((e) => e.getBoundingClientRect().height > 0).map((e) => e.getBoundingClientRect().height));
+		assert.ok(controls.every((height) => height >= 44), "visible controls have 44px targets");
+		const clutter = await map.locator(".rail-live-train").evaluateAll((elements) => elements.map((element) => { const r = element.getBoundingClientRect(); return { x:r.x+r.width/2, y:r.y+r.height/2 }; }));
+		for (let i=0;i<clutter.length;i++) for(let k=i+1;k<clutter.length;k++) assert.ok(Math.hypot(clutter[i].x-clutter[k].x,clutter[i].y-clutter[k].y)>=35, "overview sprites do not overlap");
 		await capture(page, `network-${size.width}x${size.height}`);
 	}
 	await page.setViewportSize({ width: 1440, height: 900 });
-	await start.getByRole("combobox").focus();
-	await page.keyboard.press("Home");
-	await page.keyboard.press("ArrowDown");
-	await page.keyboard.press("Enter");
-	await start.getByRole("button", { name: "Full network", exact: true }).click();
-	await start.getByRole("link", { name: "Ride through the portfolio ↓" }).click();
-	assert.ok(await page.locator("#view-atlas").count(), "ride anchor keeps Atlas active");
-	await end.getByRole("link", { name: "Back to the start ↑" }).click();
-	assert.ok(await page.locator("#view-atlas").count(), "return anchor keeps Atlas active");
+	await map.getByRole("link", { name: "Back to the scenic route ↑" }).click();
+	assert.ok(await page.locator("#view-atlas").count());
 	await page.evaluate(() => window.scrollTo(0, 0));
 }
 
@@ -182,18 +180,19 @@ async function checkLiveUpdates(browser) {
 	let requests = 0;
 	await page.route("**/positions", async (route) => {
 		requests++;
-		const train = { id: "blue-123", route: "blue", lat: requests === 1 ? 41.8857 : requests === 2 ? 41.8835 : 41.8816, lon: -87.6295, heading: 180, destination: "Forest Park", nextStation: "Washington", nextStationId: "40370", isDelayed: false };
+		const train = { id: "blue-123", route: "blue", lat: requests === 1 ? 41.901 : requests === 2 ? 41.902 : 41.9033, lon: -87.6643, heading: 180, destination: "Forest Park", nextStation: "Washington", nextStationId: "40370", isDelayed: false };
 		await route.fulfill({ headers: { "access-control-allow-origin": baseUrl.origin }, contentType: "application/json", body: JSON.stringify({ available: requests !== 4,
 			trains: requests === 6 ? [] : [train], as_of: new Date(Date.now() + (requests === 7 ? 180_000 : requests === 5 ? -180_000 : 0)).toISOString() }) });
 	});
 	await page.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
 	await page.waitForSelector(".rail-network");
 	if (!(await page.locator(".transit-board").count())) { await page.close(); return; }
-	await page.locator('.rail-network[data-placement="start"] .rail-feed-status[data-state="live"]').waitFor();
-	assert.equal(requests, 1, "both placements share one positions poll");
-	assert.match(await page.locator('.rail-network[data-placement="start"] .rail-service').innerText(), /Purple Express/, "express status is distinguished from local Purple service");
-	assert.equal(await page.locator('.rail-live-train[data-train="blue-123"]').count(), 2);
-	const marker = page.locator('.rail-network[data-placement="start"] .rail-live-train').first();
+	await page.locator('.rail-network .rail-feed-status[data-state="live"]').waitFor();
+	assert.equal(requests, 1, "camera and station changes do not duplicate the positions poll");
+	await page.locator(".rail-more > summary").click();
+	assert.match(await page.locator('.rail-network .rail-service').innerText(), /Purple Express/, "express status is distinguished from local Purple service");
+	assert.equal(await page.locator('.rail-live-train[data-train="blue-123"]').count(), 1);
+	const marker = page.locator('.rail-network .rail-live-train').first();
 	const firstPosition = await marker.getAttribute("transform");
 	for (const tick of [2, 3, 4, 5, 6, 7]) {
 		if (tick === 3) await page.emulateMedia({ reducedMotion: "reduce" });
@@ -205,9 +204,9 @@ async function checkLiveUpdates(browser) {
 		if (tick === 2) assert.notEqual(await marker.getAttribute("transform"), firstPosition, "marker moves when its real fix changes");
 		if (tick === 3) assert.equal(await marker.evaluate((element) => getComputedStyle(element).transitionDuration), "0s", "reduced-motion fixes do not interpolate with CSS");
 		if (tick >= 4) {
-			await page.locator(`.rail-network[data-placement="start"] .rail-feed-status[data-state="${tick === 6 ? "empty" : "offline"}"]`).waitFor();
+			await page.locator(`.rail-network .rail-feed-status[data-state="${tick === 6 ? "empty" : "offline"}"]`).waitFor();
 			assert.equal(await page.locator(".rail-live-train").count(), 0, "empty/stale/unavailable feeds never leave fake moving trains");
-			assert.equal(await page.locator(".rail-paths path").count(), 16, "static network survives feed failure");
+			assert.equal(await page.locator(".rail-paths path").count(), 8, "static network survives feed failure");
 		}
 	}
 	await page.close();
@@ -219,6 +218,7 @@ try {
 		const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 		await page.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
 		await page.waitForSelector("#view-atlas");
+		await capture(page, "atlas-intro-desktop");
 		await checkNetwork(page);
 		await checkLiveUpdates(browser);
 		console.log("Network browser checks passed");
@@ -378,7 +378,7 @@ try {
 				assert.ok(terminal.bottom <= terminal.height, "terminal stays inside viewport");
 				await capture(page, `terminal-${viewport.width}x${viewport.height}`);
 				const edge = await page.locator(".chi-map.riding").evaluate((element) => ({ left: element.getBoundingClientRect().left, right: element.getBoundingClientRect().right, width: innerWidth }));
-				assert.ok(edge.left <= 1 && edge.right >= edge.width - 1, "terminal never exposes the SVG's right edge");
+				assert.ok(edge.left <= 1 && edge.right >= edge.width - 1, `terminal covers screen edges: ${JSON.stringify(edge)}`);
 			}
 			await page.setViewportSize({ width: 1440, height: 900 });
 			await page.getByRole("button", { name: /Jump to The terminal/ }).click();
@@ -464,6 +464,7 @@ try {
 		touchPage.on("pageerror", (error) => errors.push(error.message));
 		await touchPage.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
 		await touchPage.waitForSelector("#view-atlas");
+		await capture(touchPage, "atlas-intro-phone");
 		await touchPage.locator(".ride").evaluate((element) => element.scrollIntoView({ block: "start" }));
 		await touchPage.mouse.wheel(0, 1200);
 		await touchPage.waitForTimeout(300);
@@ -509,7 +510,7 @@ try {
 		for (let gesture = 0; gesture < 4; gesture++) {
 			await touchPage.mouse.wheel(0, 2400);
 			await touchPage.waitForTimeout(150);
-			closingMapVisible = await touchPage.locator('.rail-network[data-placement="end"]').evaluate((element) => {
+			closingMapVisible = await touchPage.locator('.rail-network').evaluate((element) => {
 				const bounds = element.getBoundingClientRect();
 				return bounds.top < innerHeight && bounds.bottom > 0;
 			});
