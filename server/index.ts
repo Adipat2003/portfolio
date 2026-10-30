@@ -10,6 +10,7 @@
  *   SERVICE_ALLOWED_ORIGINS  comma-separated allowed Origin values
  *   NVIDIA_API_KEY          optional; enables model polish on /ask-model
  *   NVIDIA_MODEL            model id (default z-ai/glm-5.3-flash)
+ *   NVIDIA_TRANSIT_MODEL    transit selector (default meta/llama-3.1-8b-instruct)
  *   NVIDIA_ENDPOINT         chat completions endpoint (default
  *                           https://integrate.api.nvidia.com/v1/chat/completions)
  */
@@ -39,6 +40,7 @@ const ALLOWED_ORIGINS = new Set(
 );
 const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY?.trim(); // never logged, never returned; trim guards against paste artifacts
 const NVIDIA_MODEL = process.env.NVIDIA_MODEL ?? "z-ai/glm-5.3-flash";
+const NVIDIA_TRANSIT_MODEL = process.env.NVIDIA_TRANSIT_MODEL ?? "meta/llama-3.1-8b-instruct";
 const NVIDIA_ENDPOINT =
   process.env.NVIDIA_ENDPOINT ??
   "https://integrate.api.nvidia.com/v1/chat/completions";
@@ -59,7 +61,7 @@ const askModel = createAskModel(content, {
 });
 
 const transitGuide = createTransitGuide({ stations: railNetwork.stations, network: ctaNetwork, cta,
-  apiKey: NVIDIA_API_KEY, model: NVIDIA_MODEL, endpoint: NVIDIA_ENDPOINT });
+  apiKey: NVIDIA_API_KEY, model: NVIDIA_TRANSIT_MODEL, endpoint: NVIDIA_ENDPOINT });
 
 /* --------------------------------------------------------- rate limiting */
 
@@ -168,6 +170,7 @@ const server = createServer(async (req, res) => {
         uptime_s: Math.floor((Date.now() - startedAt) / 1000),
         model_polish: Boolean(NVIDIA_API_KEY),
         model: NVIDIA_API_KEY ? NVIDIA_MODEL : null,
+        transit_model: NVIDIA_API_KEY ? NVIDIA_TRANSIT_MODEL : null,
       },
       corsHeaders(origin),
     );

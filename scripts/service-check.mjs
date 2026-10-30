@@ -49,7 +49,7 @@ async function checkTransitGuide() {
 	assert.equal(glm.reasoning_effort,"low");
 	assert.equal(glm.max_tokens,4096);
 	assert.equal(glm.chat_template_kwargs.clear_thinking,true);
-	assert.equal(modelRequestOptions("other-model",350).max_tokens,350);
+	assert.deepEqual(modelRequestOptions("meta/llama-3.1-8b-instruct",350),{max_tokens:350});
 	const originalFetch = globalThis.fetch;
 	const now = new Date().toISOString();
 	const opts = { stations:[{id:"40380",name:"Clark/Lake",routes:["blue"]}], network:{
@@ -72,11 +72,13 @@ async function checkTransitGuide() {
 		globalThis.fetch=async()=>Response.json({choices:[{message:{content:'{"record_ids":["r0"]}'}}]});
 		const answer=await createTransitGuide({...opts,apiKey:"fixture"})("Next train?","40380");
 		assert.equal(answer.model_used,true);
+		assert.equal(answer.model_status,"selected");
 		assert.equal(answer.evidence.length,1);
 		assert.match(answer.answer,/scheduled/);
 		globalThis.fetch=async()=>Response.json({choices:[{message:{content:'{"record_ids":["invented"],"answer":"Made-up blockade"}'}}]});
 		const rejected=await createTransitGuide({...opts,apiKey:"fixture"})("Any closures?");
 		assert.equal(rejected.model_used,false);
+		assert.equal(rejected.model_status,"invalid_output");
 		assert.ok(!rejected.answer.includes("Made-up"));
 		globalThis.fetch=async()=>Response.json({CTAAlerts:{ErrorCode:"0",Alert:{AlertId:"123",Headline:"<b>Closure</b>",ShortDescription:"<p>Use another station.</p>",SeverityScore:"12",ImpactedService:{Service:[{ServiceType:"R",ServiceId:"Blue"},{ServiceType:"T",ServiceId:"40380"}]},AlertURL:{"#cdata-section":"javascript:invalid"}}}});
 		const proxy=createCtaNetworkProxy({ttlMs:0});
