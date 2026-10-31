@@ -69,3 +69,10 @@ same command. Full validation still requires the unfiltered suite.
 The geographic-map checks also verify bundled water, park and street layers,
 interruptible camera movement, immediate keyboard and reduced-motion camera
 changes, and the absence of extra position polls during navigation.
+
+Street tile requests are always intercepted with local fixtures in automated
+checks, including production checks. Do not remove this interception to capture
+real tiles with headless pan/zoom runs. The OSM tile policy prohibits those scans.
+Review actual street coverage through a native browser during normal viewing.
+`#map` is the direct map entry. Public food source labels, clusters, selection,
+layer toggles and tile-failure fallback are checked alongside the CTA flows.

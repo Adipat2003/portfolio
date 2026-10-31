@@ -463,6 +463,158 @@
   "chicago": {
     "spots": [],
     "events": [],
-    "landmark_notes": {}
+    "landmark_notes": {},
+    "public_food_lists": {
+      "checked_on": "2026-10-30",
+      "collections": [
+        {
+          "id": "beli-resy",
+          "title": "Beli \u00d7 Resy top-rated",
+          "description": "The first five entries in Resy\u2019s public Beli top-rated Chicago list. This covers Resy restaurants, not all Chicago dining.",
+          "url": "https://blog.resy.com/2026/10/beli-restaurants-chicago/",
+          "period": "Published October 30, 2026"
+        },
+        {
+          "id": "weekly",
+          "title": "OpenTable weekly most-booked",
+          "description": "The five entries displayed in OpenTable\u2019s public weekly most-booked Chicago list when checked. A dated snapshot, not a live popularity feed.",
+          "url": "https://www.opentable.com/metro/chicago-restaurants?lang=en-us",
+          "period": "Checked October 30, 2026"
+        }
+      ],
+      "places": [
+        {
+          "id": "bavettes",
+          "name": "Bavette\u2019s Bar & Boeuf",
+          "address": "218 W Kinzie St, Chicago, IL",
+          "neighborhood": "River North",
+          "collection": "beli-resy",
+          "rank": 1,
+          "website": "https://www.bavettessteakhouse.com/chicago/about",
+          "lat": 41.889218,
+          "lon": -87.634413,
+          "coordinate_source": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=218+W+Kinzie+St%2C+Chicago%2C+IL&benchmark=Public_AR_Current&format=json",
+          "coordinate_note": "Approximate street-address location from the US Census Geocoder, not an entrance.",
+          "notice": "Official site reports a temporary closure with reopening planned for mid-November. Check the restaurant before visiting."
+        },
+        {
+          "id": "indienne",
+          "name": "Indienne",
+          "address": "217 W Huron St, Chicago, IL",
+          "neighborhood": "River North",
+          "collection": "beli-resy",
+          "rank": 2,
+          "website": "https://www.indiennechicago.com/information",
+          "lat": 41.894723,
+          "lon": -87.634931,
+          "coordinate_source": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=217+W+Huron+St%2C+Chicago%2C+IL&benchmark=Public_AR_Current&format=json",
+          "coordinate_note": "Approximate street-address location from the US Census Geocoder, not an entrance."
+        },
+        {
+          "id": "armitage-alehouse",
+          "name": "Armitage Alehouse",
+          "address": "1000 W Armitage Ave, Chicago, IL",
+          "neighborhood": "Lincoln Park",
+          "collection": "beli-resy",
+          "rank": 3,
+          "website": "https://www.armitagealehouse.com/about",
+          "lat": 41.918161,
+          "lon": -87.653446,
+          "coordinate_source": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=1000+W+Armitage+Ave%2C+Chicago%2C+IL&benchmark=Public_AR_Current&format=json",
+          "coordinate_note": "Approximate street-address location from the US Census Geocoder, not an entrance."
+        },
+        {
+          "id": "monteverde",
+          "name": "Monteverde",
+          "address": "1020 W Madison St, Chicago, IL",
+          "neighborhood": "West Loop",
+          "collection": "beli-resy",
+          "rank": 4,
+          "website": "https://monteverdechicago.com/contact/",
+          "lat": 41.881756,
+          "lon": -87.653112,
+          "coordinate_source": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=1020+W+Madison+St%2C+Chicago%2C+IL&benchmark=Public_AR_Current&format=json",
+          "coordinate_note": "Approximate street-address location from the US Census Geocoder, not an entrance."
+        },
+        {
+          "id": "maxwells-trading",
+          "name": "Maxwells Trading",
+          "address": "1516 W Carroll Ave, Chicago, IL",
+          "neighborhood": "West Loop",
+          "collection": "beli-resy",
+          "rank": 5,
+          "website": "https://www.maxwellstrading.com/",
+          "lat": 41.887469,
+          "lon": -87.665188,
+          "coordinate_source": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=1516+W+Carroll+Ave%2C+Chicago%2C+IL&benchmark=Public_AR_Current&format=json",
+          "coordinate_note": "Approximate street-address location from the US Census Geocoder, not an entrance."
+        },
+        {
+          "id": "walnut-room",
+          "name": "The Walnut Room",
+          "address": "111 N State St, Chicago, IL",
+          "neighborhood": "Loop",
+          "collection": "weekly",
+          "rank": 1,
+          "website": "https://macysrestaurants.com/walnut-room/",
+          "lat": 41.88369,
+          "lon": -87.627808,
+          "coordinate_source": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=111+N+State+St%2C+Chicago%2C+IL&benchmark=Public_AR_Current&format=json",
+          "coordinate_note": "Approximate street-address location from the US Census Geocoder, not an entrance."
+        },
+        {
+          "id": "pizzeria-portofino",
+          "name": "Pizzeria Portofino",
+          "address": "317 N Clark St, Chicago, IL",
+          "neighborhood": "River North",
+          "collection": "weekly",
+          "rank": 2,
+          "website": "https://www.opentable.com/r/pizzeria-portofino-chicago",
+          "lat": 41.88807,
+          "lon": -87.630958,
+          "coordinate_source": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=317+N+Clark+St%2C+Chicago%2C+IL&benchmark=Public_AR_Current&format=json",
+          "coordinate_note": "Approximate street-address location from the US Census Geocoder, not an entrance."
+        },
+        {
+          "id": "naia",
+          "name": "NAIA",
+          "address": "300 N LaSalle St, Chicago, IL",
+          "neighborhood": "River North",
+          "collection": "weekly",
+          "rank": 3,
+          "website": "https://www.naiarestaurant.com/location/naia/",
+          "lat": 41.888012,
+          "lon": -87.632616,
+          "coordinate_source": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=300+N+LaSalle+St%2C+Chicago%2C+IL&benchmark=Public_AR_Current&format=json",
+          "coordinate_note": "Approximate street-address location from the US Census Geocoder, not an entrance."
+        },
+        {
+          "id": "gibsons-italia",
+          "name": "Gibsons Italia",
+          "address": "233 N Canal St, Chicago, IL",
+          "neighborhood": "River North",
+          "collection": "weekly",
+          "rank": 4,
+          "website": "https://gibsonsitalia.com/",
+          "lat": 41.886099,
+          "lon": -87.63977,
+          "coordinate_source": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=233+N+Canal+St%2C+Chicago%2C+IL&benchmark=Public_AR_Current&format=json",
+          "coordinate_note": "Approximate street-address location from the US Census Geocoder, not an entrance."
+        },
+        {
+          "id": "roberts-pizza",
+          "name": "Robert\u2019s Pizza and Dough Company",
+          "address": "465 N McClurg Ct, Chicago, IL",
+          "neighborhood": "Streeterville",
+          "collection": "weekly",
+          "rank": 5,
+          "website": "https://www.opentable.com/r/roberts-pizza-and-dough-company-chicago",
+          "lat": 41.891109,
+          "lon": -87.617593,
+          "coordinate_source": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=465+N+McClurg+Ct%2C+Chicago%2C+IL&benchmark=Public_AR_Current&format=json",
+          "coordinate_note": "Approximate street-address location from the US Census Geocoder, not an entrance."
+        }
+      ]
+    }
   }
 }

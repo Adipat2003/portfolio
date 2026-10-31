@@ -1,3 +1,4 @@
+import PublicPlaces from "./chicago/PublicPlaces";
 import { site, publishedProjects } from "@/content/load";
 import FilterBar from "./FilterBar";
 import AskBox from "./AskBox";
@@ -72,6 +73,8 @@ export default function DispatchFacade() {
       />
 
       <BiteRadar id="f1-bites" />
+
+      <PublicPlaces />
 
       <RotatingEvents />
 

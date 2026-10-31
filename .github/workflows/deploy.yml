@@ -36,6 +36,7 @@ jobs:
           node scripts/chicago-check.mjs
           node scripts/art-export.mjs --check
           node scripts/basemap-check.mjs
+          node scripts/map-layers-check.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: out

@@ -18,6 +18,10 @@ const requireFromPlaywright = createRequire(playwrightCli);
 const { chromium } = requireFromPlaywright("playwright");
 const baseUrl = new URL(process.env.BASE_URL ?? "http://localhost:3000/portfolio/");
 const errors = [];
+// Automated pan/zoom checks use fixtures, never the community tile server.
+async function mockStreetTiles(page) {
+	await page.route("https://tile.openstreetmap.org/**",(route)=>route.fulfill({contentType:"image/svg+xml",body:'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"/>'}));
+}
 const screenshotDir = process.env.SCREENSHOT_DIR;
 async function capture(page, name) {
 	if (!screenshotDir) return;
@@ -139,6 +143,21 @@ async function checkNetwork(page) {
 	assert.ok(await map.locator(".rail-water path").count() > 100, "real water geometry replaces the illustrative shoreline");
 	assert.ok(await map.locator(".rail-parks path").count() > 100, "local park geometry is available without tile requests");
 	assert.equal(await map.locator(".rail-streets path").count(),3);
+	await page.waitForFunction(()=>document.querySelector(".rail-street-map")?.getAttribute("data-state")==="ready");
+	assert.ok(await map.locator(".rail-street-map image").count()>0,"full street tiles cover the visible city extent");
+	assert.ok(await map.getByRole("link",{name:"© OpenStreetMap contributors",exact:true}).isVisible());
+	assert.equal(await map.locator(".rail-food-places [role=button]").evaluateAll((elements)=>elements.reduce((sum,e)=>sum+Number(e.dataset.placeCount),0)),10,"both public lists appear directly on the map");
+	await map.getByRole("button",{name:"Food places and layers"}).click();
+	assert.ok(await map.getByRole("button",{name:/Beli × Resy top-rated/}).count());
+	assert.ok(await map.getByRole("button",{name:/OpenTable weekly most-booked/}).count());
+	await map.getByRole("button",{name:/OpenTable weekly most-booked/}).click();
+	assert.equal(await map.locator(".rail-food-places [role=button]").evaluateAll((elements)=>elements.reduce((sum,e)=>sum+Number(e.dataset.placeCount),0)),5,"food sources toggle independently");
+	await map.getByRole("button",{name:/OpenTable weekly most-booked/}).click();
+	await capture(page,"food-lists-desktop");
+	await map.getByRole("button",{name:/Bavette/}).click();
+	assert.match(await map.locator(".rail-sheet").innerText(),/temporary closure/);
+	await map.getByRole("button",{name:"Close map details"}).click();
+	await map.getByRole("button",{name:"Chicago",exact:true}).click();
 	await capture(page, "network-desktop");
 	await map.getByRole("combobox", { name: "Choose a CTA line" }).selectOption("brn");
 	assert.ok(await map.locator(".rail-station").count() < 143);
@@ -166,7 +185,7 @@ async function checkNetwork(page) {
 	assert.equal(await map.getByRole("button", { name: "Loop", exact:true }).getAttribute("aria-pressed"), "true");
 	assert.ok(await map.locator(".rail-station text").count() <= 1, "zoom does not bring back label clutter");
 	await capture(page, "network-loop");
-	await map.getByRole("button", { name: "Network", exact:true }).click();
+	await map.getByRole("button", { name: "Chicago", exact:true }).click();
 	for (const size of [{ width:1920,height:1080 }, { width:1280,height:600 }, { width:820,height:1180 }, { width:390,height:844 }, { width:320,height:740 }]) {
 		await page.setViewportSize(size);
 		await map.evaluate((element) => element.scrollIntoView({ block:"start" }));
@@ -209,7 +228,16 @@ async function checkNetwork(page) {
 	assert.ok(dismiss,"long answers keep the close control on screen");
 	await capture(page,"network-guide-phone");
 	await map.getByRole("button",{name:"Close map details"}).click();
+	await map.getByRole("button",{name:"Food places and layers"}).click();
+	await capture(page,"food-lists-phone");
+	await map.getByRole("button",{name:"Close map details"}).click();
 	await page.setViewportSize({width:1440,height:900});
+	await page.route("https://tile.openstreetmap.org/**",(route)=>route.abort());
+	for(let step=0;step<3;step++){await map.getByRole("button",{name:"Zoom out",exact:true}).click();await page.waitForTimeout(320);}
+	await page.waitForFunction(()=>document.querySelector(".rail-street-map")?.getAttribute("data-state")==="unavailable");
+	assert.equal(await map.locator(".rail-geography").evaluate((element)=>getComputedStyle(element).visibility),"visible","tile errors retain the local vector fallback");
+	assert.ok(await map.getByText("Street details unavailable. Local reference map shown.").isVisible());
+	assert.equal(await map.locator(".rail-paths path").count(),8);
 	await map.getByRole("button",{name:"Ask CTA",exact:true}).click();
 	await map.getByRole("link",{name:"Back to the scenic route ↑"}).click();
 	assert.equal(await map.locator(".rail-sheet").count(),0,"leaving the map closes its guide panel");
@@ -218,6 +246,7 @@ async function checkNetwork(page) {
 
 async function checkLiveUpdates(browser) {
 	const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+	await mockStreetTiles(page);
 	page.on("pageerror", (error) => errors.push(error.message));
 	await page.clock.install();
 	await page.route("**/transit-alerts", (route) => route.fulfill({ headers: { "access-control-allow-origin": baseUrl.origin }, contentType: "application/json", body: JSON.stringify({ available: true, routes: [{ route: "p", status: "Normal Service" }, { route: "pexp", status: "Planned Work" }] }) }));
@@ -238,7 +267,7 @@ async function checkLiveUpdates(browser) {
 	await page.getByRole("button", {name:"Loop",exact:true}).click();
 	await page.clock.runFor(120);
 	assert.equal(await page.locator(".rail-network").getAttribute("data-camera"),"moving");
-	await page.getByRole("button", {name:"Network",exact:true}).click();
+	await page.getByRole("button", {name:"Chicago",exact:true}).click();
 	await page.clock.runFor(320);
 	assert.equal(await page.locator(".rail-network").getAttribute("data-camera"),"idle","camera can be interrupted and settles on the latest target");
 	assert.equal(await page.locator(".rail-map-svg").getAttribute("viewBox"),networkExtent);
@@ -247,10 +276,10 @@ async function checkLiveUpdates(browser) {
 	assert.equal(await page.locator(".rail-network").getAttribute("data-camera"),"idle","reduced-motion camera changes are immediate");
 	assert.equal(await page.locator(".rail-sheet").count(),0);
 	await page.emulateMedia({reducedMotion:"no-preference"});
-	await page.getByRole("button", {name:"Network",exact:true}).focus();
+	await page.getByRole("button", {name:"Chicago",exact:true}).focus();
 	await page.keyboard.press("Enter");
 	assert.equal(await page.locator(".rail-network").getAttribute("data-camera"),"idle","keyboard navigation never waits for camera motion");
-	assert.equal(await page.getByRole("button", {name:"Network",exact:true}).getAttribute("aria-pressed"),"true");
+	assert.equal(await page.getByRole("button", {name:"Chicago",exact:true}).getAttribute("aria-pressed"),"true");
 
 	assert.equal(await page.locator('.rail-live-train[data-train="blue-123"]').count(), 1);
 	const marker = page.locator('.rail-network .rail-live-train').first();
@@ -273,18 +302,32 @@ async function checkLiveUpdates(browser) {
 	await page.close();
 }
 
+async function checkMapDeepLink(browser) {
+	const page=await browser.newPage({viewport:{width:390,height:844}});
+	await mockStreetTiles(page);
+	await page.goto(new URL("#map",baseUrl).href,{waitUntil:"domcontentloaded"});
+	await page.locator('.rail-network[data-ready="true"]').waitFor();
+	assert.equal(await page.title(),"Aditya Patel: The Atlas");
+	assert.ok(Math.abs(await page.locator(".rail-network").evaluate((element)=>element.getBoundingClientRect().top))<=1,"direct map links enter at the complete city view");
+	await capture(page,"map-deep-link-phone");
+	await page.close();
+}
+
 const browser = await chromium.launch({ headless: true });
 try {
 	if (process.env.NETWORK_ONLY === "1") {
 		const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+		await mockStreetTiles(page);
 		await page.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
 		await page.waitForSelector("#view-atlas");
 		await capture(page, "atlas-intro-desktop");
 		await checkNetwork(page);
 		await checkLiveUpdates(browser);
+		await checkMapDeepLink(browser);
 		console.log("Network browser checks passed");
 	} else if (process.env.SPOT_CHECK === "1") {
 		const page = await browser.newPage();
+		await mockStreetTiles(page);
 		const session = await page.context().newCDPSession(page);
 		await session.send("Network.enable");
 		await session.send("Network.setCacheDisabled", { cacheDisabled: true });
@@ -294,6 +337,7 @@ try {
 		console.log(JSON.stringify({ result: "passed", baseUrl: baseUrl.href, cacheDisabled: true, matrix }, null, 2));
 	} else {
 		const keyboardPage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+		await mockStreetTiles(keyboardPage);
 		keyboardPage.on("pageerror", (error) => errors.push(error.message));
 		await keyboardPage.goto(baseUrl.href, { waitUntil: "domcontentloaded" });
 		await keyboardPage.keyboard.press("Tab");
@@ -311,12 +355,16 @@ try {
 			viewport: { width: 1440, height: 900 },
 		});
 		const noJsPage = await noJsContext.newPage();
+		await mockStreetTiles(noJsPage);
 		await noJsPage.goto(baseUrl.href, { waitUntil: "domcontentloaded" });
 		assert.match(await noJsPage.locator("h1").innerText(), /I build systems that keep working/);
 		assert.ok(await noJsPage.locator(".project-card").count(), "static project content renders without JavaScript");
+		await noJsPage.locator(".public-food-lists summary").first().click();
+		assert.ok(await noJsPage.locator(".public-food-lists").getByRole("link",{name:/Bavette/}).isVisible(),"public food content is available in Dispatch without JavaScript");
 		await noJsContext.close();
 
 		const motionPage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+		await mockStreetTiles(motionPage);
 		motionPage.on("pageerror", (error) => errors.push(error.message));
 		await motionPage.emulateMedia({ reducedMotion: "reduce" });
 		await motionPage.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
@@ -329,6 +377,7 @@ try {
 		await motionPage.close();
 
 		const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+		await mockStreetTiles(page);
 		page.on("pageerror", (error) => errors.push(error.message));
 
 		await page.goto(baseUrl.href, { waitUntil: "domcontentloaded" });
@@ -347,6 +396,7 @@ try {
 		assert.equal(await page.locator(".mosaics").count(), 0, "Atlas has no detached impact-number mosaics");
 		await checkNetwork(page);
 		await checkLiveUpdates(browser);
+		await checkMapDeepLink(browser);
 		await page.locator("#btn-dispatch").click();
 		await page.waitForFunction(() => document.title.includes("The Dispatch"));
 		assert.equal(new URL(page.url()).hash, "");
@@ -565,6 +615,7 @@ try {
 			hasTouch: true,
 		});
 		const touchPage = await touchContext.newPage();
+		await mockStreetTiles(touchPage);
 		touchPage.on("pageerror", (error) => errors.push(error.message));
 		await touchPage.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
 		await touchPage.waitForSelector("#view-atlas");
