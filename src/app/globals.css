@@ -698,3 +698,38 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 @media(max-width:360px){.rail-map-tools{left:10px;gap:6px}.rail-network .rail-map-tools .rail-view-switch button{padding-inline:8px}}
 
 .atlas-loading{min-height:100svh;display:grid;place-items:center;background:#111e25;color:#c5d6e3;font:14px var(--sans)}
+
+.rail-control-bar{grid-template-columns:122px minmax(0,1fr) 44px}
+.rail-network .rail-food-control{padding:10px}
+.rail-food-control svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.rail-street-map{pointer-events:none;filter:invert(1) hue-rotate(180deg) saturate(.25) brightness(.85);mix-blend-mode:screen;opacity:.7}
+.rail-food-places [role="button"]{cursor:pointer;outline:none}
+.rail-food-hit{fill:transparent}
+.rail-food-dot{fill:#efcb87;stroke:#142530;stroke-width:2;vector-effect:non-scaling-stroke}
+.rail-food-places [role="button"]:focus-visible .rail-food-dot{stroke:#fff;stroke-width:3}
+.rail-food-count{fill:#122431;font:600 11px var(--sans);pointer-events:none}
+.rail-food-glyph{fill:none;stroke:#122431;stroke-width:1.3;stroke-linecap:round;pointer-events:none}
+.rail-tile-credit{position:absolute;right:24px;bottom:4px;z-index:3;font:10px/1.4 var(--sans);background:#111e25e8;color:#d0dce4;padding:2px 5px;border-radius:3px}
+.rail-tile-credit a{color:inherit;text-decoration:none}
+.rail-food-lists section+section{border-top:1px solid var(--rail-rule);margin-top:22px;padding-top:22px}
+.rail-food-toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left}
+.rail-food-toggle span{font-size:11px;color:#e9c783}
+.rail-food-lists ol{list-style:none;padding:0}.rail-food-lists li button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin:6px 0;background:transparent;border-color:var(--rail-rule)}
+.rail-food-lists li b{font:12px var(--mono);color:#e9c783}
+.rail-place-details>button{display:block;margin-top:24px;width:100%}
+.rail-place-details .rail-place-source{color:#f0cd8c;font-size:12px}
+.rail-place-notice{padding:12px;border-left:2px solid #e9c783;background:#e9c7830b}
+.public-food-lists{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.public-food-lists details{border:1px solid var(--rule);border-radius:12px;padding:18px}
+.public-food-lists summary{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:44px;font-weight:600;cursor:pointer}
+.public-food-lists summary span{font-size:12px;color:var(--ink-soft);white-space:nowrap}
+.public-food-lists p{font-size:14px;color:var(--ink-soft)}
+.public-food-lists li{padding:8px 0}.public-food-lists li span{display:block;font-size:12px;color:var(--ink-soft);margin-top:5px}
+@media(max-width:760px){.rail-control-bar{grid-template-columns:108px minmax(0,1fr) 44px}.rail-line-picker select{font-size:13px}.rail-map-tools{bottom:26px}.rail-map-credit{bottom:30px}.rail-tile-credit{right:10px;bottom:3px;font-size:10px}.public-food-lists{grid-template-columns:1fr}}
+
+.rail-map-svg:has(.rail-street-map[data-state="ready"]) .rail-geography{visibility:hidden}
+
+.rail-map-alert{position:absolute;top:calc(var(--bar-h,64px) + 72px);left:24px;z-index:2;max-width:280px;padding:10px 14px;background:#172635ef;border:1px solid #64829b;border-radius:10px;color:#d9e5ec;font:12px/1.5 var(--sans)}
+@media(max-width:760px){.rail-map-alert{top:calc(var(--bar-h,64px) + 126px);left:14px;margin:8px 0}.rail-sheet{bottom:26px}}
+
+.rail-food-lists section{padding:8px 0}

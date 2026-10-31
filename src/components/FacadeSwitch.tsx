@@ -12,7 +12,7 @@ export default function FacadeSwitch() {
   useEffect(() => {
     const syncFromHash = () => {
       if (typeof window === "undefined") return;
-      setFacade(["#atlas", "#atlas-ride", "#view-atlas"].includes(window.location.hash) ? "atlas" : "dispatch");
+      setFacade(["#atlas", "#atlas-ride", "#view-atlas", "#map"].includes(window.location.hash) ? "atlas" : "dispatch");
     };
 
     syncFromHash();
@@ -38,17 +38,12 @@ export default function FacadeSwitch() {
       facade === "dispatch"
         ? "Aditya Patel: The Dispatch"
         : "Aditya Patel: The Atlas";
-    // On a deep-linked #atlas load the mount-time assignment is wiped: React
-    // restores the static <title> after hydration settles, which runs after
-    // the effects. Re-assert on later macrotasks so the restore never keeps
-    // the last word. Toggling later works without the ladder, but the first
-    // paint after a deep link needs it.
-    const timers = [0, 60, 250, 600].map((ms) =>
-      window.setTimeout(() => {
-        document.title = next;
-      }, ms)
-    );
-    return () => timers.forEach((t) => window.clearTimeout(t));
+    // Keep the selected facade title when lazy content hydrates.
+    const syncTitle = () => { if (document.title !== next) document.title = next; };
+    syncTitle();
+    const observer = new MutationObserver(syncTitle);
+    observer.observe(document.head, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
   }, [facade]);
 
   return (

@@ -36,6 +36,7 @@ def load_content() -> dict:
     atlas = json.loads((CONTENT / "atlas.json").read_text())
     seasons = json.loads((CONTENT / "seasons.json").read_text())
     chicago = json.loads((CONTENT / "chicago.json").read_text())
+    public_places = json.loads((CONTENT / "public-places.json").read_text())
     if not projects.get("public_safe_reviewed"):
         sys.exit("content guard: projects.json must set public_safe_reviewed true")
     for p in projects["projects"]:
@@ -77,6 +78,7 @@ def load_content() -> dict:
         "atlas": atlas,
         "seasons": seasons,
         "chicago": chicago,
+        "public_places": public_places,
     }
 
 
@@ -124,7 +126,7 @@ def e(s: object) -> str:
 
 def content_digest(data: dict) -> str:
     h = hashlib.sha256()
-    for name in ("site.json", "projects.json", "atlas.json", "seasons.json", "chicago.json"):
+    for name in ("site.json", "projects.json", "atlas.json", "seasons.json", "chicago.json", "public-places.json"):
         h.update(name.encode())
         h.update((CONTENT / name).read_bytes())
     return h.hexdigest()[:16]
@@ -482,6 +484,14 @@ def render_chicago_spots(chicago: dict, facade_id: str) -> str:
   </section>"""
 
 
+def render_public_places(data: dict) -> str:
+    rows = []
+    for collection in data["collections"]:
+        items = "".join(f'<li><a href="{e(place["website"])}">{e(place["name"])}</a><p>{e(place["address"])}. {e(place.get("notice", ""))}</p></li>' for place in data["places"] if place["collection"] == collection["id"])
+        rows.append(f'<details><summary>{e(collection["title"])}</summary><p>{e(collection["description"])} {e(collection["period"])}.</p><ol>{items}</ol><a href="{e(collection["url"])}">Ranking source</a></details>')
+    return f'<section aria-labelledby="public-food-title"><div class="wrap"><h2 id="public-food-title">Public food lists</h2><p>Public rankings, separate from Aditya’s recommendations. Snapshot checked {e(data["checked_on"])}.</p>{"".join(rows)}</div></section>'
+
+
 def render_chicago_events(chicago: dict) -> str:
     """The city-events slot. Static output carries the first event, the same fact a reduced-motion reader gets."""
     events = chicago.get("events", [])
@@ -656,6 +666,7 @@ def render_index(data: dict, season: str | None = None) -> str:
     </div>
   </section>
 {render_chicago_spots(chicago, "f1")}
+{render_public_places(data["public_places"])}
 {render_chicago_events(chicago)}
 {render_landmarks(atlas, chicago, "f1")}
 {render_ask(site, "f1")}
@@ -780,6 +791,7 @@ def render_api(data: dict, digest: str) -> str:
                 "spots": data["chicago"].get("spots", []),
                 "events": data["chicago"].get("events", []),
                 "landmark_notes": data["chicago"].get("landmark_notes", {}),
+                "public_food_lists": data["public_places"],
             },
         },
         indent=2,
