@@ -126,7 +126,7 @@ def e(s: object) -> str:
 
 def content_digest(data: dict) -> str:
     h = hashlib.sha256()
-    for name in ("site.json", "projects.json", "atlas.json", "seasons.json", "chicago.json"):
+    for name in ("site.json", "projects.json", "atlas.json", "seasons.json", "chicago.json", "public-places.json"):
         h.update(name.encode())
         h.update((CONTENT / name).read_bytes())
     return h.hexdigest()[:16]
