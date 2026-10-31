@@ -21,6 +21,8 @@ const errors = [];
 const screenshotDir = process.env.SCREENSHOT_DIR;
 async function capture(page, name) {
 	if (!screenshotDir) return;
+	await page.waitForFunction(() => document.querySelector(".rail-network")?.getAttribute("data-camera") !== "moving");
+	await page.evaluate(() => Promise.allSettled(Array.from(document.querySelectorAll(".rail-sheet,.rail-paths path,.rail-route-reveal")).flatMap((element) => element.getAnimations().map((animation) => animation.finished))));
 	mkdirSync(screenshotDir, { recursive: true });
 	const session = await page.context().newCDPSession(page);
 	const { data } = await session.send("Page.captureScreenshot", { format: "jpeg", quality: 88 });
@@ -133,6 +135,10 @@ async function checkNetwork(page) {
 	assert.equal(await map.locator(".rail-sheet").count(), 0, "map opens without a word-heavy panel");
 	assert.equal(await map.locator(".rail-station text").count(), 0, "station words appear only after selection");
 	await page.waitForFunction(() => document.querySelector(".rail-feed-status")?.getAttribute("data-state") !== "loading", null, {timeout:25000});
+	await page.waitForTimeout(1100);
+	assert.ok(await map.locator(".rail-water path").count() > 100, "real water geometry replaces the illustrative shoreline");
+	assert.ok(await map.locator(".rail-parks path").count() > 100, "local park geometry is available without tile requests");
+	assert.equal(await map.locator(".rail-streets path").count(),3);
 	await capture(page, "network-desktop");
 	await map.getByRole("combobox", { name: "Choose a CTA line" }).selectOption("brn");
 	assert.ok(await map.locator(".rail-station").count() < 143);
@@ -156,7 +162,7 @@ async function checkNetwork(page) {
 	await capture(page, "network-station");
 	await map.getByRole("button", { name: "Close map details" }).click();
 	await map.getByRole("button", { name: "Loop", exact:true }).click();
-	await page.waitForTimeout(400);
+	await page.waitForFunction(() => document.querySelector(".rail-network")?.getAttribute("data-camera") === "idle");
 	assert.equal(await map.getByRole("button", { name: "Loop", exact:true }).getAttribute("aria-pressed"), "true");
 	assert.ok(await map.locator(".rail-station text").count() <= 1, "zoom does not bring back label clutter");
 	await capture(page, "network-loop");
@@ -171,9 +177,15 @@ async function checkNetwork(page) {
 		});
 		assert.equal(geometry.height,size.height,"network fills the screen");
 		assert.ok(Math.abs(geometry.top)<=1 && geometry.toolbar>=geometry.header && geometry.overflow<=0,"full-screen controls clear the real header without overflow");
+		assert.ok(await map.evaluate((element) => {
+			const svg=element.querySelector(".rail-map-svg").getBoundingClientRect(),label=element.querySelector(".rail-lake-name")?.getBoundingClientRect();
+			return !label || (label.left>=svg.left && label.right<=svg.right && label.top>=svg.top && label.bottom<=svg.bottom);
+		}),"water label is hidden when it cannot fit on screen");
 		const controls = await map.locator("button,select,input").evaluateAll((elements) => elements.filter((e) => e.getBoundingClientRect().height>0).map((e) => e.getBoundingClientRect().height));
 		assert.ok(controls.every((height)=>height>=44));
-		const clutter = await map.locator(".rail-live-train").evaluateAll((elements)=>elements.map((e)=>{const r=e.getBoundingClientRect();return {x:r.x+65,y:r.y+65};}));
+		const clearance = await map.evaluate((element) => ({tools:element.querySelector(".rail-map-tools").getBoundingClientRect().right,credit:element.querySelector(".rail-map-credit").getBoundingClientRect().left}));
+		assert.ok(clearance.tools <= clearance.credit,`map controls and attribution never overlap at ${size.width}: ${JSON.stringify(clearance)}`);
+		const clutter = await map.locator(".rail-live-train").evaluateAll((elements)=>elements.map((e)=>{const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};}));
 		for(let i=0;i<clutter.length;i++)for(let k=i+1;k<clutter.length;k++)assert.ok(Math.hypot(clutter[i].x-clutter[k].x,clutter[i].y-clutter[k].y)>=35);
 		await capture(page, `network-${size.width}x${size.height}`);
 	}
@@ -222,6 +234,23 @@ async function checkLiveUpdates(browser) {
 	if (!requests) { await page.close(); return; }
 	await page.locator('.rail-network .rail-feed-status[data-state="live"]').waitFor();
 	assert.equal(requests, 1, "camera and station changes do not duplicate the positions poll");
+	const networkExtent = await page.locator(".rail-map-svg").getAttribute("viewBox");
+	await page.getByRole("button", {name:"Loop",exact:true}).click();
+	await page.clock.runFor(120);
+	assert.equal(await page.locator(".rail-network").getAttribute("data-camera"),"moving");
+	await page.getByRole("button", {name:"Network",exact:true}).click();
+	await page.clock.runFor(320);
+	assert.equal(await page.locator(".rail-network").getAttribute("data-camera"),"idle","camera can be interrupted and settles on the latest target");
+	assert.equal(await page.locator(".rail-map-svg").getAttribute("viewBox"),networkExtent);
+	await page.emulateMedia({reducedMotion:"reduce"});
+	await page.getByRole("button", {name:"Loop",exact:true}).click();
+	assert.equal(await page.locator(".rail-network").getAttribute("data-camera"),"idle","reduced-motion camera changes are immediate");
+	assert.equal(await page.locator(".rail-sheet").count(),0);
+	await page.emulateMedia({reducedMotion:"no-preference"});
+	await page.getByRole("button", {name:"Network",exact:true}).focus();
+	await page.keyboard.press("Enter");
+	assert.equal(await page.locator(".rail-network").getAttribute("data-camera"),"idle","keyboard navigation never waits for camera motion");
+	assert.equal(await page.getByRole("button", {name:"Network",exact:true}).getAttribute("aria-pressed"),"true");
 
 	assert.equal(await page.locator('.rail-live-train[data-train="blue-123"]').count(), 1);
 	const marker = page.locator('.rail-network .rail-live-train').first();
@@ -595,7 +624,14 @@ try {
 		await touchPage.locator(".rail-network").evaluate((element)=>element.scrollIntoView({block:"start"}));
 		await touchPage.locator('.rail-network[data-ready="true"]').waitFor();
 		const beforePan = await touchPage.locator(".rail-map-svg").getAttribute("viewBox");
-		const panOrigin = await touchPage.locator(".rail-map-svg").evaluate((svg)=>{const r=svg.getBoundingClientRect();return {x:r.x+65,y:r.y+65};});
+		const panOrigin = await touchPage.locator(".rail-map-svg").evaluate((svg)=>{
+			const r=svg.getBoundingClientRect();
+			for(const [dx,dy] of [[65,65],[r.width-65,65],[65,r.height-65]]){
+				const x=r.x+dx,y=r.y+dy,hit=document.elementFromPoint(x,y);
+				if(hit?.closest("svg")===svg && !hit.closest('[role="button"]'))return {x,y};
+			}
+			throw new Error("No clear map canvas for the touch gesture");
+		});
 		const scrollBeforePan=await touchPage.evaluate(()=>scrollY);
 		await touchSession.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[{id:2,x:panOrigin.x,y:panOrigin.y}]});
 		await touchSession.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[{id:2,x:panOrigin.x-45,y:panOrigin.y-55}]});
