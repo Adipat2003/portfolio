@@ -662,3 +662,39 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 .rail-selected .rail-stop-dot{transform-box:fill-box;transform-origin:center;animation:rail-selection 180ms var(--rail-ease)}
 @keyframes rail-selection{from{opacity:.3;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.rail-selected .rail-stop-dot{animation:none}}
+
+/* A local vector backdrop gives the rail lines their Chicago context. */
+.rail-network{background:#111e25;--rail-rule:#354c59}
+.rail-map-pane:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(#111e25,transparent 7%,transparent 93%,#111e25)}
+.rail-geography path{vector-effect:non-scaling-stroke}
+.rail-geography .rail-parks path{fill:#1d382f;stroke:#2c4b3e;stroke-width:.5}
+.rail-geography .rail-streets path{fill:none;stroke:#35505b;stroke-width:.65;opacity:.7}
+.rail-geography .rail-streets path[data-road-class="1"]{stroke:#48616a;stroke-width:1}
+.rail-geography .rail-water path{fill:#143348;stroke:#3a6070;stroke-width:.7}
+.rail-lake-name{fill:#7198aa;font-family:var(--sans);font-weight:500;opacity:.8;pointer-events:none}
+.rail-route-underlay{opacity:.28;pointer-events:none}
+.rail-paths .rail-active-route{opacity:.4}
+.rail-route-casing{stroke:#0b151d;opacity:.85;pointer-events:none}
+.rail-paths path{opacity:1;transition:opacity 220ms var(--rail-ease),stroke-width 220ms var(--rail-ease)}
+.rail-paths .rail-muted{opacity:.13}
+.rail-network[data-entered="true"] .rail-paths path{animation:rail-network-arrive 800ms var(--rail-ease) both}
+.rail-route-reveal{stroke-dasharray:1;animation:rail-route-arrive 600ms var(--rail-ease) both;pointer-events:none}
+.sprite-car{fill:#e2eced;stroke:#0b1c28;stroke-width:1.1}
+.sprite-window{fill:#7896a5}
+.sprite-coupler{fill:none;stroke:#425f70;stroke-width:.8}
+.sprite-roof{stroke-width:2}
+.rail-topbar button,.rail-topbar select,.rail-topbar input,.rail-back,.rail-view-switch,.rail-zoom{background:#14242eea;box-shadow:0 4px 16px #050c1426;border-color:#67859575}
+.rail-topbar h2{font-weight:500;letter-spacing:-.04em}
+.rail-sheet{background:#172635f7;box-shadow:0 24px 80px #020a135c,0 1px 0 #ffffff10 inset;animation:rail-panel-arrive 220ms var(--rail-ease) both;transform-origin:100% 40%}
+.rail-source-list{padding-left:18px;font-size:12px}
+@keyframes rail-network-arrive{from{stroke-dasharray:1;stroke-dashoffset:1}to{stroke-dasharray:1;stroke-dashoffset:0}}
+@keyframes rail-route-arrive{from{stroke-dashoffset:1;opacity:.3}to{stroke-dashoffset:0;opacity:1}}
+@keyframes rail-panel-arrive{from{opacity:0;transform:translateX(12px) scale(.99)}to{opacity:1;transform:translateX(0) scale(1)}}
+@media(max-width:760px){.rail-sheet{animation-name:rail-panel-rise;transform-origin:50% 100%}}
+@keyframes rail-panel-rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.rail-network[data-input="keyboard"] .rail-paths path,.rail-network[data-input="keyboard"] .rail-sheet,.rail-network[data-input="keyboard"] .rail-route-reveal,.rail-network[data-input="keyboard"] .rail-selected .rail-stop-dot{animation:none}
+@media(prefers-reduced-motion:reduce){.rail-network[data-entered="true"] .rail-paths path,.rail-route-reveal,.rail-sheet{animation:none}.rail-paths path{transition:none}}
+
+@media(max-width:360px){.rail-map-tools{left:10px;gap:6px}.rail-network .rail-map-tools .rail-view-switch button{padding-inline:8px}}
+
+.atlas-loading{min-height:100svh;display:grid;place-items:center;background:#111e25;color:#c5d6e3;font:14px var(--sans)}

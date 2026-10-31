@@ -65,3 +65,7 @@ Desktop and phone captures also cover Dispatch sections and project details.
 
 To run only the map checks during development, set `NETWORK_ONLY=1` with the
 same command. Full validation still requires the unfiltered suite.
+
+The geographic-map checks also verify bundled water, park and street layers,
+interruptible camera movement, immediate keyboard and reduced-motion camera
+changes, and the absence of extra position polls during navigation.

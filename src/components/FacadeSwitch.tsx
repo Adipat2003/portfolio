@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import DispatchFacade from "./DispatchFacade";
-import AtlasFacade from "./AtlasFacade";
 import { site } from "@/content/load";
+
+const AtlasFacade = lazy(() => import("./AtlasFacade"));
 
 export default function FacadeSwitch() {
   const [facade, setFacade] = useState<"dispatch" | "atlas">("dispatch");
@@ -75,7 +76,7 @@ export default function FacadeSwitch() {
           </div>
         </div>
       </div>
-      {facade === "dispatch" ? <DispatchFacade /> : <AtlasFacade />}
+      {facade === "dispatch" ? <DispatchFacade /> : <Suspense fallback={<div className="atlas-loading" role="status">Opening the Atlas…</div>}><AtlasFacade /></Suspense>}
     </>
   );
 }
