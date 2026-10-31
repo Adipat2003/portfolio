@@ -65,6 +65,8 @@ async function checkTransitGuide() {
 		let stationRequested;
 		await createTransitGuide({...opts,stations:[{id:"40890",name:"O'Hare",routes:["blue"]}],cta:{get:async(id)=>{stationRequested=id;return {available:false};}}})("Next train at ohare?");
 		assert.equal(stationRequested,"40890","station questions tolerate omitted punctuation");
+		await createTransitGuide({...opts,stations:[{id:"41660",name:"Lake (Subway)",routes:["red"]},{id:"40380",name:"Clark/Lake",routes:["blue"]}],cta:{get:async(id)=>{stationRequested=id;return {available:false};}}})("Next train at clark lake?","40380");
+		assert.equal(stationRequested,"40380","longer station names beat shorter names with long parenthetical labels");
 		const blue = await createTransitGuide(opts)("Where are Blue Line trains?");
 		assert.ok(blue.evidence.length > 0 && blue.evidence.every((record)=>record.text.startsWith("Blue")), "explicit line questions do not include other lines");
 		const chicagoOpts={...opts,stations:[{id:"40710",name:"Chicago (Brown/Purple)",routes:["brn","p"]},{id:"41410",name:"Chicago (Blue)",routes:["blue"]}]};
