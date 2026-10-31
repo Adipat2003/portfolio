@@ -179,7 +179,7 @@ export default function AskBox({
           type="search"
           id={`ask-${headingId}`}
           className="ask-input"
-          placeholder="Ask about his work or a number"
+          placeholder="Ask about his work"
           autoComplete="off"
           value={query}
           onChange={(e) => setQuery(e.target.value)}

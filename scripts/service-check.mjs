@@ -49,7 +49,7 @@ async function checkTransitGuide() {
 	assert.equal(glm.reasoning_effort,"low");
 	assert.equal(glm.max_tokens,4096);
 	assert.equal(glm.chat_template_kwargs.clear_thinking,true);
-	assert.deepEqual(modelRequestOptions("meta/llama-3.1-8b-instruct",350),{max_tokens:350});
+	assert.deepEqual(modelRequestOptions("nvidia/nemotron-3.5-lightning-30b-a3b",350),{max_tokens:350,chat_template_kwargs:{enable_thinking:false}});
 	const originalFetch = globalThis.fetch;
 	const now = new Date().toISOString();
 	const opts = { stations:[{id:"40380",name:"Clark/Lake",routes:["blue"]}], network:{
@@ -62,6 +62,9 @@ async function checkTransitGuide() {
 		assert.match(fallback.answer,/7 min.*scheduled.*delay flagged/);
 		assert.equal(fallback.model_used,false);
 		assert.equal((await createTransitGuide(opts)("Tell me a cake recipe")).evidence.length,0);
+		let stationRequested;
+		await createTransitGuide({...opts,stations:[{id:"40890",name:"O'Hare",routes:["blue"]}],cta:{get:async(id)=>{stationRequested=id;return {available:false};}}})("Next train at ohare?");
+		assert.equal(stationRequested,"40890","station questions tolerate omitted punctuation");
 		const blue = await createTransitGuide(opts)("Where are Blue Line trains?");
 		assert.ok(blue.evidence.length > 0 && blue.evidence.every((record)=>record.text.startsWith("Blue")), "explicit line questions do not include other lines");
 		const chicagoOpts={...opts,stations:[{id:"40710",name:"Chicago (Brown/Purple)",routes:["brn","p"]},{id:"41410",name:"Chicago (Blue)",routes:["blue"]}]};

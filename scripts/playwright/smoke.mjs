@@ -145,6 +145,8 @@ async function checkNetwork(page) {
 	assert.ok(stationFocus.width <= 12, "selected station marker stays screen-sized");
 	await map.getByRole("button", { name: "Close map details" }).click();
 	await map.getByRole("combobox", { name: "Choose a CTA line" }).selectOption("all");
+	await map.getByRole("searchbox").fill("ohare");
+	assert.ok(await map.getByRole("group", { name: "Matching stations" }).getByRole("button", { name: "O'Hare" }).count(),"station search tolerates omitted punctuation");
 	await map.getByRole("searchbox").fill("Clark");
 	await map.getByRole("group", { name: "Matching stations" }).getByRole("button").first().press("Escape");
 	assert.equal(await map.getByRole("group", { name: "Matching stations" }).count(), 0);
@@ -181,16 +183,24 @@ async function checkNetwork(page) {
 	await map.getByText("Fixture station closure",{exact:true}).click();
 	assert.ok(await map.getByText("Use the adjacent station.").isVisible());
 	await map.getByRole("button",{name:"Close map details"}).press("Escape");
-	await page.route("**/ask-transit",(route)=>route.fulfill({headers:{"access-control-allow-origin":baseUrl.origin},contentType:"application/json",body:JSON.stringify({answer:"Blue Line: 12 trains reporting positions.",evidence:[{id:"r1",source:"https://www.transitchicago.com/traintracker/",as_of:new Date().toISOString()}]})}));
+	await page.route("**/ask-transit",(route)=>route.fulfill({headers:{"access-control-allow-origin":baseUrl.origin},contentType:"application/json",body:JSON.stringify({answer:"Blue Line: 12 trains reporting positions.\n\n" + Array(6).fill("Fixture service context for a long sourced answer. Conditions can change; use the linked official notice for the full details.").join("\n\n"),evidence:[{id:"r1",source:"https://www.transitchicago.com/traintracker/",as_of:new Date().toISOString()}]})}));
 	await map.getByRole("button",{name:"Ask CTA",exact:true}).click();
 	await map.getByRole("textbox",{name:"Your question"}).fill("Where are Blue Line trains?");
 	await map.locator(".transit-guide form").getByRole("button",{name:"Ask CTA",exact:true}).click();
-	await map.getByText("Blue Line: 12 trains reporting positions.",{exact:true}).waitFor();
+	await map.locator(".transit-guide-answer p").waitFor();
+	assert.match(await map.locator(".transit-guide-answer p").innerText(), /^Blue Line: 12/);
 	assert.ok(await map.getByRole("link",{name:"CTA source ↗"}).isVisible());
+	await map.locator(".rail-sheet").evaluate((element)=>{element.scrollTop=element.scrollHeight;});
+	const dismiss = await map.getByRole("button",{name:"Close map details"}).evaluate((button)=>{
+		const r=button.getBoundingClientRect(),panel=button.closest(".rail-sheet").getBoundingClientRect();return r.top>=panel.top && r.bottom<=panel.bottom;
+	});
+	assert.ok(dismiss,"long answers keep the close control on screen");
 	await capture(page,"network-guide-phone");
 	await map.getByRole("button",{name:"Close map details"}).click();
 	await page.setViewportSize({width:1440,height:900});
+	await map.getByRole("button",{name:"Ask CTA",exact:true}).click();
 	await map.getByRole("link",{name:"Back to the scenic route ↑"}).click();
+	assert.equal(await map.locator(".rail-sheet").count(),0,"leaving the map closes its guide panel");
 	await page.evaluate(()=>window.scrollTo(0,0));
 }
 
@@ -335,6 +345,11 @@ try {
 		assert.ok(await page.locator(".station-evidence").getByText("self-reported").count());
 		const landmark = page.getByRole("button", { name: /Willis Tower:/ });
 		await landmark.focus();
+		await landmark.press(" ");
+		await page.waitForFunction(() => document.querySelector(".bld-selected") !== null);
+		await page.waitForTimeout(100);
+		assert.equal(await page.locator(".bld-selected").count(),1,"browser focus scrolling does not release a keyboard selection");
+		await landmark.press("Escape");
 		await landmark.press("Enter");
 		await page.waitForFunction(() => document.querySelector(".bld-selected") !== null);
 		assert.equal(await landmark.evaluate((element)=>getComputedStyle(element).outlineStyle),"none","landmark focus has no scaled native ring");

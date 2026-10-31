@@ -226,10 +226,22 @@ export default function AtlasRide() {
 			landmarkFocusRef.current = null;
 			setLandmark(null);
 		};
-		const escape = (event: KeyboardEvent) => { if (event.key === "Escape") release(); };
-		window.addEventListener("scroll", release, { passive: true });
-		window.addEventListener("keydown", escape);
-		return () => { window.removeEventListener("scroll", release); window.removeEventListener("keydown", escape); };
+		// Browser focus can scroll the page; only navigation intent releases the camera.
+		const navigate = (event: KeyboardEvent) => {
+			const editing = event.target instanceof Element && event.target.closest("input,textarea,select,[contenteditable]");
+			if (event.key === "Escape") release();
+			else if (!event.defaultPrevented && ["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key) &&
+				!editing) release();
+		};
+		const scrollbar = (event: PointerEvent) => { if (event.clientX >= document.documentElement.clientWidth) release(); };
+		window.addEventListener("wheel", release, { passive: true });
+		window.addEventListener("touchmove", release, { passive: true });
+		window.addEventListener("pointerdown", scrollbar, { passive: true });
+		window.addEventListener("keydown", navigate);
+		return () => {
+			window.removeEventListener("wheel", release); window.removeEventListener("touchmove", release);
+			window.removeEventListener("pointerdown", scrollbar); window.removeEventListener("keydown", navigate);
+		};
 	}, []);
 
 	const phaseCount = stops.length + 2;
@@ -377,6 +389,7 @@ export default function AtlasRide() {
 	}, [phase]);
 
 	function jumpToPhase(target: number) {
+		landmarkFocusRef.current = null; setLandmark(null);
 		const ride = rideRef.current;
 		if (!ride) return;
 		const total = ride.offsetHeight - window.innerHeight;
@@ -401,6 +414,7 @@ export default function AtlasRide() {
 	}
 
 	function skipRide() {
+		landmarkFocusRef.current = null; setLandmark(null);
 		const ride = rideRef.current;
 		if (!ride) return;
 		const top = ride.getBoundingClientRect().top + window.scrollY;
