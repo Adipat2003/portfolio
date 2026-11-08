@@ -307,9 +307,8 @@ phased plan. `docs/ai-exposure.md` carries the AI layer design.
   station and open a signage-styled project card, a weather overlay driven by
   a baked NWS snapshot, and the river drawn as the municipal Y that turns
   green for the March dye week. Chicago flag identity runs through both
-  facades (kicker stars, favorite-star hexagrams, flag-blue closing rules,
-  line-color bands on project cards). All of it is reduced-motion safe and
-  keyboard operable.
+  facades (kicker stars, favorite-star hexagrams, line-color bands on
+  project cards). All of it is reduced-motion safe and keyboard operable.
 - **Live weather.** REMOVED Oct 2026 at Aditya's direction (redundant): the
   badge, condition overlays, weather-bake workflow, content/weather.json,
   and the service /weather route are gone; git history keeps them. The NWS

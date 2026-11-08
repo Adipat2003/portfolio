@@ -654,6 +654,11 @@ try {
 				await capture(page,`dispatch-${section}-${size.width}`);
 			}
 			await page.locator(".site-foot").scrollIntoViewIfNeeded();
+			const footerDivider = await page.locator("#view-dispatch .flag-rule").evaluate((element) => {
+				const style = getComputedStyle(element);
+				return { top: style.borderTopWidth, bottom: style.borderBottomWidth, height: element.getBoundingClientRect().height };
+			});
+			assert.deepEqual(footerDivider, { top: "1px", bottom: "0px", height: 1 }, `${size.width}px Dispatch footer has a single quiet divider`);
 			await capture(page,`dispatch-footer-${size.width}`);
 		}
 
