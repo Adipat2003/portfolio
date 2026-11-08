@@ -505,6 +505,7 @@ try {
 		assert.match(await page.getByRole("group", { name: "Trip progress" }).innerText(), /STOP 2 OF \d+/);
 		await page.getByRole("button", { name: /Jump to The terminal/ }).click();
 		await page.waitForSelector(".terminal-card");
+		assert.equal(await page.locator(".terminal-overlay").evaluate((element) => getComputedStyle(element).overscrollBehaviorY), "contain", "terminal scrolling cannot chain into the ride");
 		await page.waitForTimeout(600);
 		await capture(page, "terminal-desktop");
 		if (await page.locator(".terminal-card .transit-board").count()) {
@@ -666,8 +667,8 @@ try {
 		assert.ok(stripMetrics.scrollWidth > stripMetrics.clientWidth, "phone trip strip has horizontal overflow to pan");
 		const touchSession = await touchContext.newCDPSession(touchPage);
 		const touchY = stripMetrics.rect.y + stripMetrics.rect.height / 2;
-		const touchStartX = stripMetrics.rect.x + 70;
-		const touchEndX = touchStartX + 150;
+		const touchStartX = stripMetrics.rect.x + (stripMetrics.left > 1 ? 70 : 220);
+		const touchEndX = touchStartX + (stripMetrics.left > 1 ? 150 : -150);
 		await touchSession.send("Input.dispatchTouchEvent", {
 			type: "touchStart",
 			touchPoints: [{ id: 1, x: touchStartX, y: touchY, radiusX: 2, radiusY: 2, force: 1 }],
@@ -679,6 +680,14 @@ try {
 		await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
 		await touchPage.waitForTimeout(200);
 		assert.notEqual(await strip.evaluate((element) => element.scrollLeft), stripMetrics.left, "phone trip strip responds to touch dragging");
+		await touchPage.getByRole("button", { name: "Jump to Offline sync engine" }).click();
+		await touchPage.getByRole("button", { name: "Jump to Android rollout" }).click();
+		await touchPage.waitForFunction(() => document.querySelector(".trip-stop.hit")?.getAttribute("aria-label") === "Jump to Android rollout");
+		const activeDot = await strip.evaluate((element) => ({
+			strip: element.getBoundingClientRect().left,
+			dot: element.querySelector(".trip-stop.hit").getBoundingClientRect().left,
+		}));
+		assert.ok(activeDot.dot >= activeDot.strip + 18, `phone active stop clears the faded edge: ${JSON.stringify(activeDot)}`);
 		await touchPage.getByRole("button", { name: /Jump to The terminal/ }).click();
 		await touchPage.locator(".terminal-overlay").waitFor();
 		if (await touchPage.locator(".terminal-card .transit-board").count()) {
@@ -689,17 +698,15 @@ try {
 		}
 		await touchPage.locator(".terminal-overlay").evaluate((element) => { element.scrollTop = element.scrollHeight; });
 		await touchPage.locator(".terminal-overlay").hover();
-		let closingMapVisible = false;
-		for (let gesture = 0; gesture < 4; gesture++) {
-			await touchPage.mouse.wheel(0, 2400);
-			await touchPage.waitForTimeout(150);
-			closingMapVisible = await touchPage.locator('.rail-network').evaluate((element) => {
-				const bounds = element.getBoundingClientRect();
-				return bounds.top < innerHeight && bounds.bottom > 0;
-			});
-			if (closingMapVisible) break;
-		}
-		assert.ok(closingMapVisible, "phone can scroll out of the terminal to the closing network");
+		const beforeTerminalWheel = await touchPage.evaluate(() => scrollY);
+		await touchPage.mouse.wheel(0, 600);
+		await touchPage.waitForTimeout(150);
+		assert.ok(Math.abs(await touchPage.evaluate(() => scrollY) - beforeTerminalWheel) < 2, "reading the terminal does not scroll the ride away");
+		await touchPage.getByRole("button", { name: "Continue to live map" }).click();
+		await touchPage.waitForFunction(() => {
+			const bounds = document.querySelector(".rail-network")?.getBoundingClientRect();
+			return bounds && bounds.top < innerHeight && bounds.bottom > 0;
+		});
 		await touchPage.locator(".rail-network").evaluate((element)=>element.scrollIntoView({block:"start"}));
 		await touchPage.locator('.rail-network[data-ready="true"]').waitFor();
 		const beforePan = await touchPage.locator(".rail-map-svg").getAttribute("viewBox");

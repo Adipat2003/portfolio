@@ -489,7 +489,9 @@ export default function AtlasRide() {
 
 					<div className={`ride-overlay${atTerminal ? " terminal-overlay" : ""}`} role="status" aria-live="polite">
 						{atTerminal ? (
-							<div className="chi-card terminal-card" key="terminal">
+							<div className="chi-card terminal-card" key="terminal" onClickCapture={(event) => {
+								if ((event.target as Element).closest(".transit-stations button")) jumpToPhase(stops.length);
+							}}>
 								<CtaLive />
 								<AskBox
 									variant="panel"
@@ -497,6 +499,7 @@ export default function AtlasRide() {
 									headingId="ride-ask"
 									heading="Ask the agent"
 								/>
+								<button type="button" className="terminal-continue" onClick={skipRide}>Continue to live map</button>
 							</div>
 						) : (
 							<RideCard stop={landmark ? null : stop} landmark={landmark} />

@@ -246,7 +246,7 @@ section{padding:76px 0}
 /* The terminal: the ticket booth inside the scene. A CTA ticket window:
    louver grille up top, solari departure-board sign with a duty light,
    slot-style input, and the sources as ticket fine print. */
-.terminal-overlay{left:24px;right:auto;bottom:40px;max-width:520px;max-height:calc(100dvh - var(--bar-h,64px) - 120px);overflow-y:auto;scrollbar-width:thin}
+.terminal-overlay{left:24px;right:auto;bottom:40px;max-width:520px;max-height:calc(100dvh - var(--bar-h,64px) - 120px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
 .ride-overlay .chi-card.terminal-card{position:relative;padding:0;background:#0b0e15;border:1px solid rgba(255,182,66,.22);border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.04);overflow:hidden;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .ride-overlay .chi-card.terminal-card::before{content:"";display:block;height:8px;background:repeating-linear-gradient(90deg,rgba(255,182,66,.28) 0 6px,transparent 6px 14px);border-bottom:1px solid rgba(255,182,66,.16)}
 .ride-overlay .chi-card.terminal-card::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 60% at 50% 0,rgba(255,182,66,.07),transparent 60%)}
@@ -263,7 +263,9 @@ section{padding:76px 0}
 .terminal-card .ask-result p{color:#f4e8d0}
 .terminal-card .answer{border-top:1px dashed rgba(255,255,255,.14);padding-top:10px}
 .terminal-card .answer .src{color:rgba(244,232,208,.6)}
-.terminal-card .booth-panel .answer{max-height:42vh;overflow:auto}
+.terminal-card .booth-panel .answer{max-height:42vh;overflow:auto;overscroll-behavior:contain}
+.terminal-card .terminal-continue{display:block;min-height:44px;width:calc(100% - 36px);margin:0 18px 16px;padding:10px 14px;border:1px solid rgba(255,182,66,.45);border-radius:8px;background:rgba(255,182,66,.11);color:#ffcf85;font:700 13px var(--sans);text-align:center;cursor:pointer}
+.terminal-card .terminal-continue:hover,.terminal-card .terminal-continue:focus-visible{background:rgba(255,182,66,.2);outline:2px solid #ffb642;outline-offset:2px}
 .ride-overlay .chi-card{animation:card-in .55s cubic-bezier(.22,.61,.36,1)}
 @keyframes card-in{from{opacity:0;translate:-34px 14px}to{opacity:1;translate:0 0}}
 /* Window mosaics: the impact figures spelled in lit windows. */
