@@ -165,6 +165,37 @@ selection; official disruptions and a sourced transit guide open on demand.
 Route filters, arrivals and real train positions share the Node proxy; the static network stays available when a feed fails.
 Project connections are editorial navigation, not work-location claims.
 
+The geographic map progressively enhances the bundled flat SVG with MapLibre
+and an OpenFreeMap vector style after map entry. A style or WebGL failure keeps
+the local reference map, routes, stations, food places and feed controls usable,
+shows an explicit fallback message, and disables the 3D control.
+
+### Browser validation
+
+`scripts/playwright/smoke.mjs` deliberately aborts OpenFreeMap requests,
+including the style request, and blocks the former OSM raster tile endpoint.
+It tests the local SVG fallback, its unavailable message and disabled 3D
+control without requesting public tiles. Existing geographic, food, viewport,
+interaction and live-feed checks run against that fallback. Successful vector
+rendering and 2D/3D behavior belong to the separate fixture-based vector test;
+a passing smoke suite alone does not verify the MapLibre success path.
+
+Build the site with a nonempty `NEXT_PUBLIC_SERVICE_URL` to exercise the
+existing transit fixtures. Without it, the application does not request the
+mocked alerts or guide endpoints, so those checks cannot pass. Use an already
+cached Playwright CLI on `PATH`, without installing dependencies:
+
+```sh
+BASE_URL=http://127.0.0.1:3000/portfolio/ \
+  SCREENSHOT_DIR=previews/map-smoke \
+  node scripts/playwright/smoke.mjs
+```
+
+Set `NETWORK_ONLY=1` for focused map checks. The unfiltered command remains the
+full validation path, including the nine-viewport ride matrix, keyboard,
+reduced-motion, no-JavaScript, Dispatch and phone touch checks. See
+`scripts/playwright/README.md` for the broader browser-check workflow.
+
 Regenerate the network from an official ZIP kept outside the repository:
 
 ```sh

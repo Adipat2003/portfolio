@@ -13,15 +13,13 @@
     <title>Chicago Board of Trade: statue-topped pyramid</title>
       <path d="M792 420 L792 240 L804 214 L816 240 L816 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
       <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
-        <rect x="805" y="226" width="2" height="3"/>
-        <rect x="797" y="256" width="2" height="3"/>
-        <rect x="805" y="271" width="2" height="3"/>
-        <rect x="797" y="286" width="2" height="3"/>
+        <rect x="805" y="256" width="2" height="3"/>
+        <rect x="797" y="271" width="2" height="3"/>
         <rect x="805" y="301" width="2" height="3"/>
-        <rect x="797" y="331" width="2" height="3"/>
+        <rect x="797" y="316" width="2" height="3"/>
         <rect x="805" y="346" width="2" height="3"/>
         <rect x="797" y="361" width="2" height="3"/>
-        <rect x="805" y="376" width="2" height="3"/>
+        <rect x="805" y="391" width="2" height="3"/>
         <rect x="797" y="406" width="2" height="3"/>
       </g>
       <path d="M802 196 L802 214 L806 214 L806 196 Z" fill="#222b42" stroke="none"/>

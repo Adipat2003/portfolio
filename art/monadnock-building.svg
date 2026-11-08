@@ -1,37 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Monadnock Building: broad shouldered slab with rounded bay columns. Authored geometry from content/atlas.json, exported by scripts/art-export.mjs. -->
+<!-- Monadnock Building: low masonry block with a flared base and projecting window bays. Authored geometry from content/atlas.json, exported by scripts/art-export.mjs. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 470" width="1200" height="470">
   <defs>
     <linearGradient id="towerGlass" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
-    <clipPath id="landmark-windows"><path d="M848 420 L848 176 L876 176 L876 420 Z"/></clipPath>
+    <clipPath id="landmark-windows"><path d="M824 420 L826 372 L830 360 L882 360 L886 372 L888 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
-    <title>Monadnock Building: broad shouldered slab with rounded bay columns</title>
-      <path d="M848 420 L848 176 L876 176 L876 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+    <title>Monadnock Building: low masonry block with a flared base and projecting window bays</title>
+      <path d="M824 420 L826 372 L830 360 L882 360 L886 372 L888 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
       <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
-        <rect x="861" y="188" width="2" height="3"/>
-        <rect x="853" y="203" width="2" height="3"/>
-        <rect x="869" y="203" width="2" height="3"/>
-        <rect x="861" y="218" width="2" height="3"/>
-        <rect x="869" y="233" width="2" height="3"/>
-        <rect x="853" y="248" width="2" height="3"/>
-        <rect x="861" y="263" width="2" height="3"/>
-        <rect x="853" y="278" width="2" height="3"/>
-        <rect x="869" y="278" width="2" height="3"/>
-        <rect x="861" y="293" width="2" height="3"/>
-        <rect x="869" y="308" width="2" height="3"/>
-        <rect x="853" y="323" width="2" height="3"/>
-        <rect x="861" y="338" width="2" height="3"/>
-        <rect x="853" y="353" width="2" height="3"/>
-        <rect x="869" y="353" width="2" height="3"/>
-        <rect x="861" y="368" width="2" height="3"/>
-        <rect x="869" y="383" width="2" height="3"/>
-        <rect x="853" y="398" width="2" height="3"/>
+        <rect x="845" y="372" width="2" height="3"/>
+        <rect x="869" y="372" width="2" height="3"/>
+        <rect x="837" y="387" width="2" height="3"/>
+        <rect x="861" y="387" width="2" height="3"/>
+        <rect x="829" y="402" width="2" height="3"/>
+        <rect x="853" y="402" width="2" height="3"/>
+        <rect x="877" y="402" width="2" height="3"/>
       </g>
-      <path d="M856 176 L856 420 M868 176 L868 420" stroke="#3a4a6e" stroke-width="1" fill="none"/>
+      <path d="M830 364 L882 364 M836 368 Q833 389 836 414 M846 368 Q843 389 846 414 M866 368 Q869 389 866 414 M876 368 Q879 389 876 414" stroke="#3a4a6e" stroke-width="1" fill="none"/>
   </g>
 </svg>

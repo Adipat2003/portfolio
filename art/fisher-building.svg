@@ -13,28 +13,26 @@
     <title>Fisher Building: slender tower with an octagonal turret crown</title>
       <path d="M892 420 L892 200 L910 190 L928 200 L928 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
       <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
-        <rect x="913" y="202" width="2" height="3"/>
+        <rect x="905" y="202" width="2" height="3"/>
         <rect x="897" y="217" width="2" height="3"/>
         <rect x="921" y="217" width="2" height="3"/>
-        <rect x="905" y="232" width="2" height="3"/>
-        <rect x="897" y="247" width="2" height="3"/>
-        <rect x="913" y="247" width="2" height="3"/>
-        <rect x="905" y="262" width="2" height="3"/>
+        <rect x="913" y="232" width="2" height="3"/>
+        <rect x="905" y="247" width="2" height="3"/>
+        <rect x="897" y="262" width="2" height="3"/>
         <rect x="921" y="262" width="2" height="3"/>
         <rect x="913" y="277" width="2" height="3"/>
-        <rect x="897" y="292" width="2" height="3"/>
-        <rect x="921" y="292" width="2" height="3"/>
-        <rect x="905" y="307" width="2" height="3"/>
-        <rect x="897" y="322" width="2" height="3"/>
+        <rect x="905" y="292" width="2" height="3"/>
+        <rect x="897" y="307" width="2" height="3"/>
+        <rect x="921" y="307" width="2" height="3"/>
         <rect x="913" y="322" width="2" height="3"/>
         <rect x="905" y="337" width="2" height="3"/>
-        <rect x="921" y="337" width="2" height="3"/>
-        <rect x="913" y="352" width="2" height="3"/>
-        <rect x="897" y="367" width="2" height="3"/>
-        <rect x="921" y="367" width="2" height="3"/>
+        <rect x="897" y="352" width="2" height="3"/>
+        <rect x="921" y="352" width="2" height="3"/>
+        <rect x="913" y="367" width="2" height="3"/>
         <rect x="905" y="382" width="2" height="3"/>
         <rect x="897" y="397" width="2" height="3"/>
-        <rect x="913" y="397" width="2" height="3"/>
+        <rect x="921" y="397" width="2" height="3"/>
+        <rect x="913" y="412" width="2" height="3"/>
       </g>
       <path d="M900 196 L900 190 L910 176 L920 190 L920 196" stroke="#3a4a6e" stroke-width="1.2" fill="none"/>
   </g>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import AtlasMap from "@/components/atlas/AtlasMap";
 import AtlasScene from "@/components/atlas/AtlasScene";
+import TrainSprite from "@/components/atlas/TrainSprite";
 import AskBox from "@/components/AskBox";
 import { clampedCamera } from "@/content/cta-geometry";
 import CtaLive from "@/components/atlas/CtaLive";
@@ -307,14 +308,14 @@ export default function AtlasRide() {
 				const landmarkFit = Math.min(svg.clientWidth / vw, svg.clientHeight / vh);
 				const tgt = landmarkFocus ? {
 					...landmarkFocus,
-					zoom: Math.min(landmarkFocus.zoom, (stageHeight - chromeBottom - 32) / ((landmarkFocus.height ?? vh) * landmarkFit)),
+					zoom: Math.min(landmarkFocus.zoom, (stageHeight - chromeBottom - 120) / ((landmarkFocus.height ?? vh) * landmarkFit)),
 				} : {
 					x: lerp(focuses[i].x, focuses[i + 1].x, t),
 					y: lerp(focuses[i].y, focuses[i + 1].y, t),
 					zoom: lerp(focuses[i].zoom, focuses[i + 1].zoom, t),
 				};
 				const ease = reduce.matches ? 1 : 0.08;
-				const targetAnchor = landmarkFocus ? (stageHeight + chromeBottom - 16) / (2 * stageHeight) : narrow.matches ? (phaseRef.current === 0 ? .6 : .42) : .5;
+				const targetAnchor = landmarkFocus ? (stageHeight + chromeBottom + 72) / (2 * stageHeight) : narrow.matches ? (phaseRef.current === 0 ? .6 : .42) : .5;
 				anchorY += (targetAnchor - anchorY) * ease;
 				cam.x += (tgt.x - cam.x) * ease;
 				cam.y += (tgt.y - cam.y) * ease;
@@ -455,11 +456,7 @@ export default function AtlasRide() {
 						>
 							<g ref={trainRef} className="you-train" aria-hidden="true">
 								<circle r="18" cx="10" cy="0" className="you-halo" />
-								<rect x="-13" y="-5" width="30" height="10" rx="3" className="you-body" />
-								<rect x="-9" y="-2.6" width="4.5" height="3" rx="0.8" className="train-window" />
-								<rect x="-2.5" y="-2.6" width="4.5" height="3" rx="0.8" className="train-window" />
-								<rect x="4" y="-2.6" width="4.5" height="3" rx="0.8" className="train-window" />
-								<circle cx="16" cy="0" r="1.8" className="train-headlight" />
+								<g transform="scale(1.25 1)"><TrainSprite tint={LINE_COLORS.blue} /></g>
 							</g>
 						</AtlasMap>
 					</div>

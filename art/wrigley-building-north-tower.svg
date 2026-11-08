@@ -1,28 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Wrigley Building (north tower): clock-tower crown. Authored geometry from content/atlas.json, exported by scripts/art-export.mjs. -->
+<!-- Wrigley Building (north tower): lower north block with a restrained rooftop pavilion. Authored geometry from content/atlas.json, exported by scripts/art-export.mjs. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 470" width="1200" height="470">
   <defs>
     <linearGradient id="towerGlass" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
-    <clipPath id="landmark-windows"><path d="M704 420 L704 240 L716 222 L728 240 L728 420 Z"/></clipPath>
+    <clipPath id="landmark-windows"><path d="M704 420 L704 350 L709 350 L709 340 L712 336 L720 336 L723 340 L723 350 L728 350 L728 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
-    <title>Wrigley Building (north tower): clock-tower crown</title>
-      <path d="M704 420 L704 240 L716 222 L728 240 L728 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+    <title>Wrigley Building (north tower): lower north block with a restrained rooftop pavilion</title>
+      <path d="M704 420 L704 350 L709 350 L709 340 L712 336 L720 336 L723 340 L723 350 L728 350 L728 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
       <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
-        <rect x="709" y="234" width="2" height="3"/>
-        <rect x="717" y="249" width="2" height="3"/>
-        <rect x="709" y="279" width="2" height="3"/>
-        <rect x="717" y="294" width="2" height="3"/>
-        <rect x="709" y="309" width="2" height="3"/>
-        <rect x="717" y="324" width="2" height="3"/>
-        <rect x="709" y="354" width="2" height="3"/>
-        <rect x="717" y="369" width="2" height="3"/>
-        <rect x="709" y="384" width="2" height="3"/>
-        <rect x="717" y="399" width="2" height="3"/>
+        <rect x="717" y="363" width="2" height="3"/>
+        <rect x="709" y="378" width="2" height="3"/>
+        <rect x="717" y="408" width="2" height="3"/>
       </g>
+      <path d="M706 356 L726 356 M709 362 L709 414 M716 362 L716 414 M723 362 L723 414" stroke="#999c9f" stroke-width="1" fill="none"/>
   </g>
 </svg>
