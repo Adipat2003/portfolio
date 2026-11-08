@@ -122,8 +122,10 @@ const GeographicMap = forwardRef<GeographicMapHandle, Props>(function Geographic
 					if (disposed || failed || !engine) return;
 					try {
 					const data = networkGeoJSON(latest.current.network, latest.current.colors);
-					const buildings = buildingLayer(engine.getStyle());
-					if (buildings) engine.addLayer(buildings);
+					const style = engine.getStyle();
+					const buildings = buildingLayer(style);
+					// Keep extrusions below provider labels, but CTA markers and trains above them.
+					if (buildings) engine.addLayer(buildings, style.layers.find((layer) => layer.type === "symbol")?.id);
 					engine.addSource("atlas-routes", { type: "geojson", data: data.routes });
 					engine.addSource("atlas-stations", { type: "geojson", data: data.stations });
 					engine.addSource("atlas-places", placeSource(latest.current.places, latest.current.network.projection));
@@ -144,7 +146,7 @@ const GeographicMap = forwardRef<GeographicMapHandle, Props>(function Geographic
 						drawTrainSprite(context, spriteTint(tint));
 						engine.addImage(spriteImageName(route), context.getImageData(0, 0, width, height), { pixelRatio: TRAIN_SPRITE_PIXEL_RATIO });
 					}
-					engine.addLayer({ id: "atlas-train", type: "symbol", source: "atlas-trains", layout: { "icon-image": ["case", ["has", "route"], ["concat", "atlas-train-", ["get", "route"]], spriteImageName("")], "icon-rotate": ["get", "bearing"], "icon-allow-overlap": false, "icon-rotation-alignment": "viewport" } });
+					engine.addLayer({ id: "atlas-train", type: "symbol", source: "atlas-trains", layout: { "icon-image": ["case", ["any", ["!", ["has", "route"]], ["==", ["get", "route"], ""]], spriteImageName(""), ["concat", "atlas-train-", ["get", "route"]]], "icon-rotate": ["get", "bearing"], "icon-allow-overlap": false, "icon-rotation-alignment": "viewport" } });
 					engine.on("click", (event: MapMouseEvent) => {
 						if (!engine || disposed || failed) return;
 						const { x, y } = event.point;
@@ -195,7 +197,7 @@ const GeographicMap = forwardRef<GeographicMapHandle, Props>(function Geographic
 		engine.setPaintProperty("atlas-route", "line-opacity", route === "all" ? 1 : ["case", ["==", ["get", "route"], route], 1, .16]);
 		engine.setFilter("atlas-station", route === "all" ? null : ["in", route, ["split", ["get", "routes"], ","]]);
 		engine.setFilter("atlas-station-selected", ["==", ["get", "id"], props.selected]);
-		const points = (items: Location[]): FeatureCollection<GeoPoint> => ({ type: "FeatureCollection", features: items.map((item) => ({ type: "Feature", properties: { id: item.id, route: item.route, bearing: spriteBearing(item.heading ?? NaN) }, geometry: { type: "Point", coordinates: coordinateFromPoint(item.point, props.network.projection) } })) });
+		const points = (items: Location[]): FeatureCollection<GeoPoint> => ({ type: "FeatureCollection", features: items.map((item) => ({ type: "Feature", properties: { id: item.id, route: item.route && Object.hasOwn(props.colors, item.route) ? item.route : "", bearing: spriteBearing(item.heading ?? NaN) }, geometry: { type: "Point", coordinates: coordinateFromPoint(item.point, props.network.projection) } })) });
 		(engine.getSource("atlas-places") as GeoJSONSource).setData(placeSource(props.places, props.network.projection).data);
 		(engine.getSource("atlas-trains") as GeoJSONSource).setData(points(props.trains));
 		engine.triggerRepaint();

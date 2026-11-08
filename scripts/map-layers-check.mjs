@@ -106,6 +106,8 @@ assert.equal(placeSource.data.features[0].properties.id,"food");
 assert.deepEqual(placeSource.data.features[0].geometry.coordinates,vector.coordinateFromPoint([0,0],projection));
 const mapCopy=readFileSync(new URL("../src/components/atlas/CtaRailMap.tsx",import.meta.url),"utf8");
 assert.match(mapCopy,/building heights[^.]*approximations[^.]*defaults/i,"map info must disclose derived OpenMapTiles height uncertainty");
+assert.match(mapCopy,/const visibleFoodPlaces\s*=\s*useMemo\(\(\)\s*=>\s*foodPoints\.filter\([\s\S]*?\),\s*\[foodLayers\]\)/,"the vector map's clustered places must retain identity across search renders");
+assert.match(mapCopy,/places=\{visibleFoodPlaces\}/,"the vector map must receive stable clustered places");
 assert.doesNotMatch(mapCopy,/unknown heights are not extruded|accurate building heights/i);
 // Exercise the component's real load/error callbacks with a controlled renderer boundary.
 const componentSource=readFileSync(new URL("../src/components/atlas/GeographicMap.tsx",import.meta.url),"utf8");

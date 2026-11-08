@@ -6,6 +6,7 @@ import AtlasScene from "@/components/atlas/AtlasScene";
 import TrainSprite from "@/components/atlas/TrainSprite";
 import AskBox from "@/components/AskBox";
 import { clampedCamera } from "@/content/cta-geometry";
+import { jumpInstantly, motionEase, ridePhaseOffset, rideSkipOffset } from "@/content/ride-navigation";
 import CtaLive from "@/components/atlas/CtaLive";
 import { atlas, landmarkNote, LINE_COLORS, stations, site } from "@/content/load";
 
@@ -278,9 +279,11 @@ export default function AtlasRide() {
 		);
 		const night = dusk.map((c) => c.map((v) => v * 0.42));
 		let raf = 0;
+		let previousFrame = performance.now();
 
-
-		const tick = () => {
+		const tick = (now: number) => {
+			const elapsed = now - previousFrame;
+			previousFrame = now;
 			const ride = rideRef.current;
 			const svg = svgRef.current;
 			if (ride && svg) {
@@ -314,7 +317,7 @@ export default function AtlasRide() {
 					y: lerp(focuses[i].y, focuses[i + 1].y, t),
 					zoom: lerp(focuses[i].zoom, focuses[i + 1].zoom, t),
 				};
-				const ease = reduce.matches ? 1 : 0.08;
+				const ease = motionEase(elapsed, reduce.matches);
 				const targetAnchor = landmarkFocus ? (stageHeight + chromeBottom + 72) / (2 * stageHeight) : narrow.matches ? (phaseRef.current === 0 ? .6 : .42) : .5;
 				anchorY += (targetAnchor - anchorY) * ease;
 				cam.x += (tgt.x - cam.x) * ease;
@@ -352,8 +355,8 @@ export default function AtlasRide() {
 				const ti = Math.min(rail.length - 2, Math.floor(tf));
 				const tt = smooth(tf - ti);
 				const train = { x: lerp(rail[ti].x, rail[ti + 1].x, tt), y: lerp(rail[ti].y, rail[ti + 1].y, tt) };
-				pos.x += (train.x - pos.x) * (reduce.matches ? 1 : 0.1);
-				pos.y += (train.y - pos.y) * (reduce.matches ? 1 : 0.1);
+				pos.x += (train.x - pos.x) * motionEase(elapsed, reduce.matches, 150);
+				pos.y += (train.y - pos.y) * motionEase(elapsed, reduce.matches, 150);
 				trainRef.current?.setAttribute("transform", `translate(${pos.x.toFixed(1)} ${pos.y.toFixed(1)})`);
 
 				const next = Math.round(f);
@@ -393,17 +396,8 @@ export default function AtlasRide() {
 		landmarkFocusRef.current = null; setLandmark(null);
 		const ride = rideRef.current;
 		if (!ride) return;
-		const total = ride.offsetHeight - window.innerHeight;
-		const top = ride.getBoundingClientRect().top + window.scrollY;
-		// Instant jump, warped like the scroll mapping: stops run over the
-		// first 84% of the ride, the terminal holds to 92%, the outro beyond.
-		const p =
-			target <= stops.length
-				? (target / stops.length) * 0.84
-				: Math.min(0.94, 0.92 + (target - stops.length) * 0.02);
-		// The camera lerp in the frame loop is the glide, so the browser's
-		// smooth-scroll never fights the ride on phones.
-		window.scrollTo({ top: top + p * total, behavior: "auto" });
+		const rideTop = ride.getBoundingClientRect().top + window.scrollY;
+		jumpInstantly(ridePhaseOffset({ rideTop, rideHeight: ride.offsetHeight, viewportHeight: window.innerHeight, target, stopCount: stops.length }), window.scrollTo.bind(window));
 	}
 
 	/** Clicking a station scrolls the ride to that phase. */
@@ -418,8 +412,8 @@ export default function AtlasRide() {
 		landmarkFocusRef.current = null; setLandmark(null);
 		const ride = rideRef.current;
 		if (!ride) return;
-		const top = ride.getBoundingClientRect().top + window.scrollY;
-		window.scrollTo({ top: top + ride.offsetHeight + 8, behavior: "auto" });
+		const rideTop = ride.getBoundingClientRect().top + window.scrollY;
+		jumpInstantly(rideSkipOffset({ rideTop, rideHeight: ride.offsetHeight }), window.scrollTo.bind(window));
 	}
 
 	const nextStop = stops[Math.min(stops.length, phase)];
@@ -503,6 +497,7 @@ export default function AtlasRide() {
 									headingId="ride-ask"
 									heading="Ask the agent"
 								/>
+								<button type="button" className="terminal-continue" onClick={skipRide}>Continue to live map</button>
 							</div>
 						) : (
 							<RideCard stop={landmark ? null : stop} landmark={landmark} />

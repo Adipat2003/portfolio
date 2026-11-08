@@ -179,6 +179,7 @@ export default function CtaRailMap() {
 	}), [feed.trains, routeId]);
 
 	const units = Math.max(box[2] / canvas.width, box[3] / canvas.height);
+	const visibleFoodPlaces = useMemo(() => foodPoints.filter((place) => foodLayers.includes(place.collection)), [foodLayers]);
 	const foodMarkers = useMemo(() => {
 		const groups: {places:typeof foodPoints;point:Point}[]=[];
 		for(const place of foodPoints.filter((entry)=>foodLayers.includes(entry.collection))){
@@ -282,7 +283,7 @@ export default function CtaRailMap() {
 	return (
 		<section className="rail-network" id="cta-network" data-ready={mapReady} data-entered={entered} data-camera={moving ? "moving" : "idle"} data-input={keyboard.current ? "keyboard" : "pointer"} onKeyDownCapture={() => { keyboard.current = true; }} onPointerDownCapture={() => { keyboard.current = false; }} aria-labelledby={`${id}-title`} onKeyDown={(event) => { if (event.key === "Escape" && sheet) { event.preventDefault(); closeSheet(); } }}>
 			<div className="rail-map-pane" ref={paneRef} data-renderer={tileState === "ready" ? "vector" : "local"}>
-				<GeographicMap ref={vectorRef} active={entered} network={network} colors={routeColors} box={box} route={routeId} selected={selectedId} places={foodPoints.filter((place) => foodLayers.includes(place.collection))} trains={trains} mode={mode} onState={(state) => { setTileState(state); if (state === "unavailable") setMode("2d"); }} onStation={(stationId) => { const target = network.stations.find((entry) => entry.id === stationId); if (target) selectStation(target); }} onPlace={(placeId) => { const target = foodPoints.find((entry) => entry.id === placeId); if (target) selectPlace(target); }} onGesture={() => setCameraPreset("")} />
+				<GeographicMap ref={vectorRef} active={entered} network={network} colors={routeColors} box={box} route={routeId} selected={selectedId} places={visibleFoodPlaces} trains={trains} mode={mode} onState={(state) => { setTileState(state); if (state === "unavailable") setMode("2d"); }} onStation={(stationId) => { const target = network.stations.find((entry) => entry.id === stationId); if (target) selectStation(target); }} onPlace={(placeId) => { const target = foodPoints.find((entry) => entry.id === placeId); if (target) selectPlace(target); }} onGesture={() => setCameraPreset("")} />
 						<svg ref={svgRef} style={{ display: tileState === "ready" ? "none" : undefined }} className={`rail-map-svg${routeId === "all" && box[2] >= 180 ? " rail-overview" : " rail-map-detail"}`} viewBox={box.join(" ")} role="group" aria-label="Local geographic CTA rail network" onPointerDown={(event) => {
 							if (!mapReady || !event.isPrimary || event.button !== 0 || (event.target as Element).closest('[role="button"]')) return;
 							cancelAnimationFrame(cameraFrame.current); setMoving(false);
