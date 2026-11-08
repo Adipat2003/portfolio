@@ -166,12 +166,13 @@ assert.ok(context.calls.filter(([op]) => op === "arcTo").length >= tinted.length
 assert.ok(context.calls.some(([op, , alpha]) => op === "fill" && Math.abs(alpha - 0.4) < 1e-9), "the shadow keeps its authored opacity");
 
 /* ------------------------------------------------------- vector layer --- */
-const iconImage = createExpression(["case", ["has", "route"], ["concat", "atlas-train-", ["get", "route"]], sprite.spriteImageName("")], "layout.icon-image");
+const iconImage = createExpression(["case", ["any", ["!", ["has", "route"]], ["==", ["get", "route"], ""]], sprite.spriteImageName(""), ["concat", "atlas-train-", ["get", "route"]]], "layout.icon-image");
 const iconRotate = createExpression(["get", "bearing"], "layout.icon-rotate");
 assert.equal(iconImage.result, "success", "the sprite selection expression must validate");
 assert.equal(iconRotate.result, "success", "the bearing expression must validate");
 assert.equal(iconImage.value.evaluate({ zoom: 16 }, { type: 3, properties: { route: "red" } }), "atlas-train-red");
 assert.equal(iconImage.value.evaluate({ zoom: 16 }, { type: 3, properties: {} }), sprite.spriteImageName(""), "trains without a route still resolve a registered image");
+assert.equal(iconImage.value.evaluate({ zoom: 16 }, { type: 3, properties: { route: "" } }), sprite.spriteImageName(""), "empty routes explicitly resolve the neutral sprite");
 assert.equal(iconRotate.value.evaluate({ zoom: 16 }, { type: 3, properties: { bearing: 45 } }), 45);
 
 /* --------------------------------------------------- component wiring --- */
@@ -187,7 +188,7 @@ assert.match(fallbackSource, /train-sprite/, "the SVG fallback must read the sha
 assert.match(fallbackSource, /spriteBearing/, "the SVG fallback must rotate by the shared heading rule");
 
 // Drive the real component against a controlled renderer boundary.
-const images = [], layers = [], sources = [], data = [], fits = [], states = [];
+const images = [], layers = [], layerInsertions = [], sources = [], data = [], fits = [], states = [];
 const callbacks = new Map();
 let effects = [], engine, removed = false, refCount = 0;
 const host = { dataset: {}, getBoundingClientRect: () => ({ width: 1440, height: 900, right: 1440, bottom: 900 }), closest: () => null };
@@ -201,8 +202,11 @@ const lib = {
     constructor() { engine = this; removed = false; this.dragRotate = interaction; this.touchZoomRotate = interaction; this.touchPitch = interaction; this.keyboard = interaction; }
     getCanvas() { return canvas; }
     on(name, callback) { callbacks.set(name, callback); }
-    getStyle() { return { version: 8, sources: {}, layers: [] }; }
-    addLayer(spec) { layers.push(spec); }
+    getStyle() { return { version: 8, sources: { basemap: { type: "vector" } }, layers: [
+      { id: "base-building", type: "fill", source: "basemap", "source-layer": "building" },
+      { id: "base-label", type: "symbol", source: "basemap", "source-layer": "place" },
+    ] }; }
+    addLayer(spec, beforeId) { layers.push(spec); layerInsertions.push({ id: spec.id, beforeId }); }
     addSource(id, spec) { sources.push({ id, spec }); }
     getSource(id) { return sources.some((source) => source.id === id) ? { setData(value) { data.push(value); } } : null; }
     addImage(id, image, options) { images.push({ id, options, image }); }
@@ -244,6 +248,7 @@ try {
   await new Promise((resolve) => setImmediate(resolve));
   assert.ok(engine, "the controlled renderer must construct");
   callbacks.get("load")();
+  assert.equal(layerInsertions.find((entry) => entry.id === "atlas-buildings")?.beforeId, "base-label", "3D buildings must paint beneath the basemap's first text label");
   const registered = new Set(images.map((image) => image.id));
   for (const route of network.routes) assert.ok(registered.has(sprite.spriteImageName(route.id)), `sprite registered for ${route.id}`);
   assert.ok(registered.has(sprite.spriteImageName("")), "the neutral fallback sprite is registered");
@@ -255,7 +260,10 @@ try {
   const trainLayer = layers.find((layer) => layer.id === "atlas-train");
   assert.ok(trainLayer, "the train layer is added");
   assert.equal(trainLayer.type, "symbol");
-  assert.deepEqual(trainLayer.layout["icon-image"], ["case", ["has", "route"], ["concat", "atlas-train-", ["get", "route"]], sprite.spriteImageName("")]);
+  assert.deepEqual(trainLayer.layout["icon-image"], ["case", ["any", ["!", ["has", "route"]], ["==", ["get", "route"], ""]], sprite.spriteImageName(""), ["concat", "atlas-train-", ["get", "route"]]], "absent and empty routes explicitly select the neutral sprite");
+  const actualIcon = createExpression(trainLayer.layout["icon-image"], "layout.icon-image");
+  assert.equal(actualIcon.result, "success");
+  assert.equal(actualIcon.value.evaluate({ zoom: 16 }, { type: 3, properties: { route: "" } }), sprite.spriteImageName(""), "the normalized unknown route uses the registered image");
   assert.deepEqual(trainLayer.layout["icon-rotate"], ["get", "bearing"]);
   assert.equal(trainLayer.layout["icon-rotation-alignment"], "viewport");
   assert.equal(trainLayer.layout["icon-allow-overlap"], false, "train sprites must not stack");
@@ -265,6 +273,9 @@ try {
   const setTrains = data.at(-1);
   assert.equal(setTrains.type, "FeatureCollection");
   assert.deepEqual(setTrains.features[0].properties, { id: "t4", route: "red", bearing: sprite.spriteBearing(90) }, "the vector renderer carries the route and the shared rotation");
+  render({ ...props, trains: [{ id: "unknown", point: [12, 34], route: "ZZ", heading: 0 }] });
+  effects[1]();
+  assert.equal(data.at(-1).features[0].properties.route, "", "an unrecognized route uses the registered neutral train image");
   const fallbackJS = ts.transpileModule(fallbackSource, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX } }).outputText;
   assert.match(fallbackJS, /TrainSprite/, "the transpiled fallback uses the shared authored component");
   assert.match(read("../src/components/atlas/TrainSprite.tsx"), /trainSprite\(/, "the SVG component draws the shared authored shapes");

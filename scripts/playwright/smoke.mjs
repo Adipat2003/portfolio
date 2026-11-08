@@ -122,6 +122,13 @@ async function checkMatrix(page, viewports) {
 				await page.locator(".trip-strip .strip-counter").evaluate((element) => element.scrollWidth <= element.clientWidth),
 				`${viewport.name}: active stop counter is not clipped`,
 			);
+			assert.ok(
+				await page.locator(".trip-strip").evaluate((strip) => {
+					const counter = strip.querySelector(".strip-counter");
+					return counter && strip.getBoundingClientRect().right - counter.getBoundingClientRect().right >= 24;
+				}),
+				`${viewport.name}: the stop counter clears the faded progress-strip edge`,
+			);
 		}
 		matrix.push({ name: viewport.name, ...geometry });
 		await capture(page, `atlas-${viewport.width}x${viewport.height}`);
@@ -245,6 +252,17 @@ async function checkNetwork(page) {
 	assert.ok(await map.getByText("Vector map unavailable. Local flat reference map shown.", { exact: true }).isVisible());
 	assert.ok(await map.getByRole("button", { name: "3D tilted map", exact: true }).isDisabled());
 	assert.equal(await map.locator(".rail-paths path").count(),8);
+	const atlasEnd = page.locator(".atlas-end");
+	await atlasEnd.scrollIntoViewIfNeeded();
+	assert.ok(await atlasEnd.isVisible(), "the map ends with a visible portfolio closing section");
+	assert.ok(await atlasEnd.getByRole("link", { name: "Read the Dispatch" }).isVisible());
+	assert.ok(await atlasEnd.getByRole("link", { name: "GitHub profile" }).isVisible());
+	assert.ok(await atlasEnd.evaluate((footer) => footer.getBoundingClientRect().bottom <= innerHeight + 2 && document.documentElement.scrollWidth <= innerWidth), "the Atlas closing section fits without horizontal overflow");
+	await atlasEnd.getByRole("link", { name: "Read the Dispatch" }).click();
+	await page.waitForFunction(() => document.title.includes("The Dispatch") && scrollY <= 1);
+	await page.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
+	await map.waitFor();
+	await map.scrollIntoViewIfNeeded();
 	await map.getByRole("button",{name:"Ask CTA",exact:true}).click();
 	await map.getByRole("link",{name:"Back to the scenic route ↑"}).click();
 	assert.equal(await map.locator(".rail-sheet").count(),0,"leaving the map closes its guide panel");
@@ -412,7 +430,7 @@ try {
 		assert.equal(new URL(page.url()).hash, "#atlas");
 		await page.locator(".skip-ride").click();
 		await page.waitForFunction(() => window.scrollY > 1000);
-		assert.ok(await page.locator(".rail-network").evaluate((element) => Math.abs(element.getBoundingClientRect().top) <= 1), "Skip the ride reaches the full-screen network ending");
+		assert.ok(await page.locator(".rail-network").evaluate((element) => { const top = element.getBoundingClientRect().top; return top <= 1 && top >= -10; }), "Skip the ride places the full-screen network in view before the closing footer");
 		await page.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
 		await page.waitForSelector("#view-atlas");
 
@@ -484,11 +502,21 @@ try {
 		await page.waitForFunction(() => document.querySelector(".bld-selected") === null);
 
 
+		await page.evaluate(() => { document.documentElement.style.scrollBehavior = "smooth"; });
 		await page.getByRole("button", { name: "Jump to Android rollout" }).click();
+		const immediateJump = await page.evaluate(() => {
+			const ride = document.querySelector(".ride");
+			const stopCount = document.querySelectorAll(".trip-stop").length;
+			const expected = ride.getBoundingClientRect().top + scrollY + (.84 * 2 / stopCount) * (ride.offsetHeight - innerHeight);
+			return Math.abs(scrollY - expected);
+		});
+		assert.ok(immediateJump < 3, "stop navigation responds instantly even if the page requests smooth scrolling");
+		await page.evaluate(() => { document.documentElement.style.scrollBehavior = ""; });
 		await page.waitForFunction(() => /STOP 2 OF \d+/.test(document.querySelector('[aria-label="Trip progress"]')?.textContent ?? ""));
 		assert.match(await page.getByRole("group", { name: "Trip progress" }).innerText(), /STOP 2 OF \d+/);
 		await page.getByRole("button", { name: /Jump to The terminal/ }).click();
 		await page.waitForSelector(".terminal-card");
+		assert.equal(await page.locator(".terminal-overlay").evaluate((element) => getComputedStyle(element).overscrollBehaviorY), "contain", "terminal scrolling cannot chain into the ride");
 		await page.waitForTimeout(600);
 		await capture(page, "terminal-desktop");
 		if (await page.locator(".terminal-card .transit-board").count()) {
@@ -496,7 +524,14 @@ try {
 			assert.equal(await transitStations.getByRole("button").count(), 4);
 			await page.waitForFunction(() => document.querySelector(".terminal-card .transit-board")?.getAttribute("data-state") !== "loading", null, { timeout: 25_000 });
 			await capture(page, "terminal-live-clark-lake");
+			await page.evaluate(() => {
+				const ride = document.querySelector(".ride");
+				window.scrollTo({ top: ride.getBoundingClientRect().top + scrollY + .88 * (ride.offsetHeight - innerHeight), behavior: "instant" });
+			});
+			await page.waitForFunction(() => document.querySelector(".ride-stage")?.style.getPropertyValue("--ride-progress") >= .879);
+			const beforeStationFilter = await page.evaluate(() => scrollY);
 			await transitStations.getByRole("button", { name: "State/Lake" }).click();
+			assert.ok(Math.abs(await page.evaluate(() => scrollY) - beforeStationFilter) < 3, "changing a terminal station must not rewind the ride");
 			await page.waitForFunction(() => {
 				const board = document.querySelector(".terminal-card .transit-board");
 				return board?.getAttribute("data-station") === "40260" && board.getAttribute("data-state") !== "loading";
@@ -650,8 +685,8 @@ try {
 		assert.ok(stripMetrics.scrollWidth > stripMetrics.clientWidth, "phone trip strip has horizontal overflow to pan");
 		const touchSession = await touchContext.newCDPSession(touchPage);
 		const touchY = stripMetrics.rect.y + stripMetrics.rect.height / 2;
-		const touchStartX = stripMetrics.rect.x + 70;
-		const touchEndX = touchStartX + 150;
+		const touchStartX = stripMetrics.rect.x + (stripMetrics.left > 1 ? 70 : 220);
+		const touchEndX = touchStartX + (stripMetrics.left > 1 ? 150 : -150);
 		await touchSession.send("Input.dispatchTouchEvent", {
 			type: "touchStart",
 			touchPoints: [{ id: 1, x: touchStartX, y: touchY, radiusX: 2, radiusY: 2, force: 1 }],
@@ -663,6 +698,14 @@ try {
 		await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
 		await touchPage.waitForTimeout(200);
 		assert.notEqual(await strip.evaluate((element) => element.scrollLeft), stripMetrics.left, "phone trip strip responds to touch dragging");
+		await touchPage.getByRole("button", { name: "Jump to Offline sync engine" }).click();
+		await touchPage.getByRole("button", { name: "Jump to Android rollout" }).click();
+		await touchPage.waitForFunction(() => document.querySelector(".trip-stop.hit")?.getAttribute("aria-label") === "Jump to Android rollout");
+		const activeDot = await strip.evaluate((element) => ({
+			strip: element.getBoundingClientRect().left,
+			dot: element.querySelector(".trip-stop.hit").getBoundingClientRect().left,
+		}));
+		assert.ok(activeDot.dot >= activeDot.strip + 18, `phone active stop clears the faded edge: ${JSON.stringify(activeDot)}`);
 		await touchPage.getByRole("button", { name: /Jump to The terminal/ }).click();
 		await touchPage.locator(".terminal-overlay").waitFor();
 		if (await touchPage.locator(".terminal-card .transit-board").count()) {
@@ -671,19 +714,23 @@ try {
 				return board && board.getAttribute("data-state") !== "loading";
 			}, null, { timeout: 25_000 });
 		}
+		assert.ok(await touchPage.locator(".terminal-overlay").evaluate((element) => element.scrollHeight > element.clientHeight), "the phone terminal actually has content to scroll");
 		await touchPage.locator(".terminal-overlay").evaluate((element) => { element.scrollTop = element.scrollHeight; });
 		await touchPage.locator(".terminal-overlay").hover();
-		let closingMapVisible = false;
-		for (let gesture = 0; gesture < 4; gesture++) {
-			await touchPage.mouse.wheel(0, 2400);
-			await touchPage.waitForTimeout(150);
-			closingMapVisible = await touchPage.locator('.rail-network').evaluate((element) => {
-				const bounds = element.getBoundingClientRect();
-				return bounds.top < innerHeight && bounds.bottom > 0;
-			});
-			if (closingMapVisible) break;
-		}
-		assert.ok(closingMapVisible, "phone can scroll out of the terminal to the closing network");
+		const beforeTerminalWheel = await touchPage.evaluate(() => scrollY);
+		await touchPage.mouse.wheel(0, 600);
+		await touchPage.waitForTimeout(150);
+		assert.ok(Math.abs(await touchPage.evaluate(() => scrollY) - beforeTerminalWheel) < 2, "reading the terminal does not scroll the ride away");
+		assert.ok(await touchPage.locator(".terminal-continue").evaluate((button) => {
+			const control = button.getBoundingClientRect();
+			const overlay = button.closest(".terminal-overlay").getBoundingClientRect();
+			return control.top >= overlay.top && control.bottom <= overlay.bottom && control.bottom <= innerHeight;
+		}), "the phone's exit control is visible after reading the terminal");
+		await touchPage.getByRole("button", { name: "Continue to live map" }).click();
+		await touchPage.waitForFunction(() => {
+			const bounds = document.querySelector(".rail-network")?.getBoundingClientRect();
+			return bounds && bounds.top < innerHeight && bounds.bottom > 0;
+		});
 		await touchPage.locator(".rail-network").evaluate((element)=>element.scrollIntoView({block:"start"}));
 		await touchPage.locator('.rail-network[data-ready="true"]').waitFor();
 		const beforePan = await touchPage.locator(".rail-map-svg").getAttribute("viewBox");
@@ -703,6 +750,14 @@ try {
 		assert.notEqual(await touchPage.locator(".rail-map-svg").getAttribute("viewBox"),beforePan,"full-screen map pans with a touch drag");
 		assert.equal(await touchPage.evaluate(()=>scrollY),scrollBeforePan,"map drag does not move the page");
 		await capture(touchPage, "network-end-phone");
+		await touchPage.locator(".atlas-end").scrollIntoViewIfNeeded();
+		assert.ok(await touchPage.locator(".atlas-end").evaluate((footer) => {
+			const bounds = footer.getBoundingClientRect();
+			return bounds.top >= 0 && bounds.bottom <= innerHeight + 2 && document.documentElement.scrollWidth <= innerWidth &&
+				[...footer.querySelectorAll("a")].every((link) => { const box = link.getBoundingClientRect(); return box.left >= 0 && box.right <= innerWidth && box.height >= 44; });
+		}), "phone Atlas ending and both exit links fit the viewport");
+		await touchPage.locator(".atlas-end").getByRole("link", { name: "Read the Dispatch" }).click();
+		await touchPage.waitForFunction(() => document.title.includes("The Dispatch") && scrollY <= 1);
 		await touchContext.close();
 
 		assert.deepEqual(errors, [], "no uncaught browser errors");
