@@ -6,7 +6,10 @@ import { stations as portfolioStations } from "@/content/load";
 import { positionOnRoute, projectCoordinate, type RailNetwork, type RailStation, type RailRoute, type Point } from "@/content/cta-geometry";
 import CtaLive from "./CtaLive";
 import RailBasemap from "./RailBasemap";
-import StreetMap from "./StreetMap";
+import GeographicMap, { type GeographicMapHandle } from "./GeographicMap";
+import TrainSprite from "./TrainSprite";
+import { spriteBearing } from "@/content/train-sprite";
+import type { MapMode } from "@/content/geographic-map";
 import { publicPlaces, type PublicPlace } from "@/content/public-places";
 import geography from "../../../content/chicago-basemap.json";
 import { TransitDisruptions, TransitGuide } from "./TransitPanel";
@@ -82,14 +85,7 @@ function TrainMarker({ train, point, route, size }: { train: Train; point: Point
 	}, [point[0], point[1], route]);
 	return <g ref={ref} className="rail-live-train" data-train={train.id} transform={`translate(${previous.current[0]} ${previous.current[1]})`}>
 		<title>{route.name}: {train.destination}, next {train.nextStation}{train.isDelayed ? ", delay flagged" : ""}</title>
-		<g transform={`rotate(${Number.isFinite(train.heading) ? train.heading - 90 : 0})`}><g className="rail-train-sprite" transform={`scale(${size})`}>
-			<rect className="sprite-shadow" x="-11" y="-6" width="22" height="12" rx="4" />
-			<rect className="sprite-car" x="-10" y="-5" width="20" height="10" rx="3" />
-			<path className="sprite-roof" d="M-7-5h14" stroke={routeColors[train.route]} />
-			<rect className="sprite-window" x="-7" y="-2.5" width="4" height="3" rx=".6" /><rect className="sprite-window" x="-1.5" y="-2.5" width="4" height="3" rx=".6" /><rect className="sprite-window" x="4" y="-2.5" width="4" height="3" rx=".6" />
-			<path className="sprite-track" d="M-6 5v1m12-1v1" />
-			<path className="sprite-coupler" d="M0-4v8" /><circle className="sprite-lamp" cx="8" cy="0" r="1" />
-		</g></g>
+		<g transform={`rotate(${spriteBearing(train.heading)})`}><g transform={`scale(${size})`}><TrainSprite tint={routeColors[train.route]} /></g></g>
 	</g>;
 }
 
@@ -116,6 +112,10 @@ export default function CtaRailMap() {
 	const [box, setBox] = useState<Box>(cityBox);
 	const [mapReady, setMapReady] = useState(false);
 	const [tileState,setTileState]=useState("idle");
+	const [mode, setMode] = useState<MapMode>("2d");
+	const [cameraPreset, setCameraPreset] = useState("Chicago");
+	const vectorRef = useRef<GeographicMapHandle>(null);
+	const paneRef = useRef<HTMLDivElement>(null);
 	const [canvas, setCanvas] = useState({ width: 700, height: 600 });
 	const svgRef = useRef<SVGSVGElement>(null);
 	const currentBox = useRef<Box>(cityBox);
@@ -124,7 +124,7 @@ export default function CtaRailMap() {
 	const [moving, setMoving] = useState(false);
 	const [entered, setEntered] = useState(false);
 	useEffect(() => {
-		const section = svgRef.current?.closest(".rail-network");
+		const section = paneRef.current?.closest(".rail-network");
 		if (!section) return;
 		const observer = new IntersectionObserver(([entry]) => {
 			if (entry.isIntersecting) { setEntered(true); observer.disconnect(); }
@@ -135,6 +135,11 @@ export default function CtaRailMap() {
 	}, []);
 	function moveCamera(target: Box, animate = !keyboard.current) {
 		cancelAnimationFrame(cameraFrame.current);
+		setCameraPreset(target.every((value, index) => cityBox[index] === value) ? "Chicago" : target.every((value, index) => [37, -4, 66, 79][index] === value) ? "Loop" : "");
+		if (tileState === "ready") {
+			vectorRef.current?.fit(target, animate);
+			currentBox.current = target; setBox(target); setMoving(false); return;
+		}
 		if (!animate || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
 			currentBox.current = target; setBox(target); setMoving(false); return;
 		}
@@ -152,7 +157,7 @@ export default function CtaRailMap() {
 		cameraFrame.current = requestAnimationFrame(tick);
 	}
 	useEffect(() => {
-		const update = () => { const top = svgRef.current?.closest(".rail-network")?.getBoundingClientRect().top; setMapReady(top !== undefined && Math.abs(top) <= 2); };
+		const update = () => { const top = paneRef.current?.closest(".rail-network")?.getBoundingClientRect().top; setMapReady(top !== undefined && Math.abs(top) <= 2); };
 		window.addEventListener("scroll", update, { passive: true });
 		window.addEventListener("resize", update);
 		update();
@@ -221,7 +226,7 @@ export default function CtaRailMap() {
 		return result;
 	}, [availableStations, selectedId, routeId, box, units, visibleTrains]);
 	useEffect(() => {
-		const svg = svgRef.current;
+		const svg = paneRef.current;
 		if (!svg) return;
 		const header = document.querySelector(".concept-bar");
 		const update = () => {
@@ -252,6 +257,7 @@ export default function CtaRailMap() {
 		if (next && selectedId && !station.routes.includes(value)) { setSelectedId(""); if (sheet === "station") setSheet(null); }
 	}
 	function zoom(factor: number) {
+		if (tileState === "ready") { setCameraPreset(""); vectorRef.current?.zoom(-Math.log2(factor)); return; }
 		const [x, y, w, h] = currentBox.current;
 		const width = Math.max(12, Math.min(cityBox[2] * 4, w * factor));
 		const height = h * width / w;
@@ -264,6 +270,7 @@ export default function CtaRailMap() {
 		const dx = (event.clientX - drag.current.x) * scale, dy = (event.clientY - drag.current.y) * scale;
 		if (Math.abs(dx) + Math.abs(dy) > 1) drag.current.moved = true;
 		const [x, y, w, h] = drag.current.box;
+		setCameraPreset("");
 		setBox([Math.max(-900, Math.min(500, x - dx)),
 			Math.max(-900, Math.min(500, y - dy)), w, h]);
 	}
@@ -274,8 +281,9 @@ export default function CtaRailMap() {
 	const statusText = feed.kind === "live" ? `${feed.trains.length} trains reporting` : feed.kind === "loading" ? "Connecting to CTA" : feed.kind === "empty" ? "No trains reported" : "Live feed unavailable";
 	return (
 		<section className="rail-network" id="cta-network" data-ready={mapReady} data-entered={entered} data-camera={moving ? "moving" : "idle"} data-input={keyboard.current ? "keyboard" : "pointer"} onKeyDownCapture={() => { keyboard.current = true; }} onPointerDownCapture={() => { keyboard.current = false; }} aria-labelledby={`${id}-title`} onKeyDown={(event) => { if (event.key === "Escape" && sheet) { event.preventDefault(); closeSheet(); } }}>
-			<div className="rail-map-pane">
-						<svg ref={svgRef} className={`rail-map-svg${routeId === "all" && box[2] >= 180 ? " rail-overview" : " rail-map-detail"}`} viewBox={box.join(" ")} role="group" aria-label="Geographic CTA rail network" onPointerDown={(event) => {
+			<div className="rail-map-pane" ref={paneRef} data-renderer={tileState === "ready" ? "vector" : "local"}>
+				<GeographicMap ref={vectorRef} active={entered} network={network} colors={routeColors} box={box} route={routeId} selected={selectedId} places={foodPoints.filter((place) => foodLayers.includes(place.collection))} trains={trains} mode={mode} onState={(state) => { setTileState(state); if (state === "unavailable") setMode("2d"); }} onStation={(stationId) => { const target = network.stations.find((entry) => entry.id === stationId); if (target) selectStation(target); }} onPlace={(placeId) => { const target = foodPoints.find((entry) => entry.id === placeId); if (target) selectPlace(target); }} onGesture={() => setCameraPreset("")} />
+						<svg ref={svgRef} style={{ display: tileState === "ready" ? "none" : undefined }} className={`rail-map-svg${routeId === "all" && box[2] >= 180 ? " rail-overview" : " rail-map-detail"}`} viewBox={box.join(" ")} role="group" aria-label="Local geographic CTA rail network" onPointerDown={(event) => {
 							if (!mapReady || !event.isPrimary || event.button !== 0 || (event.target as Element).closest('[role="button"]')) return;
 							cancelAnimationFrame(cameraFrame.current); setMoving(false);
 							drag.current = { x: event.clientX, y: event.clientY, box: [...currentBox.current], moved: false };
@@ -284,7 +292,7 @@ export default function CtaRailMap() {
 							<title>Chicago Transit Authority rail network, eight lines and {network.stations.length} stations</title>
 							<desc>Geographic routes from CTA GTFS. Select a station using the map or search. Train symbols are reported live positions, snapped to their route within 500 metres.</desc>
 							<RailBasemap />
-							<StreetMap box={box} canvas={canvas} projection={network.projection} active={mapReady} moving={moving} onStateChange={setTileState} />
+
 							{showLakeLabel ? <text className="rail-lake-name" x="150" y="-30" textAnchor="middle" aria-hidden="true" style={{ fontSize: units * 11, letterSpacing: units * 3 }}>LAKE MICHIGAN</text> : null}
 							<g fill="none" strokeLinecap="round" strokeLinejoin="round" className="rail-route-casing" aria-hidden="true">
 								{network.routes.map((line) => <path key={line.id} d={paths.get(line.id)} strokeWidth={units * (routeId === line.id ? 7 : 5.5)} />)}
@@ -325,7 +333,7 @@ export default function CtaRailMap() {
 							})}</g>
 						</svg>
 			</div>
-			{tileState === "unavailable" ? <p className="rail-map-alert" role="status">Street details unavailable. Local reference map shown.</p> : null}
+			{tileState === "unavailable" ? <p className="rail-map-alert" role="status">Vector map unavailable. Local flat reference map shown.</p> : null}
 			<div className="rail-topbar">
 				<a className="rail-back" href="#view-atlas" onClick={() => { setSheet(null); setQuery(""); }} aria-label="Back to the scenic route ↑">←</a>
 				<h2 id={`${id}-title`}>Chicago</h2>
@@ -340,8 +348,15 @@ export default function CtaRailMap() {
 				</div>
 				<div className="rail-top-actions"><button type="button" aria-expanded={sheet === "alerts"} onClick={() => openSheet("alerts")}>Alerts</button><button type="button" className="rail-ask-button" aria-expanded={sheet === "guide"} onClick={() => openSheet("guide")}>Ask CTA</button></div>
 			</div>
-			<div className="rail-map-tools" role="group" aria-label="Map view"><div className="rail-view-switch"><button type="button" aria-pressed={cityBox.every((value, index) => box[index] === value)} onClick={(event) => moveCamera(cityBox, event.detail > 0)}>Chicago</button><button type="button" aria-pressed={[37, -4, 66, 79].every((value, index) => box[index] === value)} onClick={(event) => moveCamera([37, -4, 66, 79], event.detail > 0)}>Loop</button></div><div className="rail-zoom"><button type="button" aria-label="Zoom out" onClick={() => zoom(1.5)}>−</button><button type="button" aria-label="Zoom in" onClick={() => zoom(.65)}>+</button></div></div>
-			<div className="rail-tile-credit"><a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a></div>
+			<div className="rail-map-tools" role="group" aria-label="Map view">
+				<div className="rail-view-switch"><button type="button" aria-pressed={cameraPreset === "Chicago"} onClick={(event) => moveCamera(cityBox, event.detail > 0)}>Chicago</button><button type="button" aria-pressed={cameraPreset === "Loop"} onClick={(event) => moveCamera([37, -4, 66, 79], event.detail > 0)}>Loop</button></div>
+				<div className="rail-zoom"><button type="button" aria-label="Zoom out" onClick={() => zoom(1.5)}>−</button><button type="button" aria-label="Zoom in" onClick={() => zoom(.65)}>+</button></div>
+			</div>
+			<div className="rail-dimension-tools" role="group" aria-label="Map dimensions">
+				<button type="button" className="rail-north" aria-label="Reset north" disabled={tileState !== "ready"} onClick={() => vectorRef.current?.north()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 4 6 15-6-4-6 4Z"/><path d="M12 4v11"/></svg><span>N</span></button>
+				<div className="rail-mode-switch"><button type="button" aria-pressed={mode === "2d"} onClick={() => setMode("2d")}>2D</button><button type="button" aria-pressed={mode === "3d"} disabled={tileState !== "ready"} onClick={() => setMode("3d")} aria-label="3D tilted map">3D</button></div>
+			</div>
+			<div className="rail-tile-credit"><a href="https://openfreemap.org/">OpenFreeMap</a> · <a href="https://openmaptiles.org/">OpenMapTiles</a> · <a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a></div>
 			<div className="rail-map-credit"><span className="rail-feed-status" role="status" data-state={feed.kind}><span className="rail-status-dot" />{statusText}</span><button type="button" aria-label="Map information and data sources" onClick={() => openSheet("info")}>Map info</button></div>
 			{sheet ? <aside key={sheet} className={`rail-sheet${sheet === "guide" || sheet === "places" ? " rail-guide-sheet" : ""}`} aria-labelledby={`${id}-panel-title`}>
 				<div className="rail-sheet-heading"><h3 id={`${id}-panel-title`} ref={sheetRef} tabIndex={-1}>{sheet === "station" ? station.name : sheet === "alerts" ? "Service alerts" : sheet === "guide" ? "Ask the transit guide" : sheet === "places" ? "Food around Chicago" : sheet === "place" ? selectedPlace?.name : "About this map"}</h3><button type="button" aria-label="Close map details" onClick={closeSheet}>×</button></div>
@@ -353,9 +368,10 @@ export default function CtaRailMap() {
 				</div> : sheet === "places" ? <div className="rail-food-lists"><p>Public lists · {publicPlaces.checked_on}</p>{publicPlaces.collections.map((collection)=><section key={collection.id}><button type="button" className="rail-food-toggle" aria-pressed={foodLayers.includes(collection.id)} onClick={()=>setFoodLayers((before)=>before.includes(collection.id)?before.filter((id)=>id!==collection.id):[...before,collection.id])}>{collection.title}<span>{foodLayers.includes(collection.id)?"Shown":"Hidden"}</span></button><p>{collection.period}</p><ol>{foodPoints.filter((place)=>place.collection===collection.id).map((place)=><li key={place.id}><button type="button" onClick={()=>selectPlace(place)}><b>{place.rank}</b>{place.name}</button></li>)}</ol><a href={collection.url}>Ranking source ↗</a><details><summary>About this list</summary><p>{collection.description}</p></details></section>)}</div> : sheet === "place" && selectedPlace ? <div className="rail-place-details"><p className="rail-place-source">{publicPlaces.collections.find((entry)=>entry.id===selectedPlace.collection)?.title} · #{selectedPlace.rank}</p><p>{selectedPlace.neighborhood}<br/>{selectedPlace.address}</p>{selectedPlace.notice?<p className="rail-place-notice">{selectedPlace.notice}</p>:null}<p>{selectedPlace.coordinate_note}</p><p>Snapshot checked {publicPlaces.checked_on}. Rankings and availability can change.</p><a href={selectedPlace.website}>Restaurant information ↗</a><br/><a href={publicPlaces.collections.find((entry)=>entry.id===selectedPlace.collection)?.url}>Ranking source ↗</a><button type="button" onClick={()=>openSheet("places")}>All food places</button></div> : sheet === "alerts" ? <TransitDisruptions /> : sheet === "guide" ? <TransitGuide station={selectedId || undefined} /> : <div className="rail-map-info">
 					<p>All eight lines and {network.stations.length} stations. Select a station for arrivals. Drag to explore; use the controls to zoom.</p>
 					<div className="rail-legend">{network.routes.map((line) => <span key={line.id}><i style={{ background: routeColors[line.id] }} />{line.name}</span>)}</div>
-					<p>{visibleTrains.length} train symbols shown at this zoom. Symbols are spaced for clarity; they use reported coordinates, not invented positions.</p>
+					<p>Train symbols are spaced for clarity; they use reported coordinates snapped to the matching route within 500 metres, not invented positions.</p>
+					<details className="rail-station-browser"><summary>Browse all stations</summary>{availableStations.map((entry) => <button key={entry.id} type="button" onClick={() => selectStation(entry)}>{entry.name}</button>)}</details>
 					<details className="rail-train-list"><summary>{trains.length} trains reporting</summary><ul>{trains.map((train) => <li key={train.id}>{network.routes.find((line) => line.id === train.route)!.name} · {train.destination}<span>Next: {train.nextStation}{train.isDelayed ? " · Delay flagged" : ""}</span></li>)}</ul></details>
-					<p>Full street map: <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>. Only visible tiles load after you enter the map. The local vector backdrop remains if tiles cannot load.</p><p>Geographic context: <a href="https://data.cityofchicago.org/">City of Chicago Data Portal ↗</a> ({geography.metadata.retrievedOn}). Waterways, major streets and park boundaries are simplified reference layers. Park and street snapshots date to 2016; this backdrop is not navigation data.</p><ul className="rail-source-list">{geography.metadata.sources.map((source) => <li key={source.layer}><a href={source.url}>{source.layer} source ↗</a></li>)}</ul>
+					<p>Vector streets: <a href="https://openfreemap.org/">OpenFreeMap</a>, <a href="https://openmaptiles.org/">OpenMapTiles</a> and <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>. External tiles and fonts load after map entry and disclose your IP address to those providers. Source detail limits still apply at high zoom. 3D building heights are derived from OpenMapTiles and may be approximations or defaults, not surveyed measurements. Buildings without render_height stay flat. Rotate with a right-button drag or two fingers. Hold Ctrl or ⌘ to wheel-zoom. Use two fingers to move the map on touch devices.</p><p>Geographic context: <a href="https://data.cityofchicago.org/">City of Chicago Data Portal ↗</a> ({geography.metadata.retrievedOn}). The local flat fallback includes simplified waterways, major streets and park boundaries. Park and street snapshots date to 2016; this backdrop is not navigation data.</p><ul className="rail-source-list">{geography.metadata.sources.map((source) => <li key={source.layer}><a href={source.url}>{source.layer} source ↗</a></li>)}</ul>
 					<p>CTA Train Tracker data. Geographic network: <a href={network.metadata.source}>CTA GTFS ↗</a>. No CTA endorsement. Predictions and conditions can change.</p><p><a href="https://www.transitchicago.com/alerts/">Official CTA service information ↗</a></p>
 				</div>}
 			</aside> : null}

@@ -3,7 +3,7 @@
   "role": "Software engineer",
   "location": "Chicago",
   "tagline": "I build systems that keep working when the network does not.",
-  "content_sha256": "bcf8206f4e52167b",
+  "content_sha256": "fcd3ae125ee19df2",
   "facades": [
     "dispatch",
     "atlas"

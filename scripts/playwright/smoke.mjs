@@ -18,9 +18,10 @@ const requireFromPlaywright = createRequire(playwrightCli);
 const { chromium } = requireFromPlaywright("playwright");
 const baseUrl = new URL(process.env.BASE_URL ?? "http://localhost:3000/portfolio/");
 const errors = [];
-// Automated pan/zoom checks use fixtures, never the community tile server.
+// Exercise the local SVG fallback without contacting public map providers.
 async function mockStreetTiles(page) {
-	await page.route("https://tile.openstreetmap.org/**",(route)=>route.fulfill({contentType:"image/svg+xml",body:'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"/>'}));
+	await page.route("https://tiles.openfreemap.org/**", (route) => route.abort());
+	await page.route("https://tile.openstreetmap.org/**", (route) => route.abort());
 }
 const screenshotDir = process.env.SCREENSHOT_DIR;
 async function capture(page, name) {
@@ -143,8 +144,10 @@ async function checkNetwork(page) {
 	assert.ok(await map.locator(".rail-water path").count() > 100, "real water geometry replaces the illustrative shoreline");
 	assert.ok(await map.locator(".rail-parks path").count() > 100, "local park geometry is available without tile requests");
 	assert.equal(await map.locator(".rail-streets path").count(),3);
-	await page.waitForFunction(()=>document.querySelector(".rail-street-map")?.getAttribute("data-state")==="ready");
-	assert.ok(await map.locator(".rail-street-map image").count()>0,"full street tiles cover the visible city extent");
+	await map.getByText("Vector map unavailable. Local flat reference map shown.", { exact: true }).waitFor();
+	assert.equal(await map.locator(".rail-map-pane").getAttribute("data-renderer"), "local", "failed vector style selects the local SVG renderer");
+	assert.ok(await map.locator(".rail-map-svg").isVisible(), "the local map remains visible without public tiles");
+	assert.ok(await map.getByRole("button", { name: "3D tilted map", exact: true }).isDisabled(), "3D is unavailable in the flat SVG fallback");
 	assert.ok(await map.getByRole("link",{name:"© OpenStreetMap contributors",exact:true}).isVisible());
 	assert.equal(await map.locator(".rail-food-places [role=button]").evaluateAll((elements)=>elements.reduce((sum,e)=>sum+Number(e.dataset.placeCount),0)),10,"both public lists appear directly on the map");
 	await map.getByRole("button",{name:"Food places and layers"}).click();
@@ -202,6 +205,10 @@ async function checkNetwork(page) {
 		}),"water label is hidden when it cannot fit on screen");
 		const controls = await map.locator("button,select,input").evaluateAll((elements) => elements.filter((e) => e.getBoundingClientRect().height>0).map((e) => e.getBoundingClientRect().height));
 		assert.ok(controls.every((height)=>height>=44));
+		assert.ok(await map.evaluate((element) => {
+			const notice=element.querySelector("p.rail-map-alert")?.getBoundingClientRect(), tools=element.querySelector(".rail-dimension-tools").getBoundingClientRect();
+			return !notice || notice.right <= tools.left || notice.left >= tools.right || notice.bottom <= tools.top || notice.top >= tools.bottom;
+		}), `fallback notice clears the dimension dock at ${size.width}`);
 		const clearance = await map.evaluate((element) => ({tools:element.querySelector(".rail-map-tools").getBoundingClientRect().right,credit:element.querySelector(".rail-map-credit").getBoundingClientRect().left}));
 		assert.ok(clearance.tools <= clearance.credit,`map controls and attribution never overlap at ${size.width}: ${JSON.stringify(clearance)}`);
 		const clutter = await map.locator(".rail-live-train").evaluateAll((elements)=>elements.map((e)=>{const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};}));
@@ -232,11 +239,11 @@ async function checkNetwork(page) {
 	await capture(page,"food-lists-phone");
 	await map.getByRole("button",{name:"Close map details"}).click();
 	await page.setViewportSize({width:1440,height:900});
-	await page.route("https://tile.openstreetmap.org/**",(route)=>route.abort());
 	for(let step=0;step<3;step++){await map.getByRole("button",{name:"Zoom out",exact:true}).click();await page.waitForTimeout(320);}
-	await page.waitForFunction(()=>document.querySelector(".rail-street-map")?.getAttribute("data-state")==="unavailable");
-	assert.equal(await map.locator(".rail-geography").evaluate((element)=>getComputedStyle(element).visibility),"visible","tile errors retain the local vector fallback");
-	assert.ok(await map.getByText("Street details unavailable. Local reference map shown.").isVisible());
+	assert.equal(await map.locator(".rail-map-pane").getAttribute("data-renderer"), "local", "zooming preserves the local SVG fallback");
+	assert.equal(await map.locator(".rail-geography").evaluate((element)=>getComputedStyle(element).visibility),"visible","vector style failure retains the local geography");
+	assert.ok(await map.getByText("Vector map unavailable. Local flat reference map shown.", { exact: true }).isVisible());
+	assert.ok(await map.getByRole("button", { name: "3D tilted map", exact: true }).isDisabled());
 	assert.equal(await map.locator(".rail-paths path").count(),8);
 	await map.getByRole("button",{name:"Ask CTA",exact:true}).click();
 	await map.getByRole("link",{name:"Back to the scenic route ↑"}).click();
@@ -266,7 +273,7 @@ async function checkLiveUpdates(browser) {
 	const networkExtent = await page.locator(".rail-map-svg").getAttribute("viewBox");
 	await page.getByRole("button", {name:"Loop",exact:true}).click();
 	await page.clock.runFor(120);
-	assert.equal(await page.locator(".rail-network").getAttribute("data-camera"),"moving");
+	assert.equal(await page.getByRole("button", {name:"Loop",exact:true}).getAttribute("aria-pressed"),"true","Loop target is selected during camera travel");
 	await page.getByRole("button", {name:"Chicago",exact:true}).click();
 	await page.clock.runFor(320);
 	assert.equal(await page.locator(".rail-network").getAttribute("data-camera"),"idle","camera can be interrupted and settles on the latest target");
@@ -449,11 +456,16 @@ try {
 		});
 		assert.ok(selectedCamera.left <= 1 && selectedCamera.right >= selectedCamera.width - 1, "selected SVG covers both screen edges");
 		await capture(page, "skyline-selected");
+		await page.waitForFunction(() => {
+			const building = document.querySelector('.atlas-building[aria-expanded="true"]')?.getBoundingClientRect();
+			const strip = document.querySelector(".trip-strip")?.getBoundingClientRect();
+			return building && strip && building.top >= strip.bottom - 2 && building.bottom <= innerHeight + 2;
+		}, null, { timeout: 3000 });
 		const buildingBounds = await page.locator('.atlas-building[aria-expanded="true"]').evaluate((element) => {
 			const rect = element.getBoundingClientRect();
 			return { top: rect.top, bottom: rect.bottom, strip: document.querySelector(".trip-strip").getBoundingClientRect().bottom, height: innerHeight };
 		});
-		assert.ok(buildingBounds.top >= buildingBounds.strip - 2 && buildingBounds.bottom <= buildingBounds.height + 2, "selected landmark fits below the trip strip");
+		assert.ok(buildingBounds.top >= buildingBounds.strip - 2 && buildingBounds.bottom <= buildingBounds.height + 2, `selected landmark fits below the trip strip: ${JSON.stringify(buildingBounds)}`);
 		await landmark.press("Escape");
 		await page.waitForFunction(() => document.querySelector(".bld-selected") === null);
 		await landmark.press("Enter");

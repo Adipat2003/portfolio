@@ -1,35 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Marina City (east): corncob cylinder. Authored geometry from content/atlas.json, exported by scripts/art-export.mjs. -->
+<!-- Marina City (east): rounded corncob tower with petal-shaped balcony bands. Authored geometry from content/atlas.json, exported by scripts/art-export.mjs. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 470" width="1200" height="470">
   <defs>
     <linearGradient id="towerGlass" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
-    <clipPath id="landmark-windows"><path d="M452 420 L452 200 L482 200 L482 420 Z"/></clipPath>
+    <clipPath id="landmark-windows"><path d="M452 420 L452 276 L455 271 L460 268 L474 268 L479 271 L482 276 L482 280 L480 283 L482 285 L482 288 L480 291 L482 293 L482 296 L480 299 L482 301 L482 304 L480 307 L482 309 L482 312 L480 315 L482 317 L482 320 L480 323 L482 325 L482 328 L480 331 L482 333 L482 336 L480 339 L482 341 L482 344 L480 347 L482 349 L482 352 L480 355 L482 357 L482 360 L480 363 L482 365 L482 368 L480 371 L482 373 L482 376 L480 379 L482 381 L482 384 L480 387 L482 389 L482 392 L480 395 L482 397 L482 400 L480 403 L482 405 L482 408 L480 411 L482 413 L482 416 L480 419 L482 421 L482 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
-    <title>Marina City (east): corncob cylinder</title>
-      <path d="M452 420 L452 200 L482 200 L482 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+    <title>Marina City (east): rounded corncob tower with petal-shaped balcony bands</title>
+      <path d="M452 420 L452 276 L455 271 L460 268 L474 268 L479 271 L482 276 L482 280 L480 283 L482 285 L482 288 L480 291 L482 293 L482 296 L480 299 L482 301 L482 304 L480 307 L482 309 L482 312 L480 315 L482 317 L482 320 L480 323 L482 325 L482 328 L480 331 L482 333 L482 336 L480 339 L482 341 L482 344 L480 347 L482 349 L482 352 L480 355 L482 357 L482 360 L480 363 L482 365 L482 368 L480 371 L482 373 L482 376 L480 379 L482 381 L482 384 L480 387 L482 389 L482 392 L480 395 L482 397 L482 400 L480 403 L482 405 L482 408 L480 411 L482 413 L482 416 L480 419 L482 421 L482 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
       <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
-        <rect x="457" y="212" width="2" height="3"/>
-        <rect x="473" y="212" width="2" height="3"/>
-        <rect x="465" y="227" width="2" height="3"/>
-        <rect x="473" y="242" width="2" height="3"/>
-        <rect x="457" y="257" width="2" height="3"/>
-        <rect x="465" y="272" width="2" height="3"/>
-        <rect x="457" y="287" width="2" height="3"/>
-        <rect x="473" y="287" width="2" height="3"/>
-        <rect x="465" y="302" width="2" height="3"/>
-        <rect x="473" y="317" width="2" height="3"/>
-        <rect x="457" y="332" width="2" height="3"/>
-        <rect x="465" y="347" width="2" height="3"/>
-        <rect x="457" y="362" width="2" height="3"/>
-        <rect x="473" y="362" width="2" height="3"/>
-        <rect x="465" y="377" width="2" height="3"/>
-        <rect x="473" y="392" width="2" height="3"/>
-        <rect x="457" y="407" width="2" height="3"/>
+        <rect x="465" y="280" width="2" height="3"/>
+        <rect x="457" y="295" width="2" height="3"/>
+        <rect x="473" y="310" width="2" height="3"/>
+        <rect x="465" y="325" width="2" height="3"/>
+        <rect x="457" y="340" width="2" height="3"/>
+        <rect x="473" y="355" width="2" height="3"/>
+        <rect x="465" y="370" width="2" height="3"/>
+        <rect x="457" y="385" width="2" height="3"/>
+        <rect x="473" y="400" width="2" height="3"/>
       </g>
+      <path d="M454 273 Q467 263 480 273 Q467 281 454 273 M452 282 Q467 288 482 282 M452 290 Q467 296 482 290 M452 298 Q467 304 482 298 M452 306 Q467 312 482 306 M452 314 Q467 320 482 314 M452 322 Q467 328 482 322 M452 330 Q467 336 482 330 M452 338 Q467 344 482 338 M452 346 Q467 352 482 346 M452 354 Q467 360 482 354 M452 362 Q467 368 482 362 M452 370 Q467 376 482 370 M452 378 Q467 384 482 378 M452 386 Q467 392 482 386 M452 394 Q467 400 482 394 M452 402 Q467 408 482 402 M452 410 Q467 416 482 410" stroke="#66718a" stroke-width="1.2" fill="none"/>
   </g>
 </svg>

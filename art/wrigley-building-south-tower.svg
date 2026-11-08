@@ -1,32 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Wrigley Building (south tower): clock-tower crown. Authored geometry from content/atlas.json, exported by scripts/art-export.mjs. -->
+<!-- Wrigley Building (south tower): south clock tower with a tiered lantern crown. Authored geometry from content/atlas.json, exported by scripts/art-export.mjs. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 470" width="1200" height="470">
   <defs>
     <linearGradient id="towerGlass" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#222b42"/>
       <stop offset="1" stop-color="#141a29"/>
     </linearGradient>
-    <clipPath id="landmark-windows"><path d="M672 420 L672 230 L686 210 L700 230 L700 420 Z"/></clipPath>
+    <clipPath id="landmark-windows"><path d="M672 420 L672 336 L678 336 L678 316 L681 316 L681 302 L684 297 L684 290 L688 290 L688 297 L691 302 L691 316 L694 316 L694 336 L700 336 L700 420 Z"/></clipPath>
   </defs>
   <rect width="1200" height="470" fill="#0b0e18"/>
   <g>
-    <title>Wrigley Building (south tower): clock-tower crown</title>
-      <path d="M672 420 L672 230 L686 210 L700 230 L700 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
+    <title>Wrigley Building (south tower): south clock tower with a tiered lantern crown</title>
+      <path d="M672 420 L672 336 L678 336 L678 316 L681 316 L681 302 L684 297 L684 290 L688 290 L688 297 L691 302 L691 316 L694 316 L694 336 L700 336 L700 420 Z" fill="url(#towerGlass)" stroke="#3a4a6e" stroke-width="1"/>
       <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
-        <rect x="677" y="237" width="2" height="3"/>
-        <rect x="685" y="252" width="2" height="3"/>
-        <rect x="677" y="267" width="2" height="3"/>
-        <rect x="693" y="267" width="2" height="3"/>
-        <rect x="685" y="282" width="2" height="3"/>
-        <rect x="693" y="297" width="2" height="3"/>
-        <rect x="677" y="312" width="2" height="3"/>
-        <rect x="685" y="327" width="2" height="3"/>
-        <rect x="677" y="342" width="2" height="3"/>
-        <rect x="693" y="342" width="2" height="3"/>
-        <rect x="685" y="357" width="2" height="3"/>
-        <rect x="693" y="372" width="2" height="3"/>
-        <rect x="677" y="387" width="2" height="3"/>
-        <rect x="685" y="402" width="2" height="3"/>
+        <rect x="685" y="332" width="2" height="3"/>
+        <rect x="677" y="347" width="2" height="3"/>
+        <rect x="693" y="362" width="2" height="3"/>
+        <rect x="685" y="377" width="2" height="3"/>
+        <rect x="677" y="392" width="2" height="3"/>
+        <rect x="693" y="407" width="2" height="3"/>
       </g>
+      <path d="M681 326 A5 5 0 1 0 691 326 A5 5 0 1 0 681 326 M686 322 L686 326 L689 328 M674 342 L698 342 M675 351 L675 414 M681 351 L681 414 M691 351 L691 414 M697 351 L697 414" stroke="#b7b3a4" stroke-width="1.2" fill="none"/>
   </g>
 </svg>

@@ -15,14 +15,12 @@
       <g clip-path="url(#landmark-windows)" fill="#e8b04b" opacity=".7">
         <rect x="633" y="220" width="2" height="3"/>
         <rect x="625" y="235" width="2" height="3"/>
-        <rect x="633" y="250" width="2" height="3"/>
+        <rect x="633" y="265" width="2" height="3"/>
         <rect x="625" y="280" width="2" height="3"/>
-        <rect x="633" y="295" width="2" height="3"/>
-        <rect x="625" y="310" width="2" height="3"/>
-        <rect x="633" y="325" width="2" height="3"/>
-        <rect x="625" y="355" width="2" height="3"/>
-        <rect x="633" y="370" width="2" height="3"/>
-        <rect x="625" y="385" width="2" height="3"/>
+        <rect x="633" y="310" width="2" height="3"/>
+        <rect x="625" y="325" width="2" height="3"/>
+        <rect x="633" y="355" width="2" height="3"/>
+        <rect x="625" y="370" width="2" height="3"/>
         <rect x="633" y="400" width="2" height="3"/>
       </g>
   </g>

@@ -1,4 +1,5 @@
-import { atlas } from "@/content/load";
+import { atlas, LINE_COLORS } from "@/content/load";
+import TrainSprite from "./TrainSprite";
 
 /**
  * 'L' trains drifting along the routes, one pair per line. Pure declarative
@@ -19,11 +20,7 @@ export default function AtlasTrains() {
 								key={car}
 								className={`train train-${route.line}`}
 							>
-								<rect x="-16" y="-5" width="32" height="10" rx="3" className="train-body" />
-								<rect x="-11" y="-2.6" width="4.5" height="3" rx="0.8" className="train-window" />
-								<rect x="-4.5" y="-2.6" width="4.5" height="3" rx="0.8" className="train-window" />
-								<rect x="2" y="-2.6" width="4.5" height="3" rx="0.8" className="train-window" />
-								<circle cx="16" cy="0" r="1.8" className="train-headlight" />
+								<g transform="scale(1.3 0.9)"><TrainSprite tint={LINE_COLORS[route.line]} /></g>
 								<animateMotion
 									dur={`${duration}s`}
 									begin={`${-car * (duration / 2)}s`}
