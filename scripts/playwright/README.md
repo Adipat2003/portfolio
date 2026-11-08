@@ -22,8 +22,15 @@ Run the checks in another terminal:
 npm exec --yes --package=playwright@1.64.1 -- node scripts/playwright/smoke.mjs
 ```
 
-The default URL is `http://localhost:3000/portfolio/`. Override it when the
-development server uses another port:
+The default URL is `http://localhost:3000/portfolio/`. To check just the Dispatch
+footer separator at phone and desktop widths, run:
+
+```sh
+npm exec --yes --package=playwright@1.64.1 -- node scripts/playwright/footer-divider.mjs
+```
+
+Override `BASE_URL` for either script when the development server uses another
+port:
 
 ```sh
 BASE_URL=http://localhost:3001/portfolio/ npm exec --yes --package=playwright@1.64.1 -- node scripts/playwright/smoke.mjs

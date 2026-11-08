@@ -9,7 +9,7 @@ const playwrightBinDir = process.env.PATH
 if (!playwrightBinDir) throw new Error("Run with npm exec --package=playwright@1.64.1");
 const requireFromPlaywright = createRequire(realpathSync(path.join(playwrightBinDir, "playwright")));
 const { chromium } = requireFromPlaywright("playwright");
-const baseUrl = process.env.BASE_URL ?? "http://127.0.0.1:8293/portfolio/";
+const baseUrl = process.env.BASE_URL ?? "http://localhost:3000/portfolio/";
 
 const browser = await chromium.launch({ headless: true });
 try {

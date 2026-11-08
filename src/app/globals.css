@@ -406,7 +406,7 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 .atlas .chi-card{background:var(--night-2);border-color:var(--night-rule);color:var(--night-ink)}
 .atlas .chi-map g[role="button"]:focus-visible{outline-color:var(--signal)}
 /* Quiet divider between the Dispatch content and its footer. */
-.flag-rule{height:1px;border:0;border-top:1px solid var(--rule);margin:0}
+#view-dispatch .flag-rule{height:1px;border:0;border-top:1px solid var(--rule);margin:0}
 @media (prefers-reduced-motion: reduce){
   *{animation:none !important;transition:none !important}
   .cursor-light{display:none !important}
