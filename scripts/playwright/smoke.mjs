@@ -122,6 +122,13 @@ async function checkMatrix(page, viewports) {
 				await page.locator(".trip-strip .strip-counter").evaluate((element) => element.scrollWidth <= element.clientWidth),
 				`${viewport.name}: active stop counter is not clipped`,
 			);
+			assert.ok(
+				await page.locator(".trip-strip").evaluate((strip) => {
+					const counter = strip.querySelector(".strip-counter");
+					return counter && strip.getBoundingClientRect().right - counter.getBoundingClientRect().right >= 24;
+				}),
+				`${viewport.name}: the stop counter clears the faded progress-strip edge`,
+			);
 		}
 		matrix.push({ name: viewport.name, ...geometry });
 		await capture(page, `atlas-${viewport.width}x${viewport.height}`);
@@ -484,7 +491,16 @@ try {
 		await page.waitForFunction(() => document.querySelector(".bld-selected") === null);
 
 
+		await page.evaluate(() => { document.documentElement.style.scrollBehavior = "smooth"; });
 		await page.getByRole("button", { name: "Jump to Android rollout" }).click();
+		const immediateJump = await page.evaluate(() => {
+			const ride = document.querySelector(".ride");
+			const stopCount = document.querySelectorAll(".trip-stop").length;
+			const expected = ride.getBoundingClientRect().top + scrollY + (.84 * 2 / stopCount) * (ride.offsetHeight - innerHeight);
+			return Math.abs(scrollY - expected);
+		});
+		assert.ok(immediateJump < 3, "stop navigation responds instantly even if the page requests smooth scrolling");
+		await page.evaluate(() => { document.documentElement.style.scrollBehavior = ""; });
 		await page.waitForFunction(() => /STOP 2 OF \d+/.test(document.querySelector('[aria-label="Trip progress"]')?.textContent ?? ""));
 		assert.match(await page.getByRole("group", { name: "Trip progress" }).innerText(), /STOP 2 OF \d+/);
 		await page.getByRole("button", { name: /Jump to The terminal/ }).click();
