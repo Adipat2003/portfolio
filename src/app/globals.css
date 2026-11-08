@@ -405,9 +405,8 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 .atlas .chi-when{color:var(--signal)}
 .atlas .chi-card{background:var(--night-2);border-color:var(--night-rule);color:var(--night-ink)}
 .atlas .chi-map g[role="button"]:focus-visible{outline-color:var(--signal)}
-/* The flag-bar rule: the two light-blue stripes of the Chicago flag as the
-   closing rule of each facade. */
-.flag-rule{height:12px;border:0;margin:0;background:transparent;border-top:3px solid var(--flag-blue);border-bottom:3px solid var(--flag-blue);opacity:.5}
+/* Quiet divider between the Dispatch content and its footer. */
+.flag-rule{height:1px;border:0;border-top:1px solid var(--rule);margin:0}
 @media (prefers-reduced-motion: reduce){
   *{animation:none !important;transition:none !important}
   .cursor-light{display:none !important}
