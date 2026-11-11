@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>03 - Terminal Night</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter','system-ui','sans-serif'], mono: ['"JetBrains Mono"','monospace'] } } } }
+</script>
+<style>
+  body { font-family: Inter, system-ui, sans-serif; background:#0b0e14; }
+  .board { background:
+      radial-gradient(120% 100% at 50% -20%, rgba(232,176,75,.10), transparent 60%),
+      #0b0e14; }
+  .card { background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02)); }
+  .led { box-shadow: 0 0 8px currentColor; }
+  .marquee { animation: marquee 26s linear infinite; }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+</style>
+</head>
+<body class="board text-neutral-200">
+
+  <header class="sticky top-0 z-20 border-b border-white/10 bg-[#0b0e14]/90 backdrop-blur">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
+      <div class="flex items-center gap-3">
+        <span class="led h-2 w-2 rounded-full bg-emerald-400 text-emerald-400"></span>
+        <span class="font-mono text-xs uppercase tracking-[0.3em] text-neutral-400">Dispatch</span>
+      </div>
+      <nav class="flex overflow-hidden rounded-md border border-white/15 font-mono text-xs">
+        <span class="bg-neutral-100 px-3 py-1.5 font-semibold text-neutral-900">The Dispatch</span>
+        <span class="px-3 py-1.5 text-neutral-400">The Atlas</span>
+      </nav>
+    </div>
+    <div class="overflow-hidden border-t border-white/10">
+      <div class="marquee flex whitespace-nowrap py-1.5 font-mono text-[11px] text-neutral-500">
+        <span class="px-6">RED LINE · on time · next: Berwyn 4 min</span><span class="px-6">BLUE LINE · minor delays · next: Cicero 9 min</span><span class="px-6">BROWN LINE · on time · next: Merchandise Mart 2 min</span><span class="px-6">GREEN LINE · reroute · next: Ashland/63rd 6 min</span>
+        <span class="px-6">RED LINE · on time · next: Berwyn 4 min</span><span class="px-6">BLUE LINE · minor delays · next: Cicero 9 min</span><span class="px-6">BROWN LINE · on time · next: Merchandise Mart 2 min</span><span class="px-6">GREEN LINE · reroute · next: Ashland/63rd 6 min</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="mx-auto max-w-5xl px-6 pt-14">
+    <p class="font-mono text-[11px] uppercase tracking-[0.35em] text-amber-400">Software engineer / Chicago</p>
+    <h1 class="mt-5 max-w-3xl text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl">
+      I build systems that keep working when the network does not.
+    </h1>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-neutral-400">
+      Field inspection apps, offline-first sync engines, access control, and supervised automation.
+      Engineering work on freight inspection tooling, plus personal projects.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3 font-mono text-xs">
+      <a href="#work" class="rounded-md bg-amber-400 px-4 py-2.5 font-bold text-neutral-900 hover:bg-amber-300">BROWSE SELECTED WORK</a>
+      <a href="#" class="rounded-md border border-white/20 px-4 py-2.5 text-neutral-300 hover:border-white/40">GITHUB PROFILE</a>
+    </div>
+  </section>
+
+  <section id="work" class="mx-auto max-w-5xl px-6 py-16">
+    <div class="flex items-end justify-between">
+      <h2 class="font-mono text-xs uppercase tracking-[0.35em] text-neutral-400">Selected work</h2>
+      <p class="font-mono text-[11px] text-neutral-600">4 of 14</p>
+    </div>
+
+    <div class="mt-6 grid gap-4 md:grid-cols-2">
+      <article class="card group rounded-lg border border-white/10 p-5 transition hover:border-rose-400/40">
+        <div class="flex items-center justify-between">
+          <span class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-500"><span class="h-2 w-2 rounded-full bg-rose-400"></span>Red line</span>
+          <span class="font-mono text-[10px] text-neutral-600">546 commits</span>
+        </div>
+        <h3 class="mt-3 text-lg font-semibold leading-snug text-white">Inspection reporting that survives dead zones</h3>
+        <p class="mt-2 text-sm leading-relaxed text-neutral-400">Single-writer sync framework replacing an edit model that lost work when a ramp lost signal.</p>
+        <div class="mt-4 flex flex-wrap gap-1.5 font-mono text-[10px]">
+          <span class="rounded border border-white/10 px-2 py-0.5 text-neutral-400">offline-first</span>
+          <span class="rounded border border-white/10 px-2 py-0.5 text-neutral-400">sync</span>
+          <span class="rounded border border-white/10 px-2 py-0.5 text-neutral-400">react-native</span>
+        </div>
+        <p class="mt-4 font-mono text-[11px] text-amber-400 opacity-60 transition group-hover:opacity-100">Read project &rarr;</p>
+      </article>
+
+      <article class="card group rounded-lg border border-white/10 p-5 transition hover:border-sky-400/40">
+        <div class="flex items-center justify-between">
+          <span class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-500"><span class="h-2 w-2 rounded-full bg-sky-400"></span>Blue line</span>
+          <span class="font-mono text-[10px] text-neutral-600">75 API paths</span>
+        </div>
+        <h3 class="mt-3 text-lg font-semibold leading-snug text-white">Access control for a 75-endpoint inspection API</h3>
+        <p class="mt-2 text-sm leading-relaxed text-neutral-400">Roles plus facility scoping resolved per request, enforced by one declarative gate at every write path.</p>
+        <div class="mt-4 flex flex-wrap gap-1.5 font-mono text-[10px]">
+          <span class="rounded border border-white/10 px-2 py-0.5 text-neutral-400">access-control</span>
+          <span class="rounded border border-white/10 px-2 py-0.5 text-neutral-400">api</span>
+        </div>
+        <p class="mt-4 font-mono text-[11px] text-amber-400 opacity-60 transition group-hover:opacity-100">Read project &rarr;</p>
+      </article>
+
+      <article class="card group rounded-lg border border-white/10 p-5 transition hover:border-amber-600/40">
+        <div class="flex items-center justify-between">
+          <span class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-500"><span class="h-2 w-2 rounded-full bg-amber-700"></span>Brown line</span>
+          <span class="font-mono text-[10px] text-neutral-600">68 of 97</span>
+        </div>
+        <h3 class="mt-3 text-lg font-semibold leading-snug text-white">Supervised automation for legacy report pipelines</h3>
+        <p class="mt-2 text-sm leading-relaxed text-neutral-400">An agent plans each step, deterministic scripts do the screen work, the operator approves every write.</p>
+        <div class="mt-4 flex flex-wrap gap-1.5 font-mono text-[10px]">
+          <span class="rounded border border-white/10 px-2 py-0.5 text-neutral-400">automation</span>
+          <span class="rounded border border-white/10 px-2 py-0.5 text-neutral-400">agent</span>
+        </div>
+        <p class="mt-4 font-mono text-[11px] text-amber-400 opacity-60 transition group-hover:opacity-100">Read project &rarr;</p>
+      </article>
+
+      <article class="card group rounded-lg border border-white/10 p-5 transition hover:border-emerald-400/40">
+        <div class="flex items-center justify-between">
+          <span class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-500"><span class="h-2 w-2 rounded-full bg-emerald-400"></span>Green line</span>
+          <span class="font-mono text-[10px] text-neutral-600">grade A</span>
+        </div>
+        <h3 class="mt-3 text-lg font-semibold leading-snug text-white">Crime-data web app over public records</h3>
+        <p class="mt-2 text-sm leading-relaxed text-neutral-400">Entity-relationship model through normalized schema to a working query surface over the LA crime dataset.</p>
+        <div class="mt-4 flex flex-wrap gap-1.5 font-mono text-[10px]">
+          <span class="rounded border border-white/10 px-2 py-0.5 text-neutral-400">databases</span>
+          <span class="rounded border border-white/10 px-2 py-0.5 text-neutral-400">web</span>
+        </div>
+        <p class="mt-4 font-mono text-[11px] text-amber-400 opacity-60 transition group-hover:opacity-100">Read project &rarr;</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-6 pb-20">
+    <div class="card rounded-lg border border-white/10 p-6">
+      <p class="font-mono text-[10px] uppercase tracking-[0.35em] text-neutral-500">Ask the guide</p>
+      <h2 class="mt-2 font-mono text-lg uppercase tracking-[0.15em] text-white">Questions get sourced answers</h2>
+      <div class="mt-5 flex gap-2">
+        <input class="flex-1 rounded-md border border-white/15 bg-black/40 px-3 py-2.5 font-mono text-sm text-white placeholder:text-neutral-600 outline-none focus:border-amber-400" placeholder="ask about his work">
+        <button class="rounded-md border border-amber-400 px-4 py-2.5 font-mono text-xs font-bold text-amber-400 hover:bg-amber-400 hover:text-neutral-900">ASK</button>
+      </div>
+      <div class="mt-3 flex flex-wrap gap-2 font-mono text-[11px]">
+        <button class="rounded-full border border-white/15 px-3 py-1.5 text-neutral-400 hover:border-amber-400 hover:text-amber-400">How does the offline sync stay correct?</button>
+        <button class="rounded-full border border-white/15 px-3 py-1.5 text-neutral-400 hover:border-amber-400 hover:text-amber-400">What was the measurable impact?</button>
+        <button class="rounded-full border border-white/15 px-3 py-1.5 text-neutral-400 hover:border-amber-400 hover:text-amber-400">What did you build at the hackathon?</button>
+      </div>
+      <div class="mt-5 rounded-md border border-dashed border-white/15 bg-black/30 p-4">
+        <p class="font-mono text-xs leading-relaxed text-neutral-300">Ask a question, and the answer comes from the portfolio records with its source attached.</p>
+        <p class="mt-2 font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-600">No answer yet</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mx-auto max-w-5xl px-6 pb-14">
+    <div class="border-t border-white/10 pt-6 font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-600">
+      <p>Classic scroll. The default facade.</p>
+      <p class="mt-2">Machine-readable content: <a class="text-amber-400" href="#">portfolio.json</a></p>
+    </div>
+  </footer>
+</body>
+</html>
