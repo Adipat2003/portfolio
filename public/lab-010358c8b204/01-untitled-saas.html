@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>01 - Untitled SaaS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter','system-ui','sans-serif'] },
+  colors: { brand: { 50:'#eef4ff',100:'#dbe6fe',200:'#bfd3fe',300:'#93b4fd',400:'#608dfa',500:'#3b66f6',600:'#2547eb',700:'#1d35d8',800:'#1e2eaf',900:'#1e2b8a' } },
+  boxShadow: { card: '0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.10)' } } } }
+</script>
+<style>
+  .spot { background: radial-gradient(240px 240px at var(--mx,50%) var(--my,50%), rgba(59,102,246,.10), transparent 70%); }
+  body { font-family: Inter, system-ui, sans-serif; }
+</style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+  <!-- Facade switcher -->
+  <header class="sticky top-0 z-20 border-b border-gray-200 bg-white/85 backdrop-blur">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+      <div class="flex items-center gap-2">
+        <span class="grid h-7 w-7 place-items-center rounded-md bg-brand-600 text-[13px] font-bold text-white">AP</span>
+        <span class="text-sm font-semibold">Aditya Patel</span>
+        <span class="hidden text-xs text-gray-500 sm:inline">Software engineer, Chicago</span>
+      </div>
+      <nav class="flex rounded-lg border border-gray-200 bg-gray-100 p-0.5 text-sm">
+        <span class="rounded-md bg-white px-3 py-1 font-semibold text-gray-900 shadow-sm">The Dispatch</span>
+        <span class="px-3 py-1 text-gray-500">The Atlas</span>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="mx-auto max-w-6xl px-6 pt-16 pb-12">
+    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">Selected work</p>
+    <h1 class="mt-4 max-w-3xl text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl">
+      I build systems that keep working when the network does not.
+    </h1>
+    <p class="mt-5 max-w-2xl text-[17px] leading-relaxed text-gray-600">
+      Field inspection apps, offline-first sync engines, access control, and supervised automation.
+      Engineering work on freight inspection tooling, plus personal projects.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="#work" class="rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white shadow-card hover:bg-gray-800">Browse selected work</a>
+      <a href="#" class="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-card hover:bg-gray-50">GitHub profile</a>
+    </div>
+    <dl class="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-card">
+        <dt class="text-xs text-gray-500">Reporting hours saved</dt>
+        <dd class="mt-1 text-2xl font-bold">~4,500</dd>
+        <dd class="mt-1 text-[11px] font-medium uppercase tracking-wide text-emerald-600">measured</dd>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-card">
+        <dt class="text-xs text-gray-500">Reports, one month</dt>
+        <dd class="mt-1 text-2xl font-bold">297</dd>
+        <dd class="mt-1 text-[11px] font-medium uppercase tracking-wide text-emerald-600">measured</dd>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-card">
+        <dt class="text-xs text-gray-500">Projected annual savings</dt>
+        <dd class="mt-1 text-2xl font-bold">$4-10M</dd>
+        <dd class="mt-1 text-[11px] font-medium uppercase tracking-wide text-amber-600">projected</dd>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-card">
+        <dt class="text-xs text-gray-500">API paths on platform</dt>
+        <dd class="mt-1 text-2xl font-bold">75</dd>
+        <dd class="mt-1 text-[11px] font-medium uppercase tracking-wide text-gray-500">self-reported</dd>
+      </div>
+    </dl>
+  </section>
+
+  <!-- Work -->
+  <section id="work" class="mx-auto max-w-6xl px-6 pb-16">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">Projects</p>
+        <h2 class="mt-2 text-2xl font-bold tracking-tight">Projects and what changed</h2>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="relative">
+          <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input class="w-56 rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm shadow-card outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100" placeholder="Title, skill, or technology">
+        </div>
+        <button class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-card hover:bg-gray-50">Filters</button>
+      </div>
+    </div>
+
+    <div class="mt-6 flex flex-wrap gap-2">
+      <span class="rounded-full bg-gray-900 px-3 py-1 text-xs font-semibold text-white">offline-first</span>
+      <span class="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 shadow-card">react-native</span>
+      <span class="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 shadow-card">access-control</span>
+      <span class="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 shadow-card">automation</span>
+      <span class="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 shadow-card">typescript</span>
+    </div>
+
+    <div class="mt-8 grid gap-5 md:grid-cols-2">
+      <article class="spot group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-card transition hover:border-gray-300 hover:shadow-lg" onmousemove="this.style.setProperty('--mx', event.offsetX+'px'); this.style.setProperty('--my', event.offsetY+'px')">
+        <div class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+          <span class="text-xs font-medium uppercase tracking-wide text-gray-500">Red line</span>
+        </div>
+        <h3 class="mt-3 text-lg font-semibold leading-snug">Inspection reporting that survives dead zones</h3>
+        <p class="mt-2 text-sm leading-relaxed text-gray-600">Field officers complete rail-yard inspections with no signal, and the reports and photos still land. A single-writer sync framework replaced an edit model that lost work.</p>
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          <span class="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">offline-first</span>
+          <span class="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">sync</span>
+          <span class="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">react-native</span>
+        </div>
+        <div class="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
+          <p class="text-sm"><b class="text-gray-900">546</b> <span class="text-gray-500">commits</span></p>
+          <span class="text-sm font-semibold text-brand-600 opacity-0 transition group-hover:opacity-100">Read project &rarr;</span>
+        </div>
+      </article>
+
+      <article class="spot group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-card transition hover:border-gray-300 hover:shadow-lg" onmousemove="this.style.setProperty('--mx', event.offsetX+'px'); this.style.setProperty('--my', event.offsetY+'px')">
+        <div class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-sky-500"></span>
+          <span class="text-xs font-medium uppercase tracking-wide text-gray-500">Blue line</span>
+        </div>
+        <h3 class="mt-3 text-lg font-semibold leading-snug">Access control for a 75-endpoint inspection API</h3>
+        <p class="mt-2 text-sm leading-relaxed text-gray-600">Role and facility permissions resolved on every request and enforced by one shared gate at every write path, so users only see and edit what their role and ramps allow.</p>
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          <span class="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">access-control</span>
+          <span class="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">api</span>
+        </div>
+        <div class="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
+          <p class="text-sm"><b class="text-gray-900">214</b> <span class="text-gray-500">checks</span></p>
+          <span class="text-sm font-semibold text-brand-600 opacity-0 transition group-hover:opacity-100">Read project &rarr;</span>
+        </div>
+      </article>
+
+      <article class="spot group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-card transition hover:border-gray-300 hover:shadow-lg" onmousemove="this.style.setProperty('--mx', event.offsetX+'px'); this.style.setProperty('--my', event.offsetY+'px')">
+        <div class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-amber-700"></span>
+          <span class="text-xs font-medium uppercase tracking-wide text-gray-500">Brown line</span>
+        </div>
+        <h3 class="mt-3 text-lg font-semibold leading-snug">Supervised automation for legacy report pipelines</h3>
+        <p class="mt-2 text-sm leading-relaxed text-gray-600">An agent plans each step, deterministic scripts do the screen work, and the operator approves every write. The pipeline stopped needing a person at the keyboard.</p>
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          <span class="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">automation</span>
+          <span class="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">agent</span>
+        </div>
+        <div class="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
+          <p class="text-sm"><b class="text-gray-900">68/97</b> <span class="text-gray-500">commits</span></p>
+          <span class="text-sm font-semibold text-brand-600 opacity-0 transition group-hover:opacity-100">Read project &rarr;</span>
+        </div>
+      </article>
+
+      <article class="spot group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-card transition hover:border-gray-300 hover:shadow-lg" onmousemove="this.style.setProperty('--mx', event.offsetX+'px'); this.style.setProperty('--my', event.offsetY+'px')">
+        <div class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+          <span class="text-xs font-medium uppercase tracking-wide text-gray-500">Green line</span>
+        </div>
+        <h3 class="mt-3 text-lg font-semibold leading-snug">Crime-data web app over public records</h3>
+        <p class="mt-2 text-sm leading-relaxed text-gray-600">A database-backed app over the Los Angeles crime dataset, designed from an entity-relationship model through normalized schema to a working query surface.</p>
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          <span class="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">databases</span>
+          <span class="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">web</span>
+        </div>
+        <div class="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
+          <p class="text-sm"><b class="text-gray-900">A</b> <span class="text-gray-500">final grade</span></p>
+          <span class="text-sm font-semibold text-brand-600 opacity-0 transition group-hover:opacity-100">Read project &rarr;</span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Ask -->
+  <section class="border-t border-gray-200 bg-white">
+    <div class="mx-auto max-w-6xl px-6 py-14">
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">Ask the guide</p>
+      <h2 class="mt-2 text-2xl font-bold tracking-tight">Questions get sourced answers</h2>
+      <div class="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-5 shadow-card">
+        <div class="flex gap-2">
+          <input class="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm shadow-card outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100" placeholder="Ask about his work">
+          <button class="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-card hover:bg-brand-700">Ask</button>
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button class="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-card hover:border-brand-300 hover:text-brand-700">How does the offline sync stay correct?</button>
+          <button class="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-card hover:border-brand-300 hover:text-brand-700">What was the measurable impact?</button>
+          <button class="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-card hover:border-brand-300 hover:text-brand-700">What did you build at the hackathon?</button>
+          <button class="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-card hover:border-brand-300 hover:text-brand-700">What did you study in school?</button>
+        </div>
+        <div class="mt-4 rounded-lg border border-gray-200 bg-white p-4">
+          <p class="text-sm text-gray-700">Ask a question, and the answer comes from the portfolio records with its source attached.</p>
+          <p class="mt-2 text-xs text-gray-400">No answer yet</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mx-auto max-w-6xl px-6 py-10 text-sm text-gray-500">
+    <div class="flex flex-wrap gap-6 border-t border-gray-200 pt-6">
+      <span>Classic scroll. The default facade, and the primary surface for readers and indexing agents.</span>
+      <span>Machine-readable content: <a class="font-medium text-gray-700 underline" href="#">portfolio.json</a></span>
+    </div>
+  </footer>
+</body>
+</html>

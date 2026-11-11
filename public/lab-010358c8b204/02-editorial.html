@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>02 - Editorial</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+tailwind.config = { theme: { extend: { fontFamily: { serif: ['Fraunces','Georgia','serif'], sans: ['Inter','system-ui','sans-serif'], mono: ['"JetBrains Mono"','monospace'] } } } }
+</script>
+<style>
+  body { font-family: Inter, system-ui, sans-serif; }
+  .headline { font-family: Fraunces, Georgia, serif; font-variation-settings: 'opsz' 100; }
+  .rule-flag { background: linear-gradient(90deg, #d22630 0 33.3%, #fff 33.3% 66.6%, #86b8d8 66.6% 100%); }
+</style>
+</head>
+<body class="bg-[#faf8f4] text-[#1c1917]">
+
+  <header class="mx-auto max-w-3xl px-6 pt-8">
+    <div class="flex items-center justify-between border-b border-neutral-300 pb-4">
+      <p class="font-mono text-[11px] uppercase tracking-[0.3em] text-neutral-500">Aditya Patel</p>
+      <nav class="flex gap-5 font-mono text-[11px] uppercase tracking-[0.2em]">
+        <span class="border-b-2 border-[#b3541e] pb-0.5 text-neutral-900">Dispatch</span>
+        <span class="text-neutral-400">Atlas</span>
+      </nav>
+    </div>
+  </header>
+
+  <section class="mx-auto max-w-3xl px-6 pt-16">
+    <p class="font-mono text-[11px] uppercase tracking-[0.3em] text-[#b3541e]">Software engineer / Chicago</p>
+    <h1 class="headline mt-6 text-[42px] font-light leading-[1.06] tracking-tight sm:text-[56px]">
+      I build systems that keep working when the network does not.
+    </h1>
+    <p class="mt-8 max-w-xl text-[17px] leading-[1.75] text-neutral-600">
+      Field inspection apps, offline-first sync engines, access control, and supervised automation.
+      Engineering work on freight inspection tooling, plus personal projects.
+    </p>
+    <div class="mt-10 flex gap-6 font-mono text-[12px] uppercase tracking-[0.15em]">
+      <a class="border-b border-[#b3541e] pb-1 text-[#b3541e]" href="#work">Browse selected work</a>
+      <a class="border-b border-neutral-400 pb-1 text-neutral-600" href="#">GitHub profile</a>
+    </div>
+  </section>
+
+  <div class="mx-auto mt-16 max-w-3xl px-6"><div class="rule-flag h-[6px] w-full opacity-80"></div></div>
+
+  <section id="work" class="mx-auto max-w-3xl px-6 pt-14">
+    <h2 class="headline text-2xl font-normal">Selected work</h2>
+    <p class="mt-2 font-mono text-[11px] uppercase tracking-[0.25em] text-neutral-500">14 projects / 4 shown</p>
+
+    <div class="mt-10 divide-y divide-neutral-300">
+      <article class="grid gap-2 py-8 sm:grid-cols-[8rem_1fr] sm:gap-8">
+        <div class="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+          <span class="text-[#d22630]">Red</span><br>2024 - 2026
+        </div>
+        <div>
+          <h3 class="headline text-xl leading-snug">Inspection reporting that survives dead zones</h3>
+          <p class="mt-3 text-[15px] leading-relaxed text-neutral-700">Field officers complete rail-yard inspections with no signal, and the reports and photos still land. A single-writer sync framework replaced an edit model that lost work.</p>
+          <p class="mt-4 font-mono text-[11px] text-neutral-500">546 commits / offline-first, sync, react-native</p>
+        </div>
+      </article>
+
+      <article class="grid gap-2 py-8 sm:grid-cols-[8rem_1fr] sm:gap-8">
+        <div class="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+          <span class="text-sky-600">Blue</span><br>2025
+        </div>
+        <div>
+          <h3 class="headline text-xl leading-snug">Access control for a 75-endpoint inspection API</h3>
+          <p class="mt-3 text-[15px] leading-relaxed text-neutral-700">Role and facility permissions resolved on every request and enforced by one shared gate at every write path, so users only see and edit what their role and ramps allow.</p>
+          <p class="mt-4 font-mono text-[11px] text-neutral-500">75 API paths / access-control, api</p>
+        </div>
+      </article>
+
+      <article class="grid gap-2 py-8 sm:grid-cols-[8rem_1fr] sm:gap-8">
+        <div class="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+          <span class="text-amber-800">Brown</span><br>2026
+        </div>
+        <div>
+          <h3 class="headline text-xl leading-snug">Supervised automation for legacy report pipelines</h3>
+          <p class="mt-3 text-[15px] leading-relaxed text-neutral-700">An agent plans each step, deterministic scripts do the screen work, and the operator approves every write. The pipeline stopped needing a person at the keyboard.</p>
+          <p class="mt-4 font-mono text-[11px] text-neutral-500">68 of 97 commits / automation, agent</p>
+        </div>
+      </article>
+
+      <article class="grid gap-2 py-8 sm:grid-cols-[8rem_1fr] sm:gap-8">
+        <div class="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+          <span class="text-emerald-700">Green</span><br>2025
+        </div>
+        <div>
+          <h3 class="headline text-xl leading-snug">Crime-data web app over public records</h3>
+          <p class="mt-3 text-[15px] leading-relaxed text-neutral-700">A database-backed app over the Los Angeles crime dataset, designed from an entity-relationship model through normalized schema to a working query surface.</p>
+          <p class="mt-4 font-mono text-[11px] text-neutral-500">Final grade A / databases, web</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-6 py-20">
+    <div class="grid gap-8 border-t border-neutral-300 pt-10 sm:grid-cols-3">
+      <div>
+        <p class="font-mono text-[11px] uppercase tracking-[0.25em] text-neutral-500">Hours saved</p>
+        <p class="headline mt-2 text-4xl font-light">~4,500</p>
+        <p class="mt-1 font-mono text-[10px] uppercase tracking-wide text-emerald-700">measured</p>
+      </div>
+      <div>
+        <p class="font-mono text-[11px] uppercase tracking-[0.25em] text-neutral-500">Reports, one month</p>
+        <p class="headline mt-2 text-4xl font-light">297</p>
+        <p class="mt-1 font-mono text-[10px] uppercase tracking-wide text-emerald-700">measured</p>
+      </div>
+      <div>
+        <p class="font-mono text-[11px] uppercase tracking-[0.25em] text-neutral-500">Projected savings</p>
+        <p class="headline mt-2 text-4xl font-light">$4-10M</p>
+        <p class="mt-1 font-mono text-[10px] uppercase tracking-wide text-amber-700">projected</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-6 pb-24">
+    <h2 class="headline text-2xl font-normal">Ask the guide</h2>
+    <div class="mt-6 border-l-2 border-[#b3541e] pl-6">
+      <p class="font-mono text-[11px] uppercase tracking-[0.25em] text-neutral-500">Questions get sourced answers</p>
+      <p class="mt-4 text-[15px] leading-relaxed text-neutral-700">Ask a question, and the answer comes from the portfolio records with its source attached. No answer yet.</p>
+      <div class="mt-5 flex flex-wrap gap-3 font-mono text-[11px]">
+        <button class="border border-neutral-400 px-3 py-1.5 text-neutral-700 hover:border-[#b3541e] hover:text-[#b3541e]">How does the offline sync stay correct?</button>
+        <button class="border border-neutral-400 px-3 py-1.5 text-neutral-700 hover:border-[#b3541e] hover:text-[#b3541e]">What was the measurable impact?</button>
+        <button class="border border-neutral-400 px-3 py-1.5 text-neutral-700 hover:border-[#b3541e] hover:text-[#b3541e]">What did you build at the hackathon?</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mx-auto max-w-3xl px-6 pb-16">
+    <div class="border-t border-neutral-300 pt-6 font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+      <p>Classic scroll. The default facade.</p>
+      <p class="mt-2">Machine-readable content: <a class="underline" href="#">portfolio.json</a></p>
+    </div>
+  </footer>
+</body>
+</html>

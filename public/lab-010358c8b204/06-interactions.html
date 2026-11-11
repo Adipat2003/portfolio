@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>06 - Interaction sheet</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script>
+tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter','system-ui','sans-serif'], mono: ['"JetBrains Mono"','monospace'] } } } }
+</script>
+<style>
+  body { font-family: Inter, system-ui, sans-serif; }
+  /* 1. Magnetic button */
+  .magnetic { transition: transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease; }
+  .magnetic:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(16,24,40,.18); }
+  .magnetic:active { transform: translateY(0) scale(.98); }
+  /* 2. Checkbox draw */
+  .cb-icon { stroke-dasharray: 24; stroke-dashoffset: 24; transition: stroke-dashoffset .3s ease; }
+  .cb-input:checked + .cb-box .cb-icon { stroke-dashoffset: 0; }
+  .cb-input:checked + .cb-box { background:#141414; border-color:#141414; }
+  /* 3. Toggle */
+  .toggle-knob { transition: transform .22s cubic-bezier(.2,.8,.2,1); }
+  .toggle-input:checked + .toggle-track { background:#141414; }
+  .toggle-input:checked + .toggle-track .toggle-knob { transform: translateX(20px); }
+  /* 4. Loader */
+  .dots span { animation: blink 1.2s infinite; }
+  .dots span:nth-child(2) { animation-delay:.2s; } .dots span:nth-child(3) { animation-delay:.4s; }
+  @keyframes blink { 0%,80%,100% { opacity:.2; } 40% { opacity:1; } }
+  /* 5. Spotlight card */
+  .spotcard::before { content:""; position:absolute; inset:0; background: radial-gradient(220px 220px at var(--x,50%) var(--y,50%), rgba(232,176,75,.14), transparent 70%); opacity:0; transition: opacity .25s ease; }
+  .spotcard:hover::before { opacity:1; }
+  /* 6. Animated underline */
+  .ulink { background-image: linear-gradient(currentColor,currentColor); background-size: 0% 1.5px; background-repeat: no-repeat; background-position: 0 100%; transition: background-size .3s ease; }
+  .ulink:hover { background-size: 100% 1.5px; }
+  /* 7. Input focus sweep */
+  .sweep { transition: border-color .2s ease, box-shadow .2s ease; }
+  .sweep:focus { border-color:#141414; box-shadow: 0 0 0 4px rgba(20,20,20,.08); outline:none; }
+  /* 8. Price/segmented control */
+  .seg-knob { transition: transform .25s cubic-bezier(.2,.8,.2,1); }
+</style>
+</head>
+<body class="bg-[#faf9f7] text-[#141414]">
+
+  <header class="mx-auto max-w-5xl px-6 py-10">
+    <p class="font-mono text-[11px] uppercase tracking-[0.3em] text-neutral-500">Design lab 06</p>
+    <h1 class="mt-3 text-3xl font-bold tracking-tight">Interaction sheet</h1>
+    <p class="mt-2 max-w-2xl text-neutral-600">Individual parts, sampled alone so they can be judged without the page around them. Hover, click, and keyboard through each one.</p>
+  </header>
+
+  <main class="mx-auto max-w-5xl px-6 pb-24 grid gap-6 sm:grid-cols-2">
+
+    <section class="rounded-2xl border border-neutral-200 bg-white p-6">
+      <p class="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400">01 Buttons</p>
+      <div class="mt-4 flex flex-wrap gap-3">
+        <button class="magnetic rounded-lg bg-[#141414] px-5 py-2.5 text-sm font-semibold text-white">Primary</button>
+        <button class="magnetic rounded-lg border border-neutral-300 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-700">Secondary</button>
+        <button class="magnetic rounded-lg bg-[#86b8d8] px-5 py-2.5 text-sm font-semibold text-[#10202b]">Chicago blue</button>
+        <button class="magnetic rounded-lg px-5 py-2.5 text-sm font-semibold text-[#b3541e] ulink">Text link</button>
+      </div>
+      <p class="mt-4 text-xs text-neutral-500">Lift on hover, press-in on click. Cheap, and it removes the "dead div" feel.</p>
+    </section>
+
+    <section class="rounded-2xl border border-neutral-200 bg-white p-6">
+      <p class="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400">02 Checkbox with draw</p>
+      <label class="mt-4 flex cursor-pointer items-center gap-3 select-none">
+        <input class="cb-input sr-only" type="checkbox" checked>
+        <span class="cb-box flex h-6 w-6 items-center justify-center rounded-md border-2 border-neutral-300 bg-white transition">
+          <svg class="cb-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 10 18 20 6"/></svg>
+        </span>
+        <span class="text-sm font-medium">Only show projects with source figures</span>
+      </label>
+      <p class="mt-4 text-xs text-neutral-500">The check draws itself. One small motion beat that suggests craft.</p>
+    </section>
+
+    <section class="rounded-2xl border border-neutral-200 bg-white p-6">
+      <p class="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400">03 Toggle</p>
+      <div class="mt-4 flex items-center gap-3">
+        <label class="relative inline-flex cursor-pointer items-center">
+          <input class="toggle-input sr-only" type="checkbox">
+          <span class="toggle-track flex h-6 w-11 items-center rounded-full bg-neutral-300 p-0.5">
+            <span class="toggle-knob h-5 w-5 rounded-full bg-white shadow"></span>
+          </span>
+        </label>
+        <span class="text-sm font-medium">Reduced motion</span>
+      </div>
+      <p class="mt-4 text-xs text-neutral-500">Real toggle, real keyboard behavior, no library needed.</p>
+    </section>
+
+    <section class="rounded-2xl border border-neutral-200 bg-white p-6">
+      <p class="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400">04 Answer loading</p>
+      <div class="mt-4 flex items-center gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
+        <span class="dots font-mono text-sm text-neutral-700"><span>.</span><span>.</span><span>.</span></span>
+        <span class="font-mono text-xs uppercase tracking-[0.2em] text-neutral-500">retrieving from portfolio records</span>
+      </div>
+      <p class="mt-4 text-xs text-neutral-500">Replaces the frozen "No answer yet" state while retrieval runs.</p>
+    </section>
+
+    <section class="rounded-2xl border border-neutral-200 bg-white p-6">
+      <p class="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400">05 Spotlight card</p>
+      <div class="spotcard relative mt-4 overflow-hidden rounded-xl border border-neutral-200 bg-white p-5" onmousemove="this.style.setProperty('--x', event.offsetX+'px'); this.style.setProperty('--y', event.offsetY+'px')">
+        <p class="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400">Offline sync engine</p>
+        <h3 class="mt-2 text-lg font-semibold">Single-writer fact logs</h3>
+        <p class="mt-2 text-sm text-neutral-600">Per-ramp store keys, idempotent retries, recovery from lost acknowledgements and stale versions.</p>
+      </div>
+      <p class="mt-4 text-xs text-neutral-500">A warm light follows the pointer. Adds depth without glassmorphism.</p>
+    </section>
+
+    <section class="rounded-2xl border border-neutral-200 bg-white p-6">
+      <p class="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400">06 Filter chips</p>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button class="rounded-full bg-[#141414] px-3.5 py-1.5 text-xs font-semibold text-white">offline-first</button>
+        <button class="rounded-full border border-neutral-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-neutral-600 transition hover:border-neutral-500">react-native</button>
+        <button class="rounded-full border border-neutral-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-neutral-600 transition hover:border-neutral-500">access-control</button>
+        <button class="rounded-full border border-neutral-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-neutral-600 transition hover:border-neutral-500">automation</button>
+      </div>
+      <p class="mt-4 text-xs text-neutral-500">Selected chip goes solid black. Works on the Dispatch filter row today.</p>
+    </section>
+
+    <section class="rounded-2xl border border-neutral-200 bg-white p-6">
+      <p class="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400">07 Search input</p>
+      <div class="relative mt-4">
+        <svg class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input class="sweep w-full rounded-lg border border-neutral-300 bg-white py-2.5 pl-10 pr-3 text-sm" placeholder="Title, skill, or technology">
+      </div>
+      <p class="mt-4 text-xs text-neutral-500">Focus sweep instead of a browser-default outline.</p>
+    </section>
+
+    <section class="rounded-2xl border border-neutral-200 bg-white p-6">
+      <p class="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400">08 Segmented control</p>
+      <div class="relative mt-4 flex w-72 rounded-lg border border-neutral-300 bg-neutral-100 p-1">
+        <span class="seg-knob absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-md bg-white shadow-sm"></span>
+        <button class="relative z-10 flex-1 rounded-md py-1.5 text-sm font-semibold">The Dispatch</button>
+        <button class="relative z-10 flex-1 rounded-md py-1.5 text-sm font-medium text-neutral-500">The Atlas</button>
+      </div>
+      <p class="mt-4 text-xs text-neutral-500">The facade switcher, rebuilt as a sliding pill. Needs a small handler to move the knob.</p>
+    </section>
+
+    <section class="rounded-2xl border border-neutral-200 bg-white p-6 sm:col-span-2">
+      <p class="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400">09 Ask answer card</p>
+      <div class="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 p-5">
+        <div class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+          <p class="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-500">Grounded answer</p>
+        </div>
+        <p class="mt-3 text-[15px] leading-relaxed text-neutral-800">Single-writer fact logs, per-ramp store keys, idempotent retries, and recovery from lost acknowledgements and stale versions. Edits and photos stop disappearing when a ramp loses signal.</p>
+        <p class="mt-3 font-mono text-[11px] text-neutral-500">Source: Contribution log, offline-first sync section</p>
+      </div>
+      <p class="mt-4 text-xs text-neutral-500">The answer card is the strongest existing pattern on the site. Keep it, tune the frame.</p>
+    </section>
+  </main>
+</body>
+</html>

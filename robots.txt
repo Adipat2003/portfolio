@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Disallow: /portfolio/lab-010358c8b204/
