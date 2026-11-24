@@ -7,7 +7,8 @@ recognizable massing matters more than detail:
 
 - Willis Tower: bundled setback tubes, twin antennas
   and an angled view of the setbacks, using the tower's published tube layout.
-  The 3D viewer projects the nine tubes and both antenna masts into SVG using
+  Selecting the tower in the skyline reveals an orbitable SVG model of the
+  nine tubes and both antenna masts. The model uses
   authored geometry in `src/content/willis-tower.ts`. Its charcoal aluminum
   and bronze glass colors follow the architects' material description.
   [Skydeck teachers guide](https://theskydeck.com/wp-content/uploads/2023/10/The-Hows-Whats-and-Wows-of-Willis-Tower-A-Guide-For-Teachers.pdf.pdf)

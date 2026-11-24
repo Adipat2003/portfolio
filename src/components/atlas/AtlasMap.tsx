@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import type { TowerOrbit } from "./WillisTowerOrbit";
 import { atlas } from "@/content/load";
 import AtlasBuildings from "./AtlasBuildings";
 import AtlasDefs from "./AtlasDefs";
@@ -23,6 +24,7 @@ import AtlasWindowLights from "./AtlasWindowLights";
 export default function AtlasMap({
   selected = null,
   onSelect,
+  towerOrbit,
   stationSelected = null,
   onSelectStation,
   activeStation = null,
@@ -34,6 +36,7 @@ export default function AtlasMap({
 }: {
   selected?: string | null;
   onSelect?: (name: string | null) => void;
+  towerOrbit?: TowerOrbit;
   stationSelected?: string | null;
   onSelectStation?: (slug: string | null) => void;
   activeStation?: string | null;
@@ -54,7 +57,7 @@ export default function AtlasMap({
       style={style}
     >
       <AtlasDefs />
-      <AtlasBuildings selected={selected} onSelect={onSelect} />
+      <AtlasBuildings selected={selected} onSelect={onSelect} towerOrbit={towerOrbit} />
       <g pointerEvents="none"><AtlasWindowLights obscured={landmark?.angle ? landmark.d : undefined} /></g>
       <g pointerEvents="none"><AtlasRiver /></g>
       <g pointerEvents="none"><AtlasRoutes /></g>
