@@ -1,20 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
-import "./fraunces.css";
+import "./fonts.css";
 import "./globals.css";
 import { seasons, site } from "@/content/load";
 import { riverDyeActive } from "@/content/season";
 import SeasonSync from "@/components/SeasonSync";
-
-/** UI grotesk. */
-const sans = Inter({ subsets: ["latin"], variable: "--font-sans-dl", display: "swap" });
-/** Signage mono: trip strips, kickers, labels. */
-const mono = JetBrains_Mono({
-	subsets: ["latin"],
-	weight: ["400", "700"],
-	variable: "--font-mono-dl",
-	display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Aditya Patel: Engineering Portfolio",
@@ -43,11 +32,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       data-season={season}
       data-river-dye={riverDyeActive(new Date()) ? "true" : "false"}
-      className={`${sans.variable} ${mono.variable}`}
       style={seasonStyle}
     >
       <head>
+        <link rel="preload" href="/portfolio/fonts/inter/latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/portfolio/fonts/fraunces/latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/portfolio/fonts/jetbrains-mono/latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="alternate" type="application/json" href="/portfolio/api/portfolio.json" />
       </head>
       <body>
