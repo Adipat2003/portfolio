@@ -526,6 +526,43 @@ try {
 		});
 		assert.ok(selectedCamera.left <= 1 && selectedCamera.right >= selectedCamera.width - 1, "selected SVG covers both screen edges");
 		await capture(page, "skyline-selected");
+		const orbitTrigger = page.getByRole("button", { name: "Explore in 3D" });
+		await orbitTrigger.click();
+		const towerDialog = page.getByRole("dialog", { name: "Willis Tower" });
+		await towerDialog.waitFor();
+		const towerStage = towerDialog.locator(".tower-orbit-stage");
+		const facing = () => towerStage.locator("[data-material=glass]").evaluateAll((faces) =>
+			faces.map((face) => face.getAttribute("transform")).join(";"));
+		const frontFaces = await facing();
+		await capture(page, "tower-view-desktop");
+		const center = await towerStage.boundingBox();
+		await page.mouse.move(center.x + center.width / 2, center.y + center.height / 2);
+		await page.mouse.down();
+		await page.mouse.move(center.x + center.width / 2 + 142, center.y + center.height / 2 + 55, { steps: 10 });
+		await page.mouse.up();
+		assert.notEqual(await facing(), frontFaces, "drag rotates the actual facade geometry");
+		assert.ok(Number(await towerStage.getAttribute("data-pitch")) > 13, "vertical drag tilts the tower");
+		await capture(page, "tower-view-turned");
+		await towerDialog.getByRole("button", { name: "Reset", exact: true }).click();
+		const rotateRight = towerDialog.getByRole("button", { name: "Rotate right" });
+		for (let step = 0; step < 12; step++) {
+			await rotateRight.click();
+			if (step === 5) assert.notEqual(await facing(), frontFaces, "the rear of the tower has different geometry");
+		}
+		assert.equal(await facing(), frontFaces, "twelve 30 degree rotations return to the original view");
+		const pageY = await page.evaluate(() => scrollY);
+		await page.keyboard.press("ArrowUp");
+		assert.equal(await towerStage.getAttribute("data-pitch"), "23");
+		await page.keyboard.press("+");
+		assert.equal(await towerStage.getAttribute("data-zoom"), "1.2");
+		await page.mouse.move(center.x + center.width / 2, center.y + center.height / 2);
+		await page.mouse.wheel(0, -100);
+		await page.waitForFunction(() => Number(document.querySelector(".tower-orbit-stage")?.dataset.zoom) > 1.2);
+		assert.equal(await page.evaluate(() => scrollY), pageY, "tower gestures leave the ride position intact");
+		await page.keyboard.press("Escape");
+		await towerDialog.waitFor({ state: "detached" });
+		assert.ok(await orbitTrigger.evaluate((button) => document.activeElement === button), "closing the viewer restores focus");
+
 		await page.waitForFunction(() => {
 			const building = document.querySelector('.atlas-building[aria-expanded="true"]')?.getBoundingClientRect();
 			const strip = document.querySelector(".trip-strip")?.getBoundingClientRect();
@@ -801,6 +838,36 @@ try {
 			return tower && tower.left >= 0 && tower.right <= innerWidth && tower.top >= strip.bottom - 2 && tower.bottom <= card.top + 2;
 		});
 		await capture(touchPage, "skyline-selected-phone");
+		await touchPage.getByRole("button", { name: "Explore in 3D" }).tap();
+		const phoneTowerDialog = touchPage.getByRole("dialog", { name: "Willis Tower" });
+		await phoneTowerDialog.waitFor();
+		const phoneTowerStage = phoneTowerDialog.locator(".tower-orbit-stage");
+		const phoneTowerBox = await phoneTowerStage.boundingBox();
+		assert.ok(phoneTowerBox.x >= 0 && phoneTowerBox.x + phoneTowerBox.width <= 390 &&
+			phoneTowerBox.y >= 0 && phoneTowerBox.y + phoneTowerBox.height <= 844, "phone tower view fits the viewport");
+		await capture(touchPage, "tower-view-phone");
+		const dragX = Math.round(phoneTowerBox.x + 80);
+		const dragY = Math.round(phoneTowerBox.y + 210);
+		await touchSession.send("Input.dispatchTouchEvent", {
+			type: "touchStart", touchPoints: [{ id: 4, x: dragX, y: dragY }],
+		});
+		await touchSession.send("Input.dispatchTouchEvent", {
+			type: "touchMove", touchPoints: [{ id: 4, x: dragX + 105, y: dragY + 42 }],
+		});
+		await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+		await touchPage.waitForFunction(() => Number(document.querySelector(".tower-orbit-stage")?.dataset.yaw) > 0);
+		await phoneTowerDialog.getByRole("button", { name: "Zoom in" }).tap();
+		assert.equal(await phoneTowerStage.getAttribute("data-zoom"), "1.2");
+		await touchPage.setViewportSize({ width: 844, height: 390 });
+		assert.equal(await phoneTowerStage.getAttribute("data-zoom"), "1.2", "the viewer stays open in phone landscape");
+		const landscapeTowerBox = await phoneTowerDialog.boundingBox();
+		assert.ok(landscapeTowerBox.y >= 0 && landscapeTowerBox.y + landscapeTowerBox.height <= 390,
+			"the tower dialog fits a short landscape viewport");
+		await capture(touchPage, "tower-view-phone-landscape");
+		await touchPage.setViewportSize({ width: 390, height: 844 });
+		await phoneTowerDialog.getByRole("button", { name: "Close tower viewer" }).tap();
+		await phoneTowerDialog.waitFor({ state: "detached" });
+
 		await touchPage.getByRole("button", { name: "Jump to Android rollout" }).click();
 		await touchPage.waitForFunction(() => document.querySelector(".trip-stop.hit")?.getAttribute("aria-label") === "Jump to Android rollout");
 		const activeDot = await strip.evaluate((element) => ({
