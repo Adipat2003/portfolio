@@ -6,7 +6,7 @@ const source = readFileSync(new URL("../src/content/ride-navigation.ts", import.
 const js = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
 const mod = { exports: {} };
 new Function("exports", "module", js)(mod.exports, mod);
-const { ridePhaseOffset, rideSkipOffset, jumpInstantly, motionEase } = mod.exports;
+const { ridePhaseOffset, ridePhaseAtProgress, rideSkipOffset, jumpInstantly, motionEase } = mod.exports;
 
 const remaining60 = Math.pow(1 - motionEase(1000 / 60, false), 60);
 const remaining15 = Math.pow(1 - motionEase(1000 / 15, false), 15);
@@ -20,6 +20,12 @@ const total = 12 * 844 - 844;
 const stops = 8;
 assert.equal(ridePhaseOffset({ rideTop: 300, rideHeight: 12 * 844, viewportHeight: 844, target: 1, stopCount: stops }), 300 + total * (.84 / stops));
 assert.equal(ridePhaseOffset({ rideTop: 300, rideHeight: 12 * 844, viewportHeight: 844, target: stops, stopCount: stops }), 300 + total * .84);
+for (let target = 0; target <= stops; target++) {
+  const offset = ridePhaseOffset({ rideTop: 300, rideHeight: 12 * 844, viewportHeight: 844, target, stopCount: stops });
+  assert.ok(Math.abs(ridePhaseAtProgress((offset - 300) / total, stops) - target) < 1e-12);
+}
+assert.equal(ridePhaseAtProgress(.88, stops), stops, "the terminal holds while scrolling through its section");
+assert.equal(ridePhaseAtProgress(1, stops), stops + 1);
 assert.equal(rideSkipOffset({ rideTop: 300, rideHeight: 12 * 844 }), 300 + 12 * 844 + 8);
 let call;
 jumpInstantly(1234, (options) => { call = options; });

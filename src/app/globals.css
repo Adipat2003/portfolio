@@ -166,7 +166,7 @@ section{padding:76px 0}
 .trip-stop.hit .trip-stop-dot{box-shadow:0 0 7px var(--accent-dot,var(--signal))}
 .trip-stop:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
 /* Where you are on the line: a hairline progress rail across the stage top. */
-.ride-progress{position:absolute;top:0;left:0;height:3px;width:calc(var(--ride-progress,0) * 100%);background:linear-gradient(90deg,var(--flag-red),var(--signal));z-index:7;pointer-events:none;transition:none}
+.ride-progress{position:absolute;top:0;left:0;height:3px;width:100%;transform:scaleX(var(--ride-progress,0));transform-origin:left;background:linear-gradient(90deg,var(--flag-red),var(--signal));z-index:7;pointer-events:none;transition:none}
 /* Live CTA arrivals, rendered only when the hosted service exists. */
 .cta-credit{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--night-soft);opacity:.8}
 .cta-chip b{font-weight:700}
@@ -422,7 +422,8 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
      bigger dots. Nothing is positioned with a magic number: the measured
      header height (--bar-h) pushes the city, the strip, and the live chips
      below the real chrome, so nothing can ever slide under the bar. */
-  .ride{--phase-h:62dvh}
+  /* Keep stop offsets fixed when the mobile browser toolbar expands or collapses. */
+  .ride{--phase-h:62vh;--phase-h:62svh;height:calc(var(--ride-phases) * var(--phase-h) - 100svh + 100dvh)}
   .atlas-hero{min-height:0}
   .ride-stage .atlas-scroll svg.chi-map{top:var(--bar-h,104px);bottom:auto;width:300%}
   .trip-strip{top:calc(var(--bar-h,104px) + 8px);padding:6px 36px 6px 12px;gap:8px;font-size:10px;max-width:calc(100vw - 12px);mask-image:linear-gradient(90deg,transparent 0,black 18px,black 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0,black 18px,black 100%)}

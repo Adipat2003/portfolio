@@ -99,7 +99,8 @@ async function checkMatrix(page, viewports) {
 		await page.setViewportSize({ width: viewport.width, height: viewport.height });
 		await page.locator(".ride").evaluate((ride) => {
 			const bounds = ride.getBoundingClientRect();
-			window.scrollTo(0, window.scrollY + bounds.top + bounds.height * 0.14);
+			const stage = ride.querySelector(".ride-stage");
+			window.scrollTo(0, window.scrollY + bounds.top + (bounds.height - stage.offsetHeight) / 2);
 		});
 		await page.waitForTimeout(250);
 		const geometry = await readGeometry(page);
@@ -437,6 +438,28 @@ try {
 		const matrix = await checkMatrix(page, viewports);
 
 		await page.setViewportSize({ width: 1440, height: 900 });
+		const scenicTrain = page.locator(".you-train");
+		await page.waitForTimeout(1100);
+		const idleWrites = await scenicTrain.evaluate((train) => new Promise((resolve) => {
+			let mutations = 0;
+			const observer = new MutationObserver((records) => { mutations += records.length; });
+			observer.observe(train, { attributeFilter: ["transform"] });
+			setTimeout(() => { observer.disconnect(); resolve(mutations); }, 150);
+		}));
+		assert.equal(idleWrites, 0, "the scenic train stops writing transforms once the ride settles");
+		await page.mouse.move(850, 550);
+		for (const delta of [16, 120, -120]) {
+			const before = await page.evaluate(() => scrollY);
+			const trainBefore = await scenicTrain.getAttribute("transform");
+			const cameraBefore = await page.locator(".chi-map.riding").evaluate((svg) => svg.style.transform);
+			await page.mouse.wheel(0, delta);
+			await page.waitForFunction(({ before, delta, trainBefore, cameraBefore }) =>
+				Math.abs(scrollY - before - delta) <= 1 &&
+				document.querySelector(".you-train").getAttribute("transform") !== trainBefore &&
+				document.querySelector(".chi-map.riding").style.transform !== cameraBefore,
+			{ before, delta, trainBefore, cameraBefore });
+		}
+
 		await page.getByRole("button", { name: /Jump to Offline sync engine/ }).click();
 		await page.waitForFunction(() =>
 			document.querySelector(".ride-overlay .station-card h3")?.textContent?.includes("Inspection reporting that survives dead zones"),
@@ -673,13 +696,29 @@ try {
 		await touchPage.waitForSelector("#view-atlas");
 		await capture(touchPage, "atlas-intro-phone");
 		await touchPage.locator(".ride").evaluate((element) => element.scrollIntoView({ block: "start" }));
-		await touchPage.mouse.wheel(0, 1200);
-		await touchPage.waitForTimeout(300);
-		const firstMobileStop = await touchPage.locator(".trip-stop.hit").getAttribute("aria-label");
-		await touchPage.mouse.wheel(0, 1200);
-		await touchPage.waitForTimeout(300);
-		const secondMobileStop = await touchPage.locator(".trip-stop.hit").getAttribute("aria-label");
-		assert.notEqual(firstMobileStop, secondMobileStop, "phone scrolling advances through ride phases");
+		const touchSession = await touchContext.newCDPSession(touchPage);
+		const swipedStops = [];
+		for (let gesture = 0; gesture < 2; gesture++) {
+			const before = await touchPage.evaluate(() => ({
+				y: scrollY,
+				stop: document.querySelector(".trip-stop.hit")?.getAttribute("aria-label") ?? null,
+			}));
+			const points = [710, 610, 510, 410, 310, 210, 150];
+			for (const [index, y] of points.entries()) {
+				await touchSession.send("Input.dispatchTouchEvent", {
+					type: index === 0 ? "touchStart" : "touchMove",
+					touchPoints: [{ id: 3, x: 330, y }],
+				});
+				await touchPage.waitForTimeout(40);
+			}
+			await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+			await touchPage.waitForFunction(({ y, stop }) => {
+				const active = document.querySelector(".trip-stop.hit")?.getAttribute("aria-label");
+				return scrollY > y + 300 && active && active !== stop;
+			}, before);
+			swipedStops.push(await touchPage.locator(".trip-stop.hit").getAttribute("aria-label"));
+		}
+		assert.notEqual(swipedStops[0], swipedStops[1], "phone swipes advance through distinct ride phases");
 		const strip = touchPage.locator(".trip-strip");
 		const stripMetrics = await strip.evaluate((element) => ({
 			left: element.scrollLeft,
@@ -688,7 +727,6 @@ try {
 			rect: element.getBoundingClientRect().toJSON(),
 		}));
 		assert.ok(stripMetrics.scrollWidth > stripMetrics.clientWidth, "phone trip strip has horizontal overflow to pan");
-		const touchSession = await touchContext.newCDPSession(touchPage);
 		const touchY = stripMetrics.rect.y + stripMetrics.rect.height / 2;
 		const touchStartX = stripMetrics.rect.x + (stripMetrics.left > 1 ? 70 : 220);
 		const touchEndX = touchStartX + (stripMetrics.left > 1 ? 150 : -150);
