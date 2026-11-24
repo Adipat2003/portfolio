@@ -543,6 +543,11 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 .atlas-building{cursor:pointer}
 .atlas-building path{transition:stroke .2s ease,filter .2s ease}
 .selected-building .building-body{stroke:var(--signal);filter:none}
+.building-angle{transform-box:fill-box;transform-origin:bottom center;animation:building-reveal .42s cubic-bezier(.22,.61,.36,1) both}
+@keyframes building-reveal{from{opacity:.25;transform:scaleX(.8)}to{opacity:1;transform:scaleX(1)}}
+@media (min-width:861px){
+  .ride-stage:has(.building-angle) .ride-overlay{left:auto;right:24px}
+}
 .chi-map g[role="button"]:focus,.chi-map g[role="button"]:focus-visible{outline:none !important}
 .chi-map .atlas-building:focus-visible .building-body,.chi-map .station:focus-visible circle{stroke:var(--signal);stroke-width:3}
 .cta-pink{background:#e27ea6;color:#0b0e15}

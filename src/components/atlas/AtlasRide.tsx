@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import AtlasMap from "@/components/atlas/AtlasMap";
 import AtlasScene from "@/components/atlas/AtlasScene";
 import TrainSprite from "@/components/atlas/TrainSprite";
@@ -169,6 +169,7 @@ export default function AtlasRide() {
 	const rideRef = useRef<HTMLDivElement>(null);
 	const stageRef = useRef<HTMLDivElement>(null);
 	const stripRef = useRef<HTMLDivElement>(null);
+	const overlayRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 	const trainRef = useRef<SVGGElement>(null);
 	const phaseRef = useRef(0);
@@ -181,16 +182,19 @@ export default function AtlasRide() {
 
 	function selectLandmark(name: string | null) {
 		interruptSnap.current?.();
-		const group = name && svgRef.current?.querySelector<SVGGElement>(`g[aria-label^="${name}:"]`);
+		setLandmark(name);
+	}
+
+	useLayoutEffect(() => {
+		const group = landmark && svgRef.current?.querySelector<SVGGElement>(`g[aria-label^="${landmark}:"] > g`);
 		const box = group ? group.getBBox() : null;
 		landmarkFocusRef.current = box ? {
 			x: box.x + box.width / 2,
 			y: box.y + box.height / 2,
 			height: box.height,
 		} : null;
-		setLandmark(name);
 		wakeScene.current?.();
-	}
+	}, [landmark]);
 
 	const stop = phase >= 1 && phase <= stops.length ? stops[phase - 1] : null;
 
@@ -199,9 +203,10 @@ export default function AtlasRide() {
 		const stage = stageRef.current;
 		const svg = svgRef.current;
 		const strip = stripRef.current;
+		const overlay = overlayRef.current;
 		const trainSprite = trainRef.current;
 		const bar = document.getElementById("concept-bar");
-		if (!ride || !stage || !svg || !strip || !trainSprite || !bar) return;
+		if (!ride || !stage || !svg || !strip || !overlay || !trainSprite || !bar) return;
 
 		const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 		const narrow = window.matchMedia("(max-width: 860px)");
@@ -226,6 +231,7 @@ export default function AtlasRide() {
 				viewportHeight: stageBounds.height,
 				travel: Math.max(1, bounds.height - stageBounds.height),
 				chromeBottom: strip.offsetTop + strip.offsetHeight || headerHeight,
+				cardTop: overlay.offsetTop,
 				stage: { width: stage.clientWidth, height: stage.clientHeight },
 				map: { width: svg.clientWidth, height: svg.clientHeight, left: parseFloat(css.left) || 0, top: parseFloat(css.top) || 0 },
 			};
@@ -249,7 +255,7 @@ export default function AtlasRide() {
 		const tick = (now: number) => {
 			raf = null;
 			const elapsed = previousFrame === null ? 1000 / 60 : now - previousFrame;
-			const { rideTop, travel, chromeBottom, stage: stageSize, map } = layout ??= measure();
+			const { rideTop, travel, chromeBottom, cardTop, stage: stageSize, map } = layout ??= measure();
 			if (!map.width || !stageSize.height) return;
 
 			const progress = Math.min(1, Math.max(0, (window.scrollY - rideTop) / travel));
@@ -267,16 +273,18 @@ export default function AtlasRide() {
 			// Continuous movement through each stop, including small mouse-wheel steps.
 			const fraction = position - i;
 			const landmarkFocus = landmarkFocusRef.current;
+			const landmarkTop = chromeBottom + 16;
+			const landmarkBottom = narrow.matches ? cardTop - 14 : stageSize.height - 16;
 			const target = landmarkFocus ? {
 				...landmarkFocus,
-				zoom: Math.min(narrow.matches ? 1.5 : 1.9, (stageSize.height - chromeBottom - 120) /
+				zoom: Math.min(narrow.matches ? 1.5 : 1.9, Math.max(1, landmarkBottom - landmarkTop) /
 					(landmarkFocus.height * Math.min(map.width / vw, map.height / vh))),
 			} : {
 				x: lerp(focuses[i].x, focuses[i + 1].x, fraction),
 				y: lerp(focuses[i].y, focuses[i + 1].y, fraction),
 				zoom: lerp(focuses[i].zoom, focuses[i + 1].zoom, fraction),
 			};
-			const targetAnchor = landmarkFocus ? (stageSize.height + chromeBottom + 72) / (2 * stageSize.height)
+			const targetAnchor = landmarkFocus ? (landmarkTop + landmarkBottom) / (2 * stageSize.height)
 				: narrow.matches ? (next === 0 ? .6 : .42) : .5;
 
 			const trainIndex = Math.min(i, rail.length - 2);
@@ -445,7 +453,7 @@ export default function AtlasRide() {
 		interruptSnap.current = cancelSnap;
 
 		const observer = new ResizeObserver(resize);
-		for (const element of [bar, ride, stage, strip, svg]) observer.observe(element);
+		for (const element of [bar, ride, stage, strip, svg, overlay]) observer.observe(element);
 		window.addEventListener("resize", resize);
 		narrow.addEventListener("change", resize);
 		reduce.addEventListener("change", schedule);
@@ -579,7 +587,7 @@ export default function AtlasRide() {
 						</button>
 					</div>
 
-					<div className={`ride-overlay${atTerminal ? " terminal-overlay" : ""}`} role="status" aria-live="polite">
+					<div className={`ride-overlay${atTerminal ? " terminal-overlay" : ""}`} ref={overlayRef} role="status" aria-live="polite">
 						{atTerminal ? (
 							<div className="chi-card terminal-card" key="terminal">
 								<CtaLive />

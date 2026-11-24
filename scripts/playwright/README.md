@@ -68,7 +68,8 @@ read-only official alerts and sourced transit-guide fixtures. Map geometry is
 checked at desktop, short-laptop, tablet, phone and 320x740 widths. The positions
 fixtures verify one poll, real-fix movement, reduced motion and honest fallback.
 Skyline checks assert fixed-width focus strokes, no selection shadow, windows
-inside the authored silhouettes, and camera coverage at both screen edges.
+inside the authored silhouettes, the angled Willis Tower reveal on desktop
+and phone, reduced-motion reveal behavior, and camera coverage at both screen edges.
 Desktop and phone captures also cover Dispatch sections and project details.
 
 To run only the map checks during development, set `NETWORK_ONLY=1` with the

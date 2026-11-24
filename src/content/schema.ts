@@ -82,6 +82,16 @@ export const buildingSchema = z.object({
   extra_stroke: z.string().optional(),
   extra_width: z.number().optional(),
   extra_fill: z.string().optional(),
+  angle: z.object({
+    view_box: z.tuple([z.number(), z.number(), z.number().positive(), z.number().positive()]),
+    outline: z.string(),
+    paths: z.array(z.object({
+      d: z.string(),
+      fill: z.string(),
+      stroke: z.string().optional(),
+      stroke_width: z.number().optional(),
+    })).nonempty(),
+  }).optional(),
 });
 
 export const riverSchema = z.object({

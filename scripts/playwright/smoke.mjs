@@ -400,6 +400,13 @@ try {
 			"0s",
 			"Atlas transitions respect reduced motion",
 		);
+		await motionPage.getByRole("button", { name: "Jump to Offline sync engine" }).click();
+		await motionPage.waitForFunction(() => document.querySelector(".trip-stop.hit")?.getAttribute("aria-label") === "Jump to Offline sync engine");
+		await motionPage.getByRole("button", { name: /Willis Tower:/ }).evaluate((tower) => tower.focus({ preventScroll: true }));
+		await motionPage.keyboard.press("Enter");
+		await motionPage.locator(".building-angle").waitFor();
+		assert.equal(await motionPage.locator(".building-angle").evaluate((element) => getComputedStyle(element).animationName),
+			"none", "reduced motion shows the angled tower immediately");
 		await motionPage.close();
 
 		const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
@@ -489,6 +496,7 @@ try {
 		assert.ok(await page.locator(".station-evidence").getByText("commits on the mobile monorepo").count());
 		assert.ok(await page.locator(".station-evidence").getByText("self-reported").count());
 		const landmark = page.getByRole("button", { name: /Willis Tower:/ });
+		const flatOutline = await landmark.locator(".building-body").getAttribute("d");
 		await landmark.focus();
 		await landmark.press(" ");
 		await page.waitForFunction(() => document.querySelector(".bld-selected") !== null);
@@ -508,6 +516,9 @@ try {
 			});
 		}),"every window fits an authored building silhouette");
 		assert.match(await page.locator(".ride-overlay .chi-card h3").innerText(), /Willis Tower/);
+		await landmark.locator(".building-angle").waitFor();
+		assert.notEqual(await landmark.locator(".building-body").getAttribute("d"), flatOutline, "Willis Tower reveals its angled geometry");
+		assert.equal(await page.locator(".window-lights").getAttribute("mask"), "url(#atlas-angled-window-mask)", "only the angled tower supplies windows inside its original silhouette");
 		await page.waitForTimeout(700);
 		const selectedCamera = await page.locator(".chi-map.riding").evaluate((element) => {
 			const rect = element.getBoundingClientRect();
@@ -527,6 +538,7 @@ try {
 		assert.ok(buildingBounds.top >= buildingBounds.strip - 2 && buildingBounds.bottom <= buildingBounds.height + 2, `selected landmark fits below the trip strip: ${JSON.stringify(buildingBounds)}`);
 		await landmark.press("Escape");
 		await page.waitForFunction(() => document.querySelector(".bld-selected") === null);
+		assert.equal(await landmark.locator(".building-body").getAttribute("d"), flatOutline, "Escape returns the tower to the skyline silhouette");
 		await landmark.press("Enter");
 		await page.waitForFunction(() => document.querySelector(".bld-selected") !== null);
 		assert.equal(await landmark.evaluate((element)=>getComputedStyle(element).outlineStyle),"none","landmark focus has no scaled native ring");
@@ -775,6 +787,20 @@ try {
 		await touchPage.waitForTimeout(200);
 		assert.notEqual(await strip.evaluate((element) => element.scrollLeft), stripMetrics.left, "phone trip strip responds to touch dragging");
 		await touchPage.getByRole("button", { name: "Jump to Offline sync engine" }).click();
+		const mobileTower = touchPage.getByRole("button", { name: /Willis Tower:/ });
+		await mobileTower.locator(".building-body").tap();
+		await mobileTower.locator(".building-angle").waitFor();
+		await touchPage.evaluate(() => Promise.allSettled(
+			[...document.querySelectorAll(".building-angle, .ride-overlay .chi-card")]
+				.flatMap((element) => element.getAnimations().map((animation) => animation.finished)),
+		));
+		await touchPage.waitForFunction(() => {
+			const tower = document.querySelector(".building-angle")?.getBoundingClientRect();
+			const strip = document.querySelector(".trip-strip").getBoundingClientRect();
+			const card = document.querySelector(".ride-overlay").getBoundingClientRect();
+			return tower && tower.left >= 0 && tower.right <= innerWidth && tower.top >= strip.bottom - 2 && tower.bottom <= card.top + 2;
+		});
+		await capture(touchPage, "skyline-selected-phone");
 		await touchPage.getByRole("button", { name: "Jump to Android rollout" }).click();
 		await touchPage.waitForFunction(() => document.querySelector(".trip-stop.hit")?.getAttribute("aria-label") === "Jump to Android rollout");
 		const activeDot = await strip.evaluate((element) => ({
