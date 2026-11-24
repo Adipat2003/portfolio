@@ -7,7 +7,12 @@ recognizable massing matters more than detail:
 
 - Willis Tower: bundled setback tubes, twin antennas
   and an angled view of the setbacks, using the tower's published tube layout.
+  The 3D viewer projects the nine tubes and both antenna masts into SVG using
+  authored geometry in `src/content/willis-tower.ts`. Its charcoal aluminum
+  and bronze glass colors follow the architects' material description.
   [Skydeck teachers guide](https://theskydeck.com/wp-content/uploads/2023/10/The-Hows-Whats-and-Wows-of-Willis-Tower-A-Guide-For-Teachers.pdf.pdf)
+  · [SOM project notes](https://www.som.com/projects/willis-tower-formerly-sears-tower/)
+  · [Published height measurements](https://www.skyscrapercenter.com/building/building/169)
 - Hancock Center: tapered body with visible cross-bracing
 - Marina City: paired cylindrical corncob towers
 - Wrigley / Tribune: clock-tower crowns and buttressed crowns

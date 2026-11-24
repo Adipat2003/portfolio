@@ -778,3 +778,32 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
  .rail-map-tools{gap:6px}
  .rail-network .rail-map-tools .rail-view-switch button{padding-inline:9px}
 }
+
+/* The tower viewer uses a light backdrop to show the dark exterior materials. */
+.tower-orbit-trigger{justify-self:start;min-height:44px;margin-top:6px;padding:8px 14px;border:1px solid #987443;border-radius:8px;background:#25201b;color:#ffe1aa;font:650 13px var(--sans);cursor:pointer}
+.tower-orbit-trigger:hover,.tower-orbit-trigger:active{background:#453323}
+html:has(.tower-orbit[open]){overflow:hidden}
+.tower-orbit{position:fixed;inset:0;width:min(760px,calc(100% - 32px));height:min(820px,calc(100dvh - 36px));max-width:none;max-height:none;margin:auto;padding:0;border:1px solid #c7beb0;border-radius:18px;background:#e6e1d6;color:#252422;box-shadow:0 24px 80px #090a11a0;overflow:hidden}
+.tower-orbit::backdrop{background:#0a0d14ca}
+.tower-orbit-frame{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100%}
+.tower-orbit-header,.tower-orbit-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px}
+.tower-orbit-header{border-bottom:1px solid #bbb3a5}
+.tower-orbit-header h2{font-size:clamp(23px,4.5vw,34px);line-height:1.1;margin:0}
+.tower-orbit-stage{display:grid;place-items:center;min-width:0;touch-action:none;cursor:grab;user-select:none;overflow:hidden;background:radial-gradient(ellipse at 49% 37%,#f4f0e6 0,#e9e3d8 52%,#cec5b7 100%)}
+.tower-orbit-stage:active{cursor:grabbing}
+.tower-orbit-stage svg{display:block;width:100%;height:100%;pointer-events:none}
+.tower-orbit-footer{border-top:1px solid #bbb3a5}
+.tower-orbit-footer p{margin:0;color:#534d45;font-size:13px}
+.tower-orbit-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
+.tower-orbit button{display:inline-grid;place-items:center;min-width:44px;min-height:44px;padding:4px 9px;border:1px solid transparent;border-radius:8px;background:transparent;color:#292622;font:650 17px var(--sans);cursor:pointer}
+.tower-orbit-controls button:last-child{font-size:13px}
+.tower-orbit button:hover,.tower-orbit button:active{border-color:#b0a391;background:#d6cebf}
+.tower-orbit button:disabled{opacity:.4;cursor:default}
+.tower-orbit button:focus-visible,.tower-orbit-trigger:focus-visible{outline:2px solid #90622b;outline-offset:2px}
+@media (pointer:coarse){.tower-orbit-key-help{display:none}}
+@media (max-width:590px){
+ .tower-orbit{width:calc(100% - 16px);height:calc(100dvh - 16px);border-radius:13px}
+ .tower-orbit-header,.tower-orbit-footer{padding:8px 12px}
+ .tower-orbit-footer{flex-wrap:wrap;justify-content:center;gap:5px}
+ .tower-orbit-footer p{text-align:center}
+}

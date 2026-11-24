@@ -4,11 +4,13 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import AtlasMap from "@/components/atlas/AtlasMap";
 import AtlasScene from "@/components/atlas/AtlasScene";
 import TrainSprite from "@/components/atlas/TrainSprite";
+import WillisTowerOrbit from "@/components/atlas/WillisTowerOrbit";
 import AskBox from "@/components/AskBox";
 import { clampedCamera } from "@/content/cta-geometry";
 import { jumpInstantly, motionEase, ridePhaseAtProgress, ridePhaseOffset, rideSkipOffset, rideSnapPhase } from "@/content/ride-navigation";
 import CtaLive from "@/components/atlas/CtaLive";
 import { atlas, landmarkNote, LINE_COLORS, stations, site } from "@/content/load";
+import { WILLIS_TOWER } from "@/content/willis-tower";
 
 /**
  * The Night Ride: the secondary portfolio tour inside Atlas.
@@ -109,7 +111,11 @@ function stopAccent(stop: Stop): string {
 }
 
 /** The overlay card: a landmark, a station, a figure, or a hint. */
-function RideCard({ stop, landmark }: { stop: Stop | null; landmark: string | null }) {
+function RideCard({ stop, landmark, openTower }: {
+	stop: Stop | null;
+	landmark: string | null;
+	openTower: (opener: HTMLButtonElement) => void;
+}) {
 	const building = landmark ? atlas.buildings.find((b) => b.name === landmark) ?? null : null;
 	const note = landmark ? landmarkNote(landmark) : null;
 	const stationRecord =
@@ -121,6 +127,12 @@ function RideCard({ stop, landmark }: { stop: Stop | null; landmark: string | nu
 				<h3>{building.name}</h3>
 				<p className="chi-feature">{building.feature}</p>
 				{note ? <p className="chi-note">{note}</p> : null}
+				{building.name === WILLIS_TOWER ? (
+					<button className="tower-orbit-trigger" type="button" aria-haspopup="dialog"
+						onClick={(event) => openTower(event.currentTarget)}>
+						Explore in 3D
+					</button>
+				) : null}
 			</div>
 		);
 	}
@@ -178,7 +190,23 @@ export default function AtlasRide() {
 
 	const [phase, setPhase] = useState(0);
 	const [landmark, setLandmark] = useState<string | null>(null);
+	const [towerOpen, setTowerOpen] = useState(false);
+	const towerOpener = useRef<HTMLButtonElement | null>(null);
 	const landmarkFocusRef = useRef<LandmarkFocus | null>(null);
+
+	function openTower(opener: HTMLButtonElement) {
+		interruptSnap.current?.();
+		towerOpener.current = opener;
+		setTowerOpen(true);
+	}
+
+	function closeTower() {
+		setTowerOpen(false);
+		const focusTarget = towerOpener.current?.isConnected ? towerOpener.current
+			: stripRef.current?.querySelector<HTMLButtonElement>(".trip-stop.hit") ?? document.getElementById("btn-atlas");
+		focusTarget?.focus({ preventScroll: true });
+		towerOpener.current = null;
+	}
 
 	function selectLandmark(name: string | null) {
 		interruptSnap.current?.();
@@ -600,13 +628,14 @@ export default function AtlasRide() {
 								<button type="button" className="terminal-continue" onClick={skipRide}>Continue to live map</button>
 							</div>
 						) : (
-							<RideCard stop={landmark ? null : stop} landmark={landmark} />
+							<RideCard stop={landmark ? null : stop} landmark={landmark} openTower={openTower} />
 						)}
 					</div>
 
 					<div className="dawn-glow" aria-hidden="true" />
 				</AtlasScene>
 			</div>
+			{towerOpen ? <WillisTowerOrbit onClose={closeTower} /> : null}
 		</div>
 	);
 }
