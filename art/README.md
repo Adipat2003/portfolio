@@ -6,13 +6,16 @@ Each file names its real source building in a comment. At silhouette scale,
 recognizable massing matters more than detail:
 
 - Willis Tower: bundled setback tubes, twin antennas
+  and an angled view of the setbacks, using the tower's published tube layout.
+  [Skydeck teachers guide](https://theskydeck.com/wp-content/uploads/2023/10/The-Hows-Whats-and-Wows-of-Willis-Tower-A-Guide-For-Teachers.pdf.pdf)
 - Hancock Center: tapered body with visible cross-bracing
 - Marina City: paired cylindrical corncob towers
 - Wrigley / Tribune: clock-tower crowns and buttressed crowns
 
 Standalone files exist so each landmark can be opened and edited alone. The
-concept page inlines the same geometry so it stays self-contained. Standalone
-exports also include the shared window grid, clipped to each building body.
+concept page inlines the same geometry so it stays self-contained. Flat
+exports include the shared window grid, clipped to each building body. An
+angled export uses its own authored windows and setbacks.
 Facade details render over the silhouette, including Hancock bracing and
 Fisher's connected crown.
 

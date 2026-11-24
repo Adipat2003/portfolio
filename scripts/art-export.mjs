@@ -24,6 +24,22 @@ function stops(g) {
 }
 
 function landmarkSvg(b) {
+  if (b.angle) {
+    const [x, y, width, height] = b.angle.view_box;
+    const paths = b.angle.paths.map((path) => {
+      const stroke = path.stroke ? ` stroke="${path.stroke}" stroke-width="${path.stroke_width ?? 1}"` : "";
+      return `    <path d="${path.d}" fill="${path.fill}"${stroke}/>`;
+    });
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<!-- ${b.name}: ${b.feature}. Authored perspective geometry from content/atlas.json, exported by scripts/art-export.mjs. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="${b.angle.view_box.join(" ")}" width="${width * 2}" height="${height * 2}">
+  <title>${b.name}: ${b.feature}</title>
+  <rect x="${x}" y="${y}" width="${width}" height="${height}" fill="#0b0e18"/>
+${paths.join("\n")}
+  <path d="${b.angle.outline}" fill="none" stroke="#c99963" stroke-linejoin="round"/>
+</svg>
+`;
+  }
   const fill = `url(#${atlas.building_fill.id})`;
   const coords = [...b.d.matchAll(/[ML]([\d.]+)\s+([\d.]+)/g)].map((match) => [Number(match[1]), Number(match[2])]);
   const left = Math.min(...coords.map(([x]) => x)), right = Math.max(...coords.map(([x]) => x));

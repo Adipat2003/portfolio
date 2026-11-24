@@ -43,6 +43,7 @@ export default function AtlasMap({
   classNameOverride?: string;
   children?: React.ReactNode;
 }) {
+  const landmark = selected ? atlas.buildings.find((building) => building.name === selected) : undefined;
   return (
     <svg
       ref={svgRef}
@@ -54,7 +55,7 @@ export default function AtlasMap({
     >
       <AtlasDefs />
       <AtlasBuildings selected={selected} onSelect={onSelect} />
-      <g pointerEvents="none"><AtlasWindowLights /></g>
+      <g pointerEvents="none"><AtlasWindowLights obscured={landmark?.angle ? landmark.d : undefined} /></g>
       <g pointerEvents="none"><AtlasRiver /></g>
       <g pointerEvents="none"><AtlasRoutes /></g>
       <AtlasTrains />
