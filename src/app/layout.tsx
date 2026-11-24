@@ -1,17 +1,11 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
+import "./fraunces.css";
 import "./globals.css";
 import { seasons, site } from "@/content/load";
 import { riverDyeActive } from "@/content/season";
 import SeasonSync from "@/components/SeasonSync";
 
-/** Editorial display serif for headlines: print-dispatch character. */
-const serif = Fraunces({
-	subsets: ["latin"],
-	weight: ["400", "600"],
-	variable: "--font-serif-dl",
-	display: "swap",
-});
 /** UI grotesk. */
 const sans = Inter({ subsets: ["latin"], variable: "--font-sans-dl", display: "swap" });
 /** Signage mono: trip strips, kickers, labels. */
@@ -49,10 +43,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       data-season={season}
       data-river-dye={riverDyeActive(new Date()) ? "true" : "false"}
-      className={`${serif.variable} ${sans.variable} ${mono.variable}`}
+      className={`${sans.variable} ${mono.variable}`}
       style={seasonStyle}
     >
       <head>
+        <link rel="preload" href="/portfolio/fonts/fraunces/latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="alternate" type="application/json" href="/portfolio/api/portfolio.json" />
       </head>
       <body>
