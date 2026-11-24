@@ -101,12 +101,14 @@ export function projectWillisTower(view: OrbitView) {
 	const sinYaw = Math.sin(azimuth);
 	const cosYaw = Math.cos(azimuth);
 	const sinPitch = Math.sin(elevation);
-	const cosPitch = Math.cos(elevation);
-	const facing: Point = [sinYaw * cosPitch, sinPitch, cosYaw * cosPitch];
+	// In the skyline, tilt reveals roofs without shrinking the tower into the river.
+	const rise = 1 - .12 * sinPitch;
+	const roofDepth = .8 * sinPitch;
+	const facing: Point = [sinYaw * rise, roofDepth, cosYaw * rise];
 	const depth = (x: number, z: number) => x * sinYaw + z * cosYaw;
 	const project = ([x, y, z]: Point) => [
 		view.zoom * (x * cosYaw - z * sinYaw),
-		view.zoom * ((263.5 - y) * cosPitch + depth(x, z) * sinPitch),
+		view.zoom * (263.5 - y * rise + depth(x, z) * roofDepth),
 	];
 	const offset = (a: Point, b: Point): Point => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 	const fixed = (value: number) => Number(value.toFixed(4));

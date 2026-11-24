@@ -72,6 +72,8 @@ inside the authored silhouettes, the inline Willis Tower reveal on desktop
 and phone, reduced motion, and camera coverage at both screen edges. The tower
 checks cover a full rotation, keyboard tilt and zoom, mouse and touch drags,
 wheel scrolling over the tower, phone orientation changes, and focus return.
+At maximum tilt the antennas must stay above the river, and a mocked Skydeck
+schedule must color the masts and appear in both facades.
 Desktop and phone captures also cover Dispatch sections and project details.
 
 To run only the map checks during development, set `NETWORK_ONLY=1` with the

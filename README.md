@@ -81,6 +81,11 @@ receive the public service URL but not CTA or NVIDIA credentials.
 `npm run check:service` intentionally bypasses the file so its no-key fallback
 checks remain meaningful. Production keys continue to live in Render.
 
+`/willis-lighting` reads Skydeck's published nightly antenna schedule, using
+the Chicago calendar date. The ride uses a neutral mast color when the current
+date or a recognized palette is unavailable. Displayed colors describe the
+schedule, and the source link is available in both facades.
+
 Never hand-edit generated files; change content and rebuild.
 
 ## Content model

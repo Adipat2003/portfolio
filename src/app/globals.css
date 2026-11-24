@@ -801,3 +801,8 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 @media (min-width:720px) and (max-width:860px) and (orientation:landscape){
  .ride-stage:has(.tower-orbit-model) .ride-overlay{left:auto;right:12px;width:max-content;max-width:calc(50% - 16px)}
 }
+.willis-lighting-note{margin:0;font-size:12px}
+.willis-lighting-note a{color:inherit;text-underline-offset:3px}
+.tower-orbit-tools .willis-lighting-note a{color:#ffd597}
+.willis-lighting-details{margin-top:6px}
+.willis-lighting-details summary{cursor:pointer}

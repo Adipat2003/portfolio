@@ -1,4 +1,6 @@
 import { atlas, landmarkNote } from "@/content/load";
+import { WILLIS_TOWER } from "@/content/willis-tower";
+import WillisLightingDetails from "./WillisLighting";
 
 /**
  * The skyline as text, so the landmark facts read without the interactive
@@ -24,6 +26,7 @@ export default function LandmarksList({ id }: { id: string }) {
                 <dd className="chi-feature">
                   {b.feature}
                   {note ? <span className="chi-note"> {note}</span> : null}
+                  {b.name === WILLIS_TOWER ? <WillisLightingDetails /> : null}
                 </dd>
               </div>
             );

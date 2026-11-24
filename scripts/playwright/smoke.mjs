@@ -424,6 +424,10 @@ try {
 
 		const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 		await mockStreetTiles(page);
+		const lightingDate = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", dateStyle: "long" }).format(new Date());
+		await page.route("**/willis-lighting", (route) => route.fulfill({
+			json: { lighting: { date: lightingDate, colors: "Red & Black", palette: ["#e24353", "#33333b"] } },
+		}));
 		page.on("pageerror", (error) => errors.push(error.message));
 
 		await page.goto(baseUrl.href, { waitUntil: "domcontentloaded" });
@@ -541,6 +545,14 @@ try {
 			const strip = document.querySelector(".trip-strip").getBoundingClientRect();
 			return building && building.top >= strip.bottom - 2 && building.bottom <= innerHeight + 2;
 		}, null, { timeout: 3000 });
+		const lightingNote = page.locator(".ride-overlay .willis-lighting-note");
+		await lightingNote.getByText("Scheduled tonight · Red & Black", { exact: false }).waitFor();
+		assert.match(await lightingNote.getByRole("link").getAttribute("href"), /theskydeck\.com\/willis-tower-antennas-and-lights/);
+		const mastFill = await tower.locator("[data-material=antenna] rect").first().getAttribute("fill");
+		assert.match(mastFill, /^url\(#/);
+		assert.deepEqual(await tower.locator("linearGradient[gradientUnits=userSpaceOnUse] stop").evaluateAll((stops) =>
+			stops.map((stop) => stop.getAttribute("stop-color"))), ["#e24353", "#33333b"]);
+
 		await capture(page, "skyline-selected");
 
 		const controls = page.getByRole("group", { name: "Tower view controls" });
@@ -563,6 +575,18 @@ try {
 			if (step === 5) assert.notEqual(await facing(), frontFaces, "the rear has different geometry");
 		}
 		assert.equal(await facing(), frontFaces, "twelve 30 degree rotations return to the original view");
+		const tiltUp = controls.getByRole("button", { name: "Tilt up" });
+		for (let step = 0; step < 5; step++) await tiltUp.click();
+		assert.equal(await tower.getAttribute("data-pitch"), "78");
+		const headroom = await tower.evaluate((model) => {
+			const lot = model.querySelector("svg").getBoundingClientRect();
+			const tip = Math.min(...[...model.querySelectorAll("[data-material=beacon] rect")].map((face) => face.getBoundingClientRect().top));
+			return (tip - lot.top) / lot.height;
+		});
+		assert.ok(headroom >= 0 && headroom < .35, `antenna stays high in the skyline at maximum tilt: ${headroom}`);
+		await capture(page, "tower-inline-max-tilt");
+		await controls.getByRole("button", { name: "Reset view" }).click();
+
 		await landmark.evaluate((element) => element.focus({ preventScroll: true }));
 		await page.keyboard.press("ArrowUp");
 		assert.equal(await tower.getAttribute("data-pitch"), "23");
@@ -679,6 +703,8 @@ try {
 
 		await page.locator("#btn-dispatch").click();
 		await page.waitForFunction(() => document.title.includes("The Dispatch"));
+		await page.locator(".willis-lighting-details summary").click();
+		await page.locator(".willis-lighting-details").getByText("Scheduled tonight · Red & Black", { exact: false }).waitFor();
 		const projectSearch = page.getByRole("searchbox", { name: "Find a project" });
 		await projectSearch.fill("75-endpoint");
 		const apiCard = page.locator(".project-card").filter({ hasText: "Access control for a 75-endpoint inspection API" });

@@ -26,6 +26,7 @@ import { createAskModel } from "./ask-model";
 import { createCtaProxy } from "./cta";
 import { createCtaNetworkProxy } from "./cta-network";
 import { createTransitGuide } from "./transit-guide";
+import { createWillisLighting } from "./willis-lighting";
 import { readFileSync } from "node:fs";
 
 const PORT = Number(process.env.PORT ?? process.env.SERVICE_PORT ?? 8788);
@@ -47,6 +48,7 @@ const NVIDIA_ENDPOINT =
 
 const content = loadContent(ROOT);
 const railNetwork = JSON.parse(readFileSync(resolve(ROOT, "content/cta-network.json"), "utf8")) as { stations: { id: string; name: string; routes: string[] }[] };
+const willisLighting = createWillisLighting();
 const ctaNetwork = createCtaNetworkProxy({ apiKey: process.env.CTA_API_KEY?.trim() });
 const cta = createCtaProxy({
   extraStations: railNetwork.stations,
@@ -73,6 +75,7 @@ const RATE_LIMITS: Record<string, number> = {
   "/ask-model": 10,
   "/ask-transit": 6,
   "/disruptions": 20,
+  "/willis-lighting": 20,
 };
 const buckets = new Map<string, { count: number; reset: number }>();
 
@@ -174,6 +177,11 @@ const server = createServer(async (req, res) => {
       },
       corsHeaders(origin),
     );
+    return;
+  }
+
+  if (route === "/willis-lighting" && req.method === "GET") {
+    sendJson(res, 200, { lighting: await willisLighting() }, corsHeaders(origin));
     return;
   }
 
