@@ -6,6 +6,7 @@ import AtlasScene from "@/components/atlas/AtlasScene";
 import TrainSprite from "@/components/atlas/TrainSprite";
 import { TowerOrbitControls } from "@/components/atlas/WillisTowerOrbit";
 import type { TowerOrbit } from "@/components/atlas/WillisTowerOrbit";
+import { useWillisLighting } from "@/components/chicago/WillisLighting";
 import AskBox from "@/components/AskBox";
 import { clampedCamera } from "@/content/cta-geometry";
 import { jumpInstantly, motionEase, ridePhaseAtProgress, ridePhaseOffset, rideSkipOffset, rideSnapPhase } from "@/content/ride-navigation";
@@ -188,10 +189,12 @@ export default function AtlasRide() {
 	const [phase, setPhase] = useState(0);
 	const [landmark, setLandmark] = useState<string | null>(null);
 	const [towerView, setTowerView] = useState(WILLIS_ORBIT_DEFAULT);
+	const lighting = useWillisLighting(landmark === WILLIS_TOWER);
 	const landmarkFocusRef = useRef<LandmarkFocus | null>(null);
 
 	const towerOrbit: TowerOrbit = {
 		view: towerView,
+		lighting,
 		adjust: (yaw, pitch, zoom) => setTowerView((current) => moveOrbit(current, yaw, pitch, zoom)),
 		reset: () => setTowerView(WILLIS_ORBIT_DEFAULT),
 	};

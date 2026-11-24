@@ -12,6 +12,7 @@ import { clampedCamera, projectCoordinate, positionOnRoute } from "../server/dis
 import { modelRequestOptions } from "../server/dist/server/model-options.js";
 import { createTransitGuide } from "../server/dist/server/transit-guide.js";
 import { createCtaProxy } from "../server/dist/server/cta.js";
+import { createWillisLighting, parseWillisLighting } from "../server/dist/server/willis-lighting.js";
 import { spawn } from "node:child_process";
 import process from "node:process";
 
@@ -42,6 +43,36 @@ async function get(path, headers = {}) {
 
 function rpc(method, params, id = 1) {
 	return { jsonrpc: "2.0", id, method, params };
+}
+
+async function checkWillisLighting() {
+	const html = `<div>Tonight's Antenna color: Unrelated heading</div>
+		<ul class="antenna-schedule-list">
+			<li>November 23, 2026: Game night - Red &amp; Black</li>
+			<li><strong>November 24, 2026:</strong> Finale - Silver Sparkle</li>
+			<li>November 25, 2026: Surprise - Mystery color</li>
+		</ul>`;
+	let now = new Date("2026-11-24T05:58:00Z");
+	let requests = 0;
+	const getLighting = createWillisLighting(async () => {
+		requests++;
+		return new Response(html);
+	}, () => now);
+	const [beforeMidnight, shared] = await Promise.all([getLighting(), getLighting()]);
+	assert.deepEqual(beforeMidnight, {
+		date: "November 23, 2026", colors: "Red & Black", palette: ["#e24353", "#33333b"],
+	});
+	assert.deepEqual(shared, beforeMidnight);
+	assert.equal(requests, 1, "parallel requests share the schedule fetch");
+	now = new Date("2026-11-24T06:01:00Z");
+	assert.deepEqual(await getLighting(), {
+		date: "November 24, 2026", colors: "Silver Sparkle", palette: ["#cbd8e8"],
+	});
+	assert.equal(requests, 2, "Chicago midnight rolls the schedule even before cache expiry");
+	assert.deepEqual(parseWillisLighting(html, "November 25, 2026")?.palette, []);
+	assert.equal(parseWillisLighting(html, "November 26, 2026"), null);
+	assert.equal(await createWillisLighting(async () => { throw new Error("offline"); })(), null);
+	ok("Willis lighting uses the Chicago date, shares requests and falls back safely", true);
 }
 
 async function checkTransitGuide() {
@@ -212,6 +243,7 @@ async function checkNetworkFeed() {
 }
 
 async function main() {
+	await checkWillisLighting();
 	await checkTransitGuide();
 	await checkCtaNormalization();
 	await checkNetworkFeed();
