@@ -110,7 +110,6 @@ export function projectWillisTower(view: OrbitView) {
 	];
 	const offset = (a: Point, b: Point): Point => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 	const fixed = (value: number) => Number(value.toFixed(4));
-	const floor = (points: Point[]) => points.map((point) => project(point).map(fixed).join(",")).join(" ");
 
 	const surfaces = towers.slice().sort((a, b) => depth(a.x, a.z) - depth(b.x, b.z)).flatMap((tower) =>
 		tower.surfaces.flatMap((surface) => {
@@ -125,9 +124,5 @@ export function projectWillisTower(view: OrbitView) {
 		}),
 	);
 
-	return {
-		surfaces,
-		base: floor([[-47, 0, -47], [47, 0, -47], [47, 0, 47], [-47, 0, 47]]),
-		shadow: floor([[-35, 0, -35], [35, 0, -35], [43, 0, 26], [-25, 0, 47]]),
-	};
+	return { surfaces };
 }

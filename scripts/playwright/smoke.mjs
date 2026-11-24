@@ -34,6 +34,19 @@ async function capture(page, name) {
 	writeFileSync(path.join(screenshotDir, `${name}.jpg`), Buffer.from(data, "base64"));
 	await session.detach();
 }
+async function towerGrip(model) {
+	return model.evaluate((element) => {
+		const rect = element.querySelector("svg").getBoundingClientRect();
+		for (const y of [.58, .70, .43]) {
+			for (const x of [.5, .47, .53, .43, .57]) {
+				const point = { x: rect.left + rect.width * x, y: rect.top + rect.height * y };
+				if (document.elementFromPoint(point.x, point.y)?.closest(".tower-orbit-drag")) return point;
+			}
+		}
+		throw new Error("No visible tower surface to drag");
+	});
+}
+
 const viewports = [
 	{ name: "desktop", width: 1920, height: 1080 },
 	{ name: "laptop", width: 1440, height: 900 },
@@ -406,7 +419,7 @@ try {
 		await motionPage.keyboard.press("Enter");
 		await motionPage.locator(".building-angle").waitFor();
 		assert.equal(await motionPage.locator(".building-angle").evaluate((element) => getComputedStyle(element).animationName),
-			"none", "reduced motion shows the angled tower immediately");
+			"none", "reduced motion shows the inline tower immediately");
 		await motionPage.close();
 
 		const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
@@ -499,98 +512,73 @@ try {
 		const flatOutline = await landmark.locator(".building-body").getAttribute("d");
 		await landmark.focus();
 		await landmark.press(" ");
-		await page.waitForFunction(() => document.querySelector(".bld-selected") !== null);
-		await page.waitForTimeout(100);
-		assert.equal(await page.locator(".bld-selected").count(),1,"browser focus scrolling does not release a keyboard selection");
-		await landmark.press("Escape");
-		await landmark.press("Enter");
-		await page.waitForFunction(() => document.querySelector(".bld-selected") !== null);
-		assert.equal(await landmark.evaluate((element)=>getComputedStyle(element).outlineStyle),"none","landmark focus has no scaled native ring");
-		assert.equal(await page.locator(".bld-selected").evaluate((element)=>getComputedStyle(element).filter),"none","selection cannot spill a glowing shadow");
-		assert.equal(await page.locator(".window-lights").getAttribute("clip-path"),"url(#atlas-window-mask)");
-		assert.ok(await page.locator(".window-lights").evaluate((group) => {
-			const mask=document.querySelector("#atlas-window-mask path");
-			return [...group.querySelectorAll("rect")].every((rect)=>{
-				const x=Number(rect.getAttribute("x")),y=Number(rect.getAttribute("y")),w=Number(rect.getAttribute("width")),h=Number(rect.getAttribute("height"));
-				return [[x,y],[x+w,y],[x,y+h],[x+w,y+h]].every(([a,b])=>mask.isPointInFill(new DOMPoint(a,b)));
-			});
-		}),"every window fits an authored building silhouette");
-		assert.match(await page.locator(".ride-overlay .chi-card h3").innerText(), /Willis Tower/);
-		await landmark.locator(".building-angle").waitFor();
-		assert.notEqual(await landmark.locator(".building-body").getAttribute("d"), flatOutline, "Willis Tower reveals its angled geometry");
-		assert.equal(await page.locator(".window-lights").getAttribute("mask"), "url(#atlas-angled-window-mask)", "only the angled tower supplies windows inside its original silhouette");
+		const tower = landmark.locator(".tower-orbit-model");
+		await tower.waitFor();
 		await page.waitForTimeout(700);
+		assert.equal(await landmark.getAttribute("aria-expanded"), "true", "browser focus scrolling retains the selection");
+		assert.equal(await page.locator("dialog[open]").count(), 0, "tower opens directly in the skyline");
+		assert.equal(await landmark.evaluate((element) => getComputedStyle(element).outlineStyle), "none");
+		assert.equal(await landmark.locator(".tower-orbit-focus").evaluate((element) => getComputedStyle(element).opacity),
+			"1", "keyboard focus is visible around the model");
+		assert.equal(await page.locator(".window-lights").getAttribute("clip-path"), "url(#atlas-window-mask)");
+		assert.equal(await page.locator(".window-lights").getAttribute("mask"), "url(#atlas-angled-window-mask)");
+		assert.ok(await page.locator(".window-lights").evaluate((group) => {
+			const mask = document.querySelector("#atlas-window-mask path");
+			return [...group.querySelectorAll("rect")].every((rect) => {
+				const x = Number(rect.getAttribute("x")), y = Number(rect.getAttribute("y"));
+				const w = Number(rect.getAttribute("width")), h = Number(rect.getAttribute("height"));
+				return [[x, y], [x + w, y], [x + w, y + h], [x, y + h]].every(([a, b]) => mask.isPointInFill(new DOMPoint(a, b)));
+			});
+		}), "every shared window fits an authored silhouette");
+		assert.match(await page.locator(".ride-overlay .chi-card h3").innerText(), /Willis Tower/);
 		const selectedCamera = await page.locator(".chi-map.riding").evaluate((element) => {
 			const rect = element.getBoundingClientRect();
 			return { left: rect.left, right: rect.right, width: innerWidth };
 		});
 		assert.ok(selectedCamera.left <= 1 && selectedCamera.right >= selectedCamera.width - 1, "selected SVG covers both screen edges");
+		await page.waitForFunction(() => {
+			const building = document.querySelector(".tower-orbit-model svg")?.getBoundingClientRect();
+			const strip = document.querySelector(".trip-strip").getBoundingClientRect();
+			return building && building.top >= strip.bottom - 2 && building.bottom <= innerHeight + 2;
+		}, null, { timeout: 3000 });
 		await capture(page, "skyline-selected");
-		const orbitTrigger = page.getByRole("button", { name: "Explore in 3D" });
-		await orbitTrigger.click();
-		const towerDialog = page.getByRole("dialog", { name: "Willis Tower" });
-		await towerDialog.waitFor();
-		const towerStage = towerDialog.locator(".tower-orbit-stage");
-		const facing = () => towerStage.locator("[data-material=glass]").evaluateAll((faces) =>
+
+		const controls = page.getByRole("group", { name: "Tower view controls" });
+		const facing = () => tower.locator("[data-material=glass]").evaluateAll((faces) =>
 			faces.map((face) => face.getAttribute("transform")).join(";"));
 		const frontFaces = await facing();
-		await capture(page, "tower-view-desktop");
-		const center = await towerStage.boundingBox();
-		await page.mouse.move(center.x + center.width / 2, center.y + center.height / 2);
+		const pageY = await page.evaluate(() => scrollY);
+		const grip = await towerGrip(tower);
+		await page.mouse.move(grip.x, grip.y);
 		await page.mouse.down();
-		await page.mouse.move(center.x + center.width / 2 + 142, center.y + center.height / 2 + 55, { steps: 10 });
+		await page.mouse.move(grip.x + 142, grip.y + 55, { steps: 10 });
 		await page.mouse.up();
-		assert.notEqual(await facing(), frontFaces, "drag rotates the actual facade geometry");
-		assert.ok(Number(await towerStage.getAttribute("data-pitch")) > 13, "vertical drag tilts the tower");
-		await capture(page, "tower-view-turned");
-		await towerDialog.getByRole("button", { name: "Reset", exact: true }).click();
-		const rotateRight = towerDialog.getByRole("button", { name: "Rotate right" });
+		assert.notEqual(await facing(), frontFaces, "drag rotates the facade geometry in the skyline");
+		assert.ok(Number(await tower.getAttribute("data-pitch")) > 13, "vertical drag tilts the tower");
+		await capture(page, "tower-inline-turned");
+		await controls.getByRole("button", { name: "Reset view" }).click();
+		const rotateRight = controls.getByRole("button", { name: "Rotate right" });
 		for (let step = 0; step < 12; step++) {
 			await rotateRight.click();
-			if (step === 5) assert.notEqual(await facing(), frontFaces, "the rear of the tower has different geometry");
+			if (step === 5) assert.notEqual(await facing(), frontFaces, "the rear has different geometry");
 		}
 		assert.equal(await facing(), frontFaces, "twelve 30 degree rotations return to the original view");
-		const pageY = await page.evaluate(() => scrollY);
+		await landmark.evaluate((element) => element.focus({ preventScroll: true }));
 		await page.keyboard.press("ArrowUp");
-		assert.equal(await towerStage.getAttribute("data-pitch"), "23");
+		assert.equal(await tower.getAttribute("data-pitch"), "23");
 		await page.keyboard.press("+");
-		assert.equal(await towerStage.getAttribute("data-zoom"), "1.2");
-		await page.mouse.move(center.x + center.width / 2, center.y + center.height / 2);
-		await page.mouse.wheel(0, -100);
-		await page.waitForFunction(() => Number(document.querySelector(".tower-orbit-stage")?.dataset.zoom) > 1.2);
-		assert.equal(await page.evaluate(() => scrollY), pageY, "tower gestures leave the ride position intact");
-		await page.keyboard.press("Escape");
-		await towerDialog.waitFor({ state: "detached" });
-		assert.ok(await orbitTrigger.evaluate((button) => document.activeElement === button), "closing the viewer restores focus");
-
-		await page.waitForFunction(() => {
-			const building = document.querySelector('.atlas-building[aria-expanded="true"]')?.getBoundingClientRect();
-			const strip = document.querySelector(".trip-strip")?.getBoundingClientRect();
-			return building && strip && building.top >= strip.bottom - 2 && building.bottom <= innerHeight + 2;
-		}, null, { timeout: 3000 });
-		const buildingBounds = await page.locator('.atlas-building[aria-expanded="true"]').evaluate((element) => {
-			const rect = element.getBoundingClientRect();
-			return { top: rect.top, bottom: rect.bottom, strip: document.querySelector(".trip-strip").getBoundingClientRect().bottom, height: innerHeight };
-		});
-		assert.ok(buildingBounds.top >= buildingBounds.strip - 2 && buildingBounds.bottom <= buildingBounds.height + 2, `selected landmark fits below the trip strip: ${JSON.stringify(buildingBounds)}`);
+		assert.equal(await tower.getAttribute("data-zoom"), "1.2");
+		assert.equal(await page.evaluate(() => scrollY), pageY, "tower gestures and keys leave the ride position intact");
 		await landmark.press("Escape");
-		await page.waitForFunction(() => document.querySelector(".bld-selected") === null);
-		assert.equal(await landmark.locator(".building-body").getAttribute("d"), flatOutline, "Escape returns the tower to the skyline silhouette");
+		await tower.waitFor({ state: "detached" });
+		assert.equal(await landmark.locator(".building-body").getAttribute("d"), flatOutline, "Escape returns the skyline silhouette");
 		await landmark.press("Enter");
-		await page.waitForFunction(() => document.querySelector(".bld-selected") !== null);
-		assert.equal(await landmark.evaluate((element)=>getComputedStyle(element).outlineStyle),"none","landmark focus has no scaled native ring");
-		assert.equal(await page.locator(".bld-selected").evaluate((element)=>getComputedStyle(element).filter),"none","selection cannot spill a glowing shadow");
-		assert.equal(await page.locator(".window-lights").getAttribute("clip-path"),"url(#atlas-window-mask)");
-		assert.ok(await page.locator(".window-lights").evaluate((group) => {
-			const mask=document.querySelector("#atlas-window-mask path");
-			return [...group.querySelectorAll("rect")].every((rect)=>{
-				const x=Number(rect.getAttribute("x")),y=Number(rect.getAttribute("y")),w=Number(rect.getAttribute("width")),h=Number(rect.getAttribute("height"));
-				return [[x,y],[x+w,y],[x,y+h],[x+w,y+h]].every(([a,b])=>mask.isPointInFill(new DOMPoint(a,b)));
-			});
-		}),"every window fits an authored building silhouette");
+		await tower.waitFor();
+		const wheelGrip = await towerGrip(tower);
+		await page.mouse.move(wheelGrip.x, wheelGrip.y);
 		await page.mouse.wheel(0, 80);
-		await page.waitForFunction(() => document.querySelector(".bld-selected") === null);
-
+		await tower.waitFor({ state: "detached" });
+		await page.waitForFunction((before) => scrollY > before, pageY);
 
 		await page.evaluate(() => { document.documentElement.style.scrollBehavior = "smooth"; });
 		await page.getByRole("button", { name: "Jump to Android rollout" }).click();
@@ -838,35 +826,33 @@ try {
 			return tower && tower.left >= 0 && tower.right <= innerWidth && tower.top >= strip.bottom - 2 && tower.bottom <= card.top + 2;
 		});
 		await capture(touchPage, "skyline-selected-phone");
-		await touchPage.getByRole("button", { name: "Explore in 3D" }).tap();
-		const phoneTowerDialog = touchPage.getByRole("dialog", { name: "Willis Tower" });
-		await phoneTowerDialog.waitFor();
-		const phoneTowerStage = phoneTowerDialog.locator(".tower-orbit-stage");
-		const phoneTowerBox = await phoneTowerStage.boundingBox();
-		assert.ok(phoneTowerBox.x >= 0 && phoneTowerBox.x + phoneTowerBox.width <= 390 &&
-			phoneTowerBox.y >= 0 && phoneTowerBox.y + phoneTowerBox.height <= 844, "phone tower view fits the viewport");
-		await capture(touchPage, "tower-view-phone");
-		const dragX = Math.round(phoneTowerBox.x + 80);
-		const dragY = Math.round(phoneTowerBox.y + 210);
+		const phoneTower = mobileTower.locator(".tower-orbit-model");
+		const phoneGrip = await towerGrip(phoneTower);
+		const phoneRideY = await touchPage.evaluate(() => scrollY);
 		await touchSession.send("Input.dispatchTouchEvent", {
-			type: "touchStart", touchPoints: [{ id: 4, x: dragX, y: dragY }],
+			type: "touchStart", touchPoints: [{ id: 4, x: phoneGrip.x, y: phoneGrip.y }],
 		});
 		await touchSession.send("Input.dispatchTouchEvent", {
-			type: "touchMove", touchPoints: [{ id: 4, x: dragX + 105, y: dragY + 42 }],
+			type: "touchMove", touchPoints: [{ id: 4, x: phoneGrip.x + 105, y: phoneGrip.y + 42 }],
 		});
 		await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-		await touchPage.waitForFunction(() => Number(document.querySelector(".tower-orbit-stage")?.dataset.yaw) > 0);
-		await phoneTowerDialog.getByRole("button", { name: "Zoom in" }).tap();
-		assert.equal(await phoneTowerStage.getAttribute("data-zoom"), "1.2");
+		await touchPage.waitForFunction(() => Number(document.querySelector(".tower-orbit-model")?.dataset.yaw) > 0);
+		assert.equal(await touchPage.evaluate(() => scrollY), phoneRideY, "touch drag on the tower keeps the ride in place");
+		await touchPage.getByRole("group", { name: "Tower view controls" }).getByRole("button", { name: "Zoom in" }).tap();
+		assert.equal(await phoneTower.getAttribute("data-zoom"), "1.2");
 		await touchPage.setViewportSize({ width: 844, height: 390 });
-		assert.equal(await phoneTowerStage.getAttribute("data-zoom"), "1.2", "the viewer stays open in phone landscape");
-		const landscapeTowerBox = await phoneTowerDialog.boundingBox();
-		assert.ok(landscapeTowerBox.y >= 0 && landscapeTowerBox.y + landscapeTowerBox.height <= 390,
-			"the tower dialog fits a short landscape viewport");
-		await capture(touchPage, "tower-view-phone-landscape");
+		assert.equal(await phoneTower.getAttribute("data-zoom"), "1.2", "the selected tower keeps its view when the phone rotates");
+		await touchPage.waitForTimeout(650);
+		await towerGrip(phoneTower);
+		const landscapeControls = await touchPage.getByRole("group", { name: "Tower view controls" }).boundingBox();
+		assert.ok(landscapeControls.y >= 0 && landscapeControls.y + landscapeControls.height <= 390,
+			"the tower and its controls are available in phone landscape");
+		await capture(touchPage, "tower-inline-landscape");
 		await touchPage.setViewportSize({ width: 390, height: 844 });
-		await phoneTowerDialog.getByRole("button", { name: "Close tower viewer" }).tap();
-		await phoneTowerDialog.waitFor({ state: "detached" });
+		await touchPage.getByRole("button", { name: "Close tower controls" }).tap();
+		await phoneTower.waitFor({ state: "detached" });
+		assert.ok(await mobileTower.evaluate((element) => document.activeElement === element), "closing the tower controls restores focus");
+
 
 		await touchPage.getByRole("button", { name: "Jump to Android rollout" }).click();
 		await touchPage.waitForFunction(() => document.querySelector(".trip-stop.hit")?.getAttribute("aria-label") === "Jump to Android rollout");
