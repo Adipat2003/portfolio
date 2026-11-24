@@ -6,7 +6,7 @@ import AtlasScene from "@/components/atlas/AtlasScene";
 import TrainSprite from "@/components/atlas/TrainSprite";
 import AskBox from "@/components/AskBox";
 import { clampedCamera } from "@/content/cta-geometry";
-import { jumpInstantly, motionEase, ridePhaseAtProgress, ridePhaseOffset, rideSkipOffset } from "@/content/ride-navigation";
+import { jumpInstantly, motionEase, ridePhaseAtProgress, ridePhaseOffset, rideSkipOffset, rideSnapPhase } from "@/content/ride-navigation";
 import CtaLive from "@/components/atlas/CtaLive";
 import { atlas, landmarkNote, LINE_COLORS, stations, site } from "@/content/load";
 
@@ -173,12 +173,14 @@ export default function AtlasRide() {
 	const trainRef = useRef<SVGGElement>(null);
 	const phaseRef = useRef(0);
 	const wakeScene = useRef<(() => void) | null>(null);
+	const interruptSnap = useRef<(() => void) | null>(null);
 
 	const [phase, setPhase] = useState(0);
 	const [landmark, setLandmark] = useState<string | null>(null);
 	const landmarkFocusRef = useRef<LandmarkFocus | null>(null);
 
 	function selectLandmark(name: string | null) {
+		interruptSnap.current?.();
 		const group = name && svgRef.current?.querySelector<SVGGElement>(`g[aria-label^="${name}:"]`);
 		const box = group ? group.getBBox() : null;
 		landmarkFocusRef.current = box ? {
@@ -189,37 +191,6 @@ export default function AtlasRide() {
 		setLandmark(name);
 		wakeScene.current?.();
 	}
-
-	useEffect(() => {
-		const release = () => {
-			if (!landmarkFocusRef.current) return;
-			landmarkFocusRef.current = null;
-			setLandmark(null);
-			wakeScene.current?.();
-		};
-		// Browser focus can scroll the page; only navigation intent releases the camera.
-		const navigate = (event: KeyboardEvent) => {
-			const editing = event.target instanceof Element && event.target.closest("input,textarea,select,[contenteditable]");
-			if (event.key === "Escape") release();
-			else if (!event.defaultPrevented && ["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key) &&
-				!editing) release();
-		};
-		const scrollbar = (event: PointerEvent) => { if (event.clientX >= document.documentElement.clientWidth) release(); };
-		const wheel = (event: WheelEvent) => {
-			if (!event.ctrlKey && !event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX)) release();
-		};
-		const touch = (event: TouchEvent) => {
-			if (event.touches.length === 1 && !(event.target instanceof Element && stripRef.current?.contains(event.target))) release();
-		};
-		window.addEventListener("wheel", wheel, { passive: true });
-		window.addEventListener("touchmove", touch, { passive: true });
-		window.addEventListener("pointerdown", scrollbar, { passive: true });
-		window.addEventListener("keydown", navigate);
-		return () => {
-			window.removeEventListener("wheel", wheel); window.removeEventListener("touchmove", touch);
-			window.removeEventListener("pointerdown", scrollbar); window.removeEventListener("keydown", navigate);
-		};
-	}, []);
 
 	const stop = phase >= 1 && phase <= stops.length ? stops[phase - 1] : null;
 
@@ -251,6 +222,8 @@ export default function AtlasRide() {
 			const css = getComputedStyle(svg!);
 			return {
 				rideTop: bounds.top + window.scrollY,
+				rideHeight: bounds.height,
+				viewportHeight: stageBounds.height,
 				travel: Math.max(1, bounds.height - stageBounds.height),
 				chromeBottom: strip.offsetTop + strip.offsetHeight || headerHeight,
 				stage: { width: stage.clientWidth, height: stage.clientHeight },
@@ -354,9 +327,125 @@ export default function AtlasRide() {
 			if (settling) schedule();
 		};
 
+		const quietMs = 200;
+		let lastInput = -Infinity;
+		let lastScrollY = window.scrollY;
+		let snapTimer: number | undefined;
+		let gesture = false;
+		let touching = false;
+		let touchEnd: AbortController | undefined;
+		let alignedStop: number | null = null;
+
+		const cancelSnap = () => {
+			window.clearTimeout(snapTimer);
+			gesture = false;
+			lastInput = -Infinity;
+		};
+		const snap = () => {
+			cancelSnap();
+			if (landmarkFocusRef.current) return;
+			const extent = layout ??= measure();
+			const y = window.scrollY;
+			const target = rideSnapPhase((y - extent.rideTop) / extent.travel, stops.length);
+			if (target === null || target === alignedStop) return;
+			const offset = ridePhaseOffset({ ...extent, target, stopCount: stops.length });
+			alignedStop = target;
+			if (Math.abs(offset - y) > 1) jumpInstantly(offset, window.scrollTo.bind(window));
+		};
+		const waitToSnap = () => {
+			window.clearTimeout(snapTimer);
+			if (gesture && !touching) snapTimer = window.setTimeout(snap, quietMs);
+		};
+		const onScroll = () => {
+			schedule();
+			const before = lastScrollY;
+			lastScrollY = window.scrollY;
+			if (before === lastScrollY || (!gesture && performance.now() - lastInput > quietMs)) return;
+			const extent = layout ??= measure();
+			const nearest = (y: number) => rideSnapPhase((y - extent.rideTop) / extent.travel, stops.length);
+			if (!gesture) {
+				const from = nearest(before);
+				if (from !== null && Math.abs(ridePhaseOffset({ ...extent, target: from, stopCount: stops.length }) - before) <= 1) {
+					alignedStop = from;
+				}
+			}
+			// Leave a stop freely, even if several small wheel steps are needed.
+			if (nearest(lastScrollY) !== alignedStop) alignedStop = null;
+			gesture = true;
+			waitToSnap();
+		};
+		const release = () => {
+			if (!landmarkFocusRef.current) return;
+			landmarkFocusRef.current = null;
+			setLandmark(null);
+			schedule();
+		};
+		const navigationInput = () => {
+			lastInput = performance.now();
+			release();
+			waitToSnap();
+		};
+		const wheel = (event: WheelEvent) => {
+			if (!event.defaultPrevented && !event.ctrlKey && !event.shiftKey &&
+				Math.abs(event.deltaY) > Math.abs(event.deltaX)) navigationInput();
+		};
+		const finishTouch = () => {
+			touching = false;
+			touchEnd?.abort();
+			waitToSnap();
+		};
+		const touchEndEvent = (event: Event) => {
+			if ((event as TouchEvent).touches.length === 0) finishTouch();
+		};
+		const touchStart = (event: TouchEvent) => {
+			if (event.touches.length !== 1) return;
+			touching = true;
+			lastInput = performance.now();
+			touchEnd?.abort();
+			touchEnd = new AbortController();
+			const options = { passive: true, signal: touchEnd.signal };
+			// A stop change can remove the card the finger started on.
+			event.target?.addEventListener("touchend", touchEndEvent, options);
+			event.target?.addEventListener("touchcancel", touchEndEvent, options);
+			waitToSnap();
+		};
+		const scrollEnd = () => {
+			if (touching && gesture) finishTouch();
+		};
+		const touchMove = (event: TouchEvent) => {
+			if (event.touches.length === 1 && !(event.target instanceof Element && strip.contains(event.target))) navigationInput();
+		};
+		const key = (event: KeyboardEvent) => {
+			if (event.key === "Escape") {
+				cancelSnap();
+				release();
+				return;
+			}
+			const editing = event.target instanceof Element &&
+				event.target.closest("input,textarea,select,[contenteditable]");
+			const activating = event.key === " " && event.target instanceof Element && event.target.closest("button,[role=button]");
+			if (!event.defaultPrevented && !editing && !activating &&
+				["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) navigationInput();
+		};
+		const scrollbar = (event: PointerEvent) => {
+			if (event.clientX >= document.documentElement.clientWidth) navigationInput();
+		};
+
+		const listeners = new AbortController();
+		const passive = { passive: true, signal: listeners.signal };
+		window.addEventListener("scroll", onScroll, passive);
+		window.addEventListener("wheel", wheel, passive);
+		window.addEventListener("touchstart", touchStart, passive);
+		window.addEventListener("touchmove", touchMove, passive);
+		window.addEventListener("touchend", touchEndEvent, passive);
+		window.addEventListener("touchcancel", touchEndEvent, passive);
+		document.addEventListener("scrollend", scrollEnd, passive);
+		window.addEventListener("pointerdown", scrollbar, passive);
+		window.addEventListener("keydown", key, { signal: listeners.signal });
+		interruptSnap.current = cancelSnap;
+
 		const observer = new ResizeObserver(resize);
 		for (const element of [bar, ride, stage, strip, svg]) observer.observe(element);
-		window.addEventListener("scroll", schedule, { passive: true });
 		window.addEventListener("resize", resize);
 		narrow.addEventListener("change", resize);
 		reduce.addEventListener("change", schedule);
@@ -364,7 +453,10 @@ export default function AtlasRide() {
 		schedule();
 		return () => {
 			observer.disconnect();
-			window.removeEventListener("scroll", schedule);
+			listeners.abort();
+			touchEnd?.abort();
+			cancelSnap();
+			interruptSnap.current = null;
 			window.removeEventListener("resize", resize);
 			narrow.removeEventListener("change", resize);
 			reduce.removeEventListener("change", schedule);

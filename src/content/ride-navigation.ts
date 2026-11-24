@@ -14,6 +14,14 @@ export function ridePhaseAtProgress(progress: number, stopCount: number): number
   return Math.min(stopCount + 1, stopCount + (progress - TERMINAL_END) / (1 - TERMINAL_END));
 }
 
+/** Capture the nearest stop within 45% of a station interval. */
+export function rideSnapPhase(progress: number, stopCount: number): number | null {
+  if (progress <= 0 || progress >= TERMINAL_START) return null;
+  const phase = ridePhaseAtProgress(progress, stopCount);
+  const stop = Math.round(phase);
+  return stop > 0 && Math.abs(stop - phase) <= .45 ? stop : null;
+}
+
 /** Stop positions follow the scene's progress warp, not uniform phase spacing. */
 export function ridePhaseOffset({ rideTop, rideHeight, viewportHeight, target, stopCount }: RideExtent & { target: number; stopCount: number }): number {
   const progress = target <= stopCount

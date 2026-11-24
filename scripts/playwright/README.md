@@ -39,7 +39,7 @@ BASE_URL=http://localhost:3001/portfolio/ npm exec --yes --package=playwright@1.
 The script checks keyboard focus visibility, the no-JavaScript Dispatch view,
 reduced-motion behavior, Atlas deep-link and facade state, all nine ride-stage
 geometries from `AGENTS.md` at mid-ride, native wheel steps and idle camera work,
-station and stop jumps, keyboard landmark
+station settling and small wheel-step departures, station and stop jumps, keyboard landmark
 selection/release, the terminal's sourced answer, Skip the ride, Dispatch
 search and tag filters, project details and return navigation, phone ride swipes and trip-strip
 touch scrolling, horizontal overflow, and uncaught browser errors. It prints

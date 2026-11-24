@@ -6,7 +6,7 @@ const source = readFileSync(new URL("../src/content/ride-navigation.ts", import.
 const js = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
 const mod = { exports: {} };
 new Function("exports", "module", js)(mod.exports, mod);
-const { ridePhaseOffset, ridePhaseAtProgress, rideSkipOffset, jumpInstantly, motionEase } = mod.exports;
+const { ridePhaseOffset, ridePhaseAtProgress, rideSnapPhase, rideSkipOffset, jumpInstantly, motionEase } = mod.exports;
 
 const remaining60 = Math.pow(1 - motionEase(1000 / 60, false), 60);
 const remaining15 = Math.pow(1 - motionEase(1000 / 15, false), 15);
@@ -26,6 +26,14 @@ for (let target = 0; target <= stops; target++) {
 }
 assert.equal(ridePhaseAtProgress(.88, stops), stops, "the terminal holds while scrolling through its section");
 assert.equal(ridePhaseAtProgress(1, stops), stops + 1);
+const approach = (phase) => phase / stops * .84;
+assert.equal(rideSnapPhase(approach(1.4), stops), 1, "a nearby stop is selected looking back");
+assert.equal(rideSnapPhase(approach(1.6), stops), 2, "a nearby stop is selected looking ahead");
+assert.equal(rideSnapPhase(approach(1.5), stops), null, "the exact gap stays neutral");
+assert.equal(rideSnapPhase(approach(.3), stops), null, "the opening scene stays free");
+assert.equal(rideSnapPhase(approach(stops - .3), stops), stops, "the terminal can be reached by snapping");
+assert.equal(rideSnapPhase(.88, stops), null, "the terminal hold does not pull readers back");
+assert.equal(rideSnapPhase(1, stops), null, "the ride exit stays free");
 assert.equal(rideSkipOffset({ rideTop: 300, rideHeight: 12 * 844 }), 300 + 12 * 844 + 8);
 let call;
 jumpInstantly(1234, (options) => { call = options; });

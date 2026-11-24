@@ -461,6 +461,24 @@ try {
 		}
 
 		await page.getByRole("button", { name: /Jump to Offline sync engine/ }).click();
+		const firstStopY = await page.evaluate(() => scrollY);
+		const stopInterval = await page.locator(".ride").evaluate((ride) =>
+			.84 * (ride.offsetHeight - ride.querySelector(".ride-stage").offsetHeight) /
+				ride.querySelectorAll(".trip-stop").length,
+		);
+		for (const step of [1, 2]) {
+			await page.mouse.wheel(0, 60);
+			await page.waitForFunction((y) => Math.abs(scrollY - y) <= 1, firstStopY + step * 60);
+			await page.waitForTimeout(300);
+			assert.ok(Math.abs(await page.evaluate(() => scrollY) - firstStopY - step * 60) <= 1,
+				"small wheel steps can leave the station without being pulled back");
+		}
+		const approachDelta = Math.round(stopInterval * .76 - 120);
+		await page.mouse.wheel(0, approachDelta);
+		await page.waitForFunction((y) => Math.abs(scrollY - y) <= 2, firstStopY + stopInterval);
+		assert.equal(await page.locator(".trip-stop.hit").getAttribute("aria-label"), "Jump to Android rollout");
+
+		await page.getByRole("button", { name: /Jump to Offline sync engine/ }).click();
 		await page.waitForFunction(() =>
 			document.querySelector(".ride-overlay .station-card h3")?.textContent?.includes("Inspection reporting that survives dead zones"),
 		);
@@ -719,6 +737,21 @@ try {
 			swipedStops.push(await touchPage.locator(".trip-stop.hit").getAttribute("aria-label"));
 		}
 		assert.notEqual(swipedStops[0], swipedStops[1], "phone swipes advance through distinct ride phases");
+		await touchPage.waitForFunction(() => {
+			const ride = document.querySelector(".ride");
+			const stop = [...ride.querySelectorAll(".trip-stop")].findIndex((pill) => pill.classList.contains("hit")) + 1;
+			const interval = .84 * (ride.offsetHeight - ride.querySelector(".ride-stage").offsetHeight) /
+				ride.querySelectorAll(".trip-stop").length;
+			return stop > 0 && Math.abs(-ride.getBoundingClientRect().top - stop * interval) <= 2;
+		}, null, { timeout: 2500 }).catch(async (error) => {
+			console.error(await touchPage.locator(".ride").evaluate((ride) => ({
+				y: scrollY, top: ride.getBoundingClientRect().top, rideHeight: ride.offsetHeight,
+				stageHeight: ride.querySelector(".ride-stage").offsetHeight, stops: ride.querySelectorAll(".trip-stop").length,
+				active: ride.querySelector(".trip-stop.hit")?.getAttribute("aria-label"),
+			})));
+			throw error;
+		});
+
 		const strip = touchPage.locator(".trip-strip");
 		const stripMetrics = await strip.evaluate((element) => ({
 			left: element.scrollLeft,
