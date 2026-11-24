@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AtlasMap from "@/components/atlas/AtlasMap";
 import AtlasScene from "@/components/atlas/AtlasScene";
 import TrainSprite from "@/components/atlas/TrainSprite";
 import AskBox from "@/components/AskBox";
 import { clampedCamera } from "@/content/cta-geometry";
-import { jumpInstantly, motionEase, ridePhaseOffset, rideSkipOffset } from "@/content/ride-navigation";
+import { jumpInstantly, motionEase, ridePhaseAtProgress, ridePhaseOffset, rideSkipOffset } from "@/content/ride-navigation";
 import CtaLive from "@/components/atlas/CtaLive";
 import { atlas, landmarkNote, LINE_COLORS, stations, site } from "@/content/load";
 
@@ -14,7 +14,7 @@ import { atlas, landmarkNote, LINE_COLORS, stations, site } from "@/content/load
  * The Night Ride: the secondary portfolio tour inside Atlas.
  *
  * One tall scroll track, one sticky stage, one experience on every screen
- * size. A requestAnimationFrame loop lerps the camera between stop focuses,
+ * size. Animation frames settle the camera between stop focuses,
  * moves the you-are-here train (the glowing one) along the stop polyline,
  * deepens the sky from dusk through night toward dawn, and swaps the overlay
  * card as each phase arrives. The stops are project stations and the terminal,
@@ -53,9 +53,20 @@ const stops: Stop[] = [
 const TERMINAL: Stop = { kind: "terminal", label: "The terminal", x: 1140, y: 300 };
 stops.push(TERMINAL);
 
-type Focus = { x: number; y: number; zoom: number; height?: number };
+type Focus = { x: number; y: number; zoom: number };
+type LandmarkFocus = Pick<Focus, "x" | "y"> & { height: number };
 
 const wideFocus: Focus = { x: vw / 2, y: vh / 2 - 30, zoom: 1 };
+
+function rideFocuses(narrow: boolean): Focus[] {
+	const destinations = stops.map(({ x, y, kind }) => ({
+		x, y, zoom: kind === "terminal" ? (narrow ? 1.15 : 1.3) : (narrow ? 1.3 : 2),
+	}));
+	return [wideFocus, ...destinations, destinations[destinations.length - 1]];
+}
+
+const desktopFocuses = rideFocuses(false);
+const mobileFocuses = rideFocuses(true);
 
 /** Train polyline: enters from the west edge and parks at the terminal.
     The exit point used to sit past the viewBox, so the train clipped off
@@ -67,7 +78,6 @@ const rail: Array<{ x: number; y: number }> = [
 ];
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-const smooth = (t: number) => t * t * (3 - 2 * t);
 
 /** Sky color helpers: the ride deepens the dusk into night, then lifts it
     toward a pre-dawn glow, all inside the ride stage. */
@@ -155,18 +165,6 @@ function RideCard({ stop, landmark }: { stop: Stop | null; landmark: string | nu
 	);
 }
 
-function useIsMobile() {
-	const [isMobile, setIsMobile] = useState(false);
-	useEffect(() => {
-		const mq = window.matchMedia("(max-width: 860px)");
-		const update = () => setIsMobile(mq.matches);
-		update();
-		mq.addEventListener("change", update);
-		return () => mq.removeEventListener("change", update);
-	}, []);
-	return isMobile;
-}
-
 export default function AtlasRide() {
 	const rideRef = useRef<HTMLDivElement>(null);
 	const stageRef = useRef<HTMLDivElement>(null);
@@ -174,59 +172,30 @@ export default function AtlasRide() {
 	const svgRef = useRef<SVGSVGElement>(null);
 	const trainRef = useRef<SVGGElement>(null);
 	const phaseRef = useRef(0);
+	const wakeScene = useRef<(() => void) | null>(null);
 
 	const [phase, setPhase] = useState(0);
 	const [landmark, setLandmark] = useState<string | null>(null);
-	const isMobile = useIsMobile();
-	/** When a landmark is open, the camera glides onto it like a stop. */
-	const landmarkFocusRef = useRef<Focus | null>(null);
+	const landmarkFocusRef = useRef<LandmarkFocus | null>(null);
 
 	function selectLandmark(name: string | null) {
+		const group = name && svgRef.current?.querySelector<SVGGElement>(`g[aria-label^="${name}:"]`);
+		const box = group ? group.getBBox() : null;
+		landmarkFocusRef.current = box ? {
+			x: box.x + box.width / 2,
+			y: box.y + box.height / 2,
+			height: box.height,
+		} : null;
 		setLandmark(name);
-		if (!name) {
-			landmarkFocusRef.current = null;
-			return;
-		}
-		// Find the building's group by its aria-label and take its center in
-		// viewBox units, so the camera focus needs no new data.
-		const svg = svgRef.current;
-		const group = svg?.querySelector<SVGGElement>(`g[aria-label^="${name}:"]`);
-		if (group) {
-			const box = group.getBBox();
-			landmarkFocusRef.current = {
-				x: box.x + box.width / 2,
-				y: box.y + box.height / 2,
-				zoom: isMobile ? 1.5 : 1.9,
-				height: box.height,
-			};
-		}
+		wakeScene.current?.();
 	}
-
-	/** Keep the stage aware of the real header height: phones wrap the bar to
-	    two rows and every fixed offset guess has already been wrong once.
-	    The bar is measured, never assumed. */
-	useEffect(() => {
-		const bar = document.getElementById("concept-bar");
-		const stage = stageRef.current;
-		if (!bar || !stage) return;
-		const apply = () => {
-			stage.style.setProperty("--bar-h", `${Math.round(bar.getBoundingClientRect().height)}px`);
-		};
-		apply();
-		const observer = new ResizeObserver(apply);
-		observer.observe(bar);
-		window.addEventListener("resize", apply);
-		return () => {
-			observer.disconnect();
-			window.removeEventListener("resize", apply);
-		};
-	}, []);
 
 	useEffect(() => {
 		const release = () => {
 			if (!landmarkFocusRef.current) return;
 			landmarkFocusRef.current = null;
 			setLandmark(null);
+			wakeScene.current?.();
 		};
 		// Browser focus can scroll the page; only navigation intent releases the camera.
 		const navigate = (event: KeyboardEvent) => {
@@ -236,142 +205,173 @@ export default function AtlasRide() {
 				!editing) release();
 		};
 		const scrollbar = (event: PointerEvent) => { if (event.clientX >= document.documentElement.clientWidth) release(); };
-		window.addEventListener("wheel", release, { passive: true });
-		window.addEventListener("touchmove", release, { passive: true });
+		const wheel = (event: WheelEvent) => {
+			if (!event.ctrlKey && !event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX)) release();
+		};
+		const touch = (event: TouchEvent) => {
+			if (event.touches.length === 1 && !(event.target instanceof Element && stripRef.current?.contains(event.target))) release();
+		};
+		window.addEventListener("wheel", wheel, { passive: true });
+		window.addEventListener("touchmove", touch, { passive: true });
 		window.addEventListener("pointerdown", scrollbar, { passive: true });
 		window.addEventListener("keydown", navigate);
 		return () => {
-			window.removeEventListener("wheel", release); window.removeEventListener("touchmove", release);
+			window.removeEventListener("wheel", wheel); window.removeEventListener("touchmove", touch);
 			window.removeEventListener("pointerdown", scrollbar); window.removeEventListener("keydown", navigate);
 		};
 	}, []);
 
-	const phaseCount = stops.length + 2;
 	const stop = phase >= 1 && phase <= stops.length ? stops[phase - 1] : null;
 
-	/** Camera targets: wide city, one per stop, wide again. Phones zoom less so
-	    the whole stop stays legible on a small stage. */
-	const focuses = useMemo<Focus[]>(
-		() => [
-			wideFocus,
-			...stops.map((s) => ({
-				x: s.x,
-				y: s.y,
-				zoom: s.kind === "terminal" ? (isMobile ? 1.15 : 1.3) : isMobile ? 1.3 : 2,
-			})),
-			// The outro is the terminal's own camera: the ride ENDS at the
-			// agent, and the dawn sky plus the footer close it out instead
-			// of a pull-back that abandons the booth.
-			{ x: TERMINAL.x, y: TERMINAL.y, zoom: isMobile ? 1.15 : 1.3 },
-		],
-		[isMobile],
-	);
-
 	useEffect(() => {
+		const ride = rideRef.current;
+		const stage = stageRef.current;
+		const svg = svgRef.current;
+		const strip = stripRef.current;
+		const trainSprite = trainRef.current;
+		const bar = document.getElementById("concept-bar");
+		if (!ride || !stage || !svg || !strip || !trainSprite || !bar) return;
+
 		const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 		const narrow = window.matchMedia("(max-width: 860px)");
-		const cam = { ...focuses[0] };
+		const cam = { ...wideFocus };
 		let anchorY = narrow.matches ? .6 : .5;
 		const pos = { ...rail[0] };
-		const rootCs = getComputedStyle(document.documentElement);
+		const rootCss = getComputedStyle(document.documentElement);
 		const dusk = (["--atlas-sky-1", "--atlas-sky-2", "--atlas-sky-3"] as const).map((key) =>
-			hexToRgb(rootCs.getPropertyValue(key)),
+			hexToRgb(rootCss.getPropertyValue(key)),
 		);
-		const night = dusk.map((c) => c.map((v) => v * 0.42));
-		let raf = 0;
-		let previousFrame = performance.now();
+		const night = dusk.map((color) => color.map((value) => value * 0.42));
+
+		const measure = () => {
+			const headerHeight = Math.round(bar.getBoundingClientRect().height);
+			stage.style.setProperty("--bar-h", `${headerHeight}px`);
+			const bounds = ride.getBoundingClientRect();
+			const stageBounds = stage.getBoundingClientRect();
+			const css = getComputedStyle(svg!);
+			return {
+				rideTop: bounds.top + window.scrollY,
+				travel: Math.max(1, bounds.height - stageBounds.height),
+				chromeBottom: strip.offsetTop + strip.offsetHeight || headerHeight,
+				stage: { width: stage.clientWidth, height: stage.clientHeight },
+				map: { width: svg.clientWidth, height: svg.clientHeight, left: parseFloat(css.left) || 0, top: parseFloat(css.top) || 0 },
+			};
+		};
+
+		let layout: ReturnType<typeof measure> | undefined;
+		let raf: number | null = null;
+		let previousFrame: number | null = null;
+		let previousProgress = -1;
+		let previousTransform = "";
+		let previousTrain = "";
+
+		const schedule = () => {
+			if (raf === null) raf = requestAnimationFrame(tick);
+		};
+		const resize = () => {
+			layout = undefined;
+			schedule();
+		};
 
 		const tick = (now: number) => {
-			const elapsed = now - previousFrame;
-			previousFrame = now;
-			const ride = rideRef.current;
-			const svg = svgRef.current;
-			if (ride && svg) {
-				const rect = ride.getBoundingClientRect();
-				const total = Math.max(1, rect.height - window.innerHeight);
-				const raw = Math.min(1, Math.max(0, -rect.top / total));
-				// Scroll warp: the stops run to raw 0.84, the terminal then
-				// HOLDS through raw 0.92 (the agent screen sticks while you
-				// keep scrolling), and the outro rides the last 8% with the
-				// camera parked, so the booth is never scrolled past.
-				const HOLD_END = 0.92;
-				let f =
-					raw <= 0.84
-						? (raw / 0.84) * stops.length
-						: raw <= HOLD_END
-							? stops.length
-							: stops.length + (raw - HOLD_END) / (1 - HOLD_END);
-				f = Math.min(phaseCount - 1, f);
-				const i = Math.min(phaseCount - 2, Math.floor(f));
-				const t = smooth(f - i);
+			raf = null;
+			const elapsed = previousFrame === null ? 1000 / 60 : now - previousFrame;
+			const { rideTop, travel, chromeBottom, stage: stageSize, map } = layout ??= measure();
+			if (!map.width || !stageSize.height) return;
 
-				const landmarkFocus = landmarkFocusRef.current;
-				const stageHeight = stageRef.current?.clientHeight ?? innerHeight;
-				const chromeBottom = stripRef.current?.getBoundingClientRect().bottom ?? 120;
-				const landmarkFit = Math.min(svg.clientWidth / vw, svg.clientHeight / vh);
-				const tgt = landmarkFocus ? {
-					...landmarkFocus,
-					zoom: Math.min(landmarkFocus.zoom, (stageHeight - chromeBottom - 120) / ((landmarkFocus.height ?? vh) * landmarkFit)),
-				} : {
-					x: lerp(focuses[i].x, focuses[i + 1].x, t),
-					y: lerp(focuses[i].y, focuses[i + 1].y, t),
-					zoom: lerp(focuses[i].zoom, focuses[i + 1].zoom, t),
-				};
-				const ease = motionEase(elapsed, reduce.matches);
-				const targetAnchor = landmarkFocus ? (stageHeight + chromeBottom + 72) / (2 * stageHeight) : narrow.matches ? (phaseRef.current === 0 ? .6 : .42) : .5;
-				anchorY += (targetAnchor - anchorY) * ease;
-				cam.x += (tgt.x - cam.x) * ease;
-				cam.y += (tgt.y - cam.y) * ease;
-				cam.zoom += (tgt.zoom - cam.zoom) * ease;
-
-				const stage = stageRef.current;
-				if (stage) {
-					const css = getComputedStyle(svg);
-					const camera = clampedCamera({ width: svg.clientWidth, height: svg.clientHeight,
-						left: parseFloat(css.left) || 0, top: parseFloat(css.top) || 0 },
-						{ width: stage.clientWidth, height: stage.clientHeight }, cam,
-						{ width: vw, height: vh }, anchorY);
-					svg.style.transform = `translate(${camera.x.toFixed(2)}px,${camera.y.toFixed(2)}px) scale(${camera.zoom.toFixed(4)})`;
-				}
-
-				// Dusk deepens to night through the middle of the ride, then
-				// lifts toward the pre-dawn glow by the end.
-				const skyT = raw < 0.55 ? raw / 0.55 : 1;
-				const dawnT = raw < 0.55 ? 0 : (raw - 0.55) / 0.45;
-				if (stage) {
-					const skyStops = dusk.map((from, k) =>
-						rgbCss(mixRgb(mixRgb(from, night[k], skyT), PREDAWN[k], dawnT)),
-					);
-					stage.style.setProperty("--atlas-sky-1", skyStops[0]);
-					stage.style.setProperty("--atlas-sky-2", skyStops[1]);
-					stage.style.setProperty("--atlas-sky-3", skyStops[2]);
-					stage.style.setProperty("--dawn", dawnT.toFixed(3));
-					stage.style.setProperty("--ride-progress", raw.toFixed(4));
-				}
-
-				// The train reaches the terminal at the final stop and parks
-				// there through the outro, instead of clipping off the map.
-				const tf = Math.min(f, rail.length - 1);
-				const ti = Math.min(rail.length - 2, Math.floor(tf));
-				const tt = smooth(tf - ti);
-				const train = { x: lerp(rail[ti].x, rail[ti + 1].x, tt), y: lerp(rail[ti].y, rail[ti + 1].y, tt) };
-				pos.x += (train.x - pos.x) * motionEase(elapsed, reduce.matches, 150);
-				pos.y += (train.y - pos.y) * motionEase(elapsed, reduce.matches, 150);
-				trainRef.current?.setAttribute("transform", `translate(${pos.x.toFixed(1)} ${pos.y.toFixed(1)})`);
-
-				const next = Math.round(f);
-				if (next !== phaseRef.current) {
-					phaseRef.current = next;
-					setPhase(next);
-					setLandmark(null);
-					landmarkFocusRef.current = null;
-				}
+			const progress = Math.min(1, Math.max(0, (window.scrollY - rideTop) / travel));
+			const position = ridePhaseAtProgress(progress, stops.length);
+			const next = Math.round(position);
+			if (next !== phaseRef.current) {
+				phaseRef.current = next;
+				setPhase(next);
+				setLandmark(null);
+				landmarkFocusRef.current = null;
 			}
-			raf = requestAnimationFrame(tick);
+
+			const focuses = narrow.matches ? mobileFocuses : desktopFocuses;
+			const i = Math.min(focuses.length - 2, Math.floor(position));
+			// Continuous movement through each stop, including small mouse-wheel steps.
+			const fraction = position - i;
+			const landmarkFocus = landmarkFocusRef.current;
+			const target = landmarkFocus ? {
+				...landmarkFocus,
+				zoom: Math.min(narrow.matches ? 1.5 : 1.9, (stageSize.height - chromeBottom - 120) /
+					(landmarkFocus.height * Math.min(map.width / vw, map.height / vh))),
+			} : {
+				x: lerp(focuses[i].x, focuses[i + 1].x, fraction),
+				y: lerp(focuses[i].y, focuses[i + 1].y, fraction),
+				zoom: lerp(focuses[i].zoom, focuses[i + 1].zoom, fraction),
+			};
+			const targetAnchor = landmarkFocus ? (stageSize.height + chromeBottom + 72) / (2 * stageSize.height)
+				: narrow.matches ? (next === 0 ? .6 : .42) : .5;
+
+			const trainIndex = Math.min(i, rail.length - 2);
+			const trainFraction = Math.min(1, position - trainIndex);
+			const train = {
+				x: lerp(rail[trainIndex].x, rail[trainIndex + 1].x, trainFraction),
+				y: lerp(rail[trainIndex].y, rail[trainIndex + 1].y, trainFraction),
+			};
+			const remaining = Math.max(
+				Math.abs(target.x - cam.x), Math.abs(target.y - cam.y), Math.abs(target.zoom - cam.zoom) * 100,
+				Math.abs(targetAnchor - anchorY) * stageSize.height,
+				Math.abs(train.x - pos.x), Math.abs(train.y - pos.y),
+			);
+			const settling = !reduce.matches && remaining > .2;
+			const ease = settling ? motionEase(elapsed, false, 110) : 1;
+			cam.x = lerp(cam.x, target.x, ease);
+			cam.y = lerp(cam.y, target.y, ease);
+			cam.zoom = lerp(cam.zoom, target.zoom, ease);
+			anchorY = lerp(anchorY, targetAnchor, ease);
+			pos.x = lerp(pos.x, train.x, ease);
+			pos.y = lerp(pos.y, train.y, ease);
+
+			const camera = clampedCamera(map, stageSize, cam, { width: vw, height: vh }, anchorY);
+			const transform = `translate(${camera.x.toFixed(2)}px,${camera.y.toFixed(2)}px) scale(${camera.zoom.toFixed(4)})`;
+			const trainTransform = `translate(${pos.x.toFixed(1)} ${pos.y.toFixed(1)})`;
+			if (transform !== previousTransform) {
+				svg.style.transform = transform;
+				previousTransform = transform;
+			}
+			if (trainTransform !== previousTrain) {
+				trainSprite.setAttribute("transform", trainTransform);
+				previousTrain = trainTransform;
+			}
+
+			if (progress !== previousProgress) {
+				const skyT = Math.min(1, progress / .55);
+				const dawnT = Math.max(0, (progress - .55) / .45);
+				dusk.forEach((from, k) => {
+					stage.style.setProperty(`--atlas-sky-${k + 1}`, rgbCss(mixRgb(mixRgb(from, night[k], skyT), PREDAWN[k], dawnT)));
+				});
+				stage.style.setProperty("--dawn", dawnT.toFixed(3));
+				stage.style.setProperty("--ride-progress", progress.toFixed(4));
+				previousProgress = progress;
+			}
+
+			// Leave no frame loop running while the scene is idle.
+			previousFrame = settling ? now : null;
+			if (settling) schedule();
 		};
-		raf = requestAnimationFrame(tick);
-		return () => cancelAnimationFrame(raf);
-	}, [phaseCount, focuses]);
+
+		const observer = new ResizeObserver(resize);
+		for (const element of [bar, ride, stage, strip, svg]) observer.observe(element);
+		window.addEventListener("scroll", schedule, { passive: true });
+		window.addEventListener("resize", resize);
+		narrow.addEventListener("change", resize);
+		reduce.addEventListener("change", schedule);
+		wakeScene.current = schedule;
+		schedule();
+		return () => {
+			observer.disconnect();
+			window.removeEventListener("scroll", schedule);
+			window.removeEventListener("resize", resize);
+			narrow.removeEventListener("change", resize);
+			reduce.removeEventListener("change", schedule);
+			if (raf !== null) cancelAnimationFrame(raf);
+			wakeScene.current = null;
+		};
+	}, []);
 
 	/** After each phase renders, keep the active stop visible inside the
 	    strip's own scroll track; the page itself never moves here. The
@@ -393,11 +393,11 @@ export default function AtlasRide() {
 	}, [phase]);
 
 	function jumpToPhase(target: number) {
-		landmarkFocusRef.current = null; setLandmark(null);
+		selectLandmark(null);
 		const ride = rideRef.current;
 		if (!ride) return;
 		const rideTop = ride.getBoundingClientRect().top + window.scrollY;
-		jumpInstantly(ridePhaseOffset({ rideTop, rideHeight: ride.offsetHeight, viewportHeight: window.innerHeight, target, stopCount: stops.length }), window.scrollTo.bind(window));
+		jumpInstantly(ridePhaseOffset({ rideTop, rideHeight: ride.offsetHeight, viewportHeight: stageRef.current?.clientHeight ?? window.innerHeight, target, stopCount: stops.length }), window.scrollTo.bind(window));
 	}
 
 	/** Clicking a station scrolls the ride to that phase. */
@@ -409,7 +409,7 @@ export default function AtlasRide() {
 	}
 
 	function skipRide() {
-		landmarkFocusRef.current = null; setLandmark(null);
+		selectLandmark(null);
 		const ride = rideRef.current;
 		if (!ride) return;
 		const rideTop = ride.getBoundingClientRect().top + window.scrollY;
@@ -434,7 +434,7 @@ export default function AtlasRide() {
 				: "";
 
 	return (
-		<div id="atlas-ride" className={`ride${phase === 0 ? " ride-phase-0" : ""}`} ref={rideRef} style={{ ["--ride-phases" as string]: phaseCount + 2 }}>
+		<div id="atlas-ride" className={`ride${phase === 0 ? " ride-phase-0" : ""}`} ref={rideRef} style={{ ["--ride-phases" as string]: stops.length + 4 }}>
 			<div className="ride-stage atlas-hero" ref={stageRef}>
 				<AtlasScene>
 					<div className="atlas-scroll">
