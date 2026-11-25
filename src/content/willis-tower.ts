@@ -85,13 +85,14 @@ export const WILLIS_FLOOR = FLOOR_HEIGHT;
 // The dark service bands are represented at their approximate positions.
 export const WILLIS_BANDS = [29, 48, 64, 88, 107].map((floor) => floor * FLOOR_HEIGHT);
 export const WILLIS_ORBIT_DEFAULT = { yaw: -28, pitch: 13, zoom: 1 };
+export const WILLIS_ORBIT_MAX_ZOOM = 1.2;
 export type OrbitView = typeof WILLIS_ORBIT_DEFAULT;
 
 export function moveOrbit(view: OrbitView, yaw: number, pitch: number, zoom = 1): OrbitView {
 	return {
 		yaw: (view.yaw + yaw) % 360,
 		pitch: Math.max(0, Math.min(78, view.pitch + pitch)),
-		zoom: Math.max(.75, Math.min(2.35, view.zoom * zoom)),
+		zoom: Math.max(.75, Math.min(WILLIS_ORBIT_MAX_ZOOM, view.zoom * zoom)),
 	};
 }
 
@@ -101,14 +102,15 @@ export function projectWillisTower(view: OrbitView) {
 	const sinYaw = Math.sin(azimuth);
 	const cosYaw = Math.cos(azimuth);
 	const sinPitch = Math.sin(elevation);
-	// In the skyline, tilt reveals roofs without shrinking the tower into the river.
+	// Keep the near edge of the footprint on the shore as the camera turns.
 	const rise = 1 - .12 * sinPitch;
 	const roofDepth = .8 * sinPitch;
+	const nearEdge = 1.5 * TUBE_WIDTH * (Math.abs(sinYaw) + Math.abs(cosYaw)) * roofDepth;
 	const facing: Point = [sinYaw * rise, roofDepth, cosYaw * rise];
 	const depth = (x: number, z: number) => x * sinYaw + z * cosYaw;
 	const project = ([x, y, z]: Point) => [
 		view.zoom * (x * cosYaw - z * sinYaw),
-		view.zoom * (263.5 - y * rise + depth(x, z) * roofDepth),
+		view.zoom * (-y * rise + depth(x, z) * roofDepth - nearEdge),
 	];
 	const offset = (a: Point, b: Point): Point => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 	const fixed = (value: number) => Number(value.toFixed(4));
