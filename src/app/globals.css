@@ -234,8 +234,13 @@ section{padding:76px 0}
 .ride-copy .kicker{color:var(--signal)}
 .ride-copy h1{font-size:clamp(40px,6vw,74px);line-height:1.02;margin:16px 0 0;max-width:16ch;text-wrap:balance}
 .ride-copy .lede{margin-top:18px;max-width:52ch;color:var(--night-soft)}
-.skip-ride{pointer-events:auto;appearance:none;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--night-soft);background:transparent;border:1px solid var(--night-rule);border-radius:999px;padding:9px 16px;margin-top:28px;cursor:pointer}
+.ride-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.ride-actions button{pointer-events:auto;appearance:none;min-height:44px;font-family:var(--mono);font-size:11px;letter-spacing:.045em;border:1px solid;border-radius:999px;padding:0 13px;cursor:pointer}
+.skip-ride{color:var(--night-soft);background:#101620d6;border-color:var(--night-rule)}
 .skip-ride:hover{color:var(--signal);border-color:var(--signal)}
+.explore-willis{color:#ffe0a9;background:#1a1c22e8;border-color:#a6804d}
+.explore-willis:hover{background:#403021}
+.ride-actions button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
 .ride-overlay{position:absolute;left:24px;bottom:40px;z-index:5;max-width:400px}
 .ride-overlay .chi-card{animation:card-in .55s cubic-bezier(.22,.61,.36,1)}
 @keyframes card-in{from{opacity:0;translate:-34px 14px}to{opacity:1;translate:0 0}}
@@ -779,27 +784,65 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
  .rail-network .rail-map-tools .rail-view-switch button{padding-inline:9px}
 }
 
-/* Only a selected tower owns drag gestures. Its controls sit beside the route. */
-.tower-orbit-model,.tower-orbit-drag{touch-action:none;user-select:none}
-.tower-orbit-drag{cursor:grab}
-.tower-orbit-drag:active{cursor:grabbing}
-.tower-orbit-focus{opacity:0}
-.atlas-building:focus-visible .tower-orbit-focus{opacity:1}
-.tower-orbit-tools{display:grid;gap:6px;margin-top:4px}
-.tower-orbit-tools p{margin:0;color:var(--night-soft);font-size:12px}
-.tower-orbit-controls{display:flex;flex-wrap:wrap;gap:2px}
-.tower-orbit-controls button,.tower-orbit-close{display:grid;place-items:center;min-width:44px;min-height:44px;padding:0;border:1px solid #655037;border-radius:7px;background:#1f1c1c;color:#ffe0a9;font:650 17px var(--sans);cursor:pointer}
-.tower-orbit-controls button:hover,.tower-orbit-controls button:active,.tower-orbit-close:hover{background:#403021}
-.tower-orbit-controls button:disabled{opacity:.4;cursor:default}
-.tower-orbit-controls button:focus-visible,.tower-orbit-close:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
-.chi-card:has(.tower-orbit-tools){position:relative}
-.chi-card:has(.tower-orbit-tools) h3{padding-right:48px}
-.tower-orbit-close{position:absolute;top:6px;right:8px;border-color:transparent;background:transparent}
-@media (max-width:365px){
- .tower-orbit-controls{display:grid;grid-template-columns:repeat(4,44px)}
+/* The waterfront occupies the ride stage under its existing trip strip. */
+.willis-riverfront{
+  position:absolute;inset:0;z-index:5;display:grid;grid-template:1fr / 65% 35%;
+  padding:var(--ride-chrome-bottom,var(--bar-h,64px)) 0 0;
+  background:radial-gradient(ellipse at 42% 72%,#2c3b45,transparent 67%),#101620;
+  color:var(--night-ink);animation:willis-arrive .45s ease-out both
 }
-@media (min-width:720px) and (max-width:860px) and (orientation:landscape){
- .ride-stage:has(.tower-orbit-model) .ride-overlay{left:auto;right:12px;width:max-content;max-width:calc(50% - 16px)}
+@keyframes willis-arrive{from{opacity:0}to{opacity:1}}
+.willis-riverfront::before{
+  content:"";position:absolute;inset:0 0 0 57%;z-index:1;pointer-events:none;
+  background:linear-gradient(90deg,transparent,#101620c9 30%,#101620e6)
+}
+.willis-vista{position:relative;grid-area:1/1/2/-1;min-height:0;overflow:hidden}
+.willis-waterfront{display:block;width:100%;height:100%;pointer-events:none}
+.willis-tower-slot{position:absolute;inset:0 auto 25% 43%;width:min(38%,460px);transform:translateX(-50%);pointer-events:none}
+.tower-orbit-model{display:block;width:100%;height:100%;overflow:visible;outline:none}
+.tower-orbit-drag{pointer-events:auto;touch-action:none;user-select:none;cursor:grab}
+.tower-orbit-drag:active{cursor:grabbing}
+.willis-reflection{opacity:.60;pointer-events:none}
+.tower-orbit-focus{opacity:0}
+.tower-orbit-model:focus-visible .tower-orbit-focus{opacity:1}
+.willis-details{
+  grid-area:1/2;position:relative;z-index:2;align-self:center;min-width:0;
+  padding:clamp(20px,3.2vw,54px) clamp(16px,4vw,68px) clamp(22px,3vw,48px) clamp(16px,3vw,38px);
+}
+.willis-details h2{margin:4px 0 8px;font:600 clamp(34px,3.9vw,62px)/.98 var(--serif);letter-spacing:-.035em;text-wrap:balance}
+.willis-feature{margin:4px 0;color:var(--night-soft);font-size:15px;line-height:1.4;max-width:36ch}
+.willis-feature:first-letter{text-transform:uppercase}
+.tower-orbit-tools{display:grid;gap:10px;margin-top:16px}
+.tower-orbit-tools p{margin:0;color:var(--night-soft);font-size:12px;line-height:1.4}
+.tower-orbit-controls{display:flex;flex-wrap:wrap;gap:3px}
+.tower-orbit-controls button,.tower-orbit-close{display:grid;place-items:center;min-width:44px;min-height:44px;padding:0;color:#ffe0a9;cursor:pointer}
+.tower-orbit-controls button{border:1px solid #7c624c;border-radius:5px;background:#25262a;font:650 17px var(--sans)}
+.tower-orbit-controls button:hover,.tower-orbit-controls button:active,.tower-orbit-close:hover{background:#453628}
+.tower-orbit-controls button:disabled{opacity:.46;cursor:default}
+.tower-orbit-controls button:focus-visible,.tower-orbit-close:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.tower-orbit-close{display:inline-flex;gap:8px;padding:0 8px;margin-left:-8px;background:none;border:0;border-radius:5px;font:600 11px var(--mono)}
+.tower-orbit-close span{font-size:16px}
+@media(max-width:900px) and (min-height:501px){
+  .willis-riverfront{grid-template:minmax(0,1fr) auto / 1fr}
+  .willis-riverfront::before{display:none}
+  .willis-waterfront{width:145%;margin-left:-22.5%}
+  .willis-tower-slot{left:50%;width:min(64%,390px)}
+  .willis-details{grid-area:2/1;padding:14px 16px max(16px,env(safe-area-inset-bottom));background:#101721;border-top:1px solid #ad907356}
+  .willis-details h2{padding-right:126px;font-size:clamp(28px,7vw,38px)}
+  .tower-orbit-close{position:absolute;right:12px;top:6px;margin:0}
+  .tower-orbit-tools{margin-top:10px;gap:8px}
+}
+@media(max-height:500px){
+  .willis-riverfront{grid-template-columns:58% 42%}
+  .willis-riverfront::before{left:50%}
+  .willis-tower-slot{left:40%}
+  .willis-details{padding:3px 12px 10px}
+  .willis-details h2{font-size:30px}
+  .willis-feature{font-size:13px}
+  .tower-orbit-tools{gap:6px;margin-top:6px}
+}
+@media(prefers-reduced-motion:reduce){
+  .willis-riverfront{animation:none}
 }
 .willis-lighting-note{margin:0;font-size:12px}
 .willis-lighting-note a{color:inherit;text-underline-offset:3px}
