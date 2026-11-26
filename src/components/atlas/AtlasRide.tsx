@@ -254,6 +254,12 @@ export default function AtlasRide() {
 		jumpToPhase(lastProject.current);
 	}
 
+	function resumeRide() {
+		const target = guideProgress > 0 ? Math.min(guideProgress, guidedStops.length) : lastProject.current;
+		projectFocus.current = Math.max(1, Math.round(target));
+		jumpToPhase(Math.max(1, target));
+	}
+
 	function exploreCity() {
 		if (phase > 0 && phase <= guidedStops.length) lastProject.current = phase;
 		interruptSnap.current?.();
@@ -517,10 +523,6 @@ export default function AtlasRide() {
 		};
 		const navigationInput = () => {
 			lastInput = performance.now();
-			if (entryRef.current && exploringRef.current) {
-				setExplore(false);
-				schedule();
-			}
 			release();
 			waitToSnap();
 		};
@@ -608,7 +610,7 @@ export default function AtlasRide() {
 			if (raf !== null) cancelAnimationFrame(raf);
 			wakeScene.current = null;
 		};
-	}, [setExplore]);
+	}, []);
 
 	/** After each phase renders, keep the active stop visible inside the
 	    strip's own scroll track; the page itself never moves here. The
@@ -757,7 +759,7 @@ export default function AtlasRide() {
 					{entryVisited ? (
 						<WillisRiverfront key="city" orbit={cityOrbit} active={entryOpen && stageVisible} entry close={openProjects}
 							guided={guided} guideProgress={guideProgress} guideStop={guideStop}
-							explore={exploreCity} resume={openProjects} skip={skipRide} onStation={selectGuidedStop}
+							explore={exploreCity} resume={resumeRide} skip={skipRide} onStation={selectGuidedStop}
 							onFallback={dismissEntry}
 							showSimple={() => { simpleFocus.current = true; dismissEntry(); }}>
 							{guided && phase > 0 ? (

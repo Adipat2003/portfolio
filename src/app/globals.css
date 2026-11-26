@@ -943,6 +943,11 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 
 .riverfront-skip{min-height:44px;padding:0;background:none;border:0;color:var(--night-soft);font:12px var(--sans);text-decoration:underline;cursor:pointer}
 .riverfront-guide-help{margin:9px 0;color:var(--night-soft);font:12px/1.4 var(--sans)}
+.riverfront-guide-touch{display:none}
+@media(pointer:coarse){
+  .riverfront-guide-pointer{display:none}
+  .riverfront-guide-touch{display:inline}
+}
 .riverfront-line{display:table;margin:0 0 7px;padding:0 0 4px;border-bottom:3px solid;color:#eee5d6;font:600 11px var(--mono)}
 .willis-riverfront[data-guide-card="true"]{padding-top:var(--ride-chrome-bottom,var(--bar-h,64px))}
 .willis-riverfront[data-guide-card="true"] .willis-details{margin-top:0;max-height:100%;scrollbar-width:thin}
@@ -952,7 +957,12 @@ footer.site-foot{padding:36px 24px;color:var(--ink-soft);font-size:14px;display:
 .riverfront-project-card.terminal-overlay{max-height:none;overflow:visible}
 .riverfront-guide-settings{margin-top:10px;color:var(--night-soft);font:13px var(--sans)}
 .riverfront-guide-settings summary{min-height:32px;cursor:pointer}
-.riverfront-canvas:not(.tower-orbit-drag){touch-action:pan-y pinch-zoom}
+.riverfront-interaction{position:absolute;inset:0;touch-action:none;user-select:none}
+.riverfront-interaction[data-guided="true"]{touch-action:pan-y pinch-zoom;cursor:grab}
+.riverfront-interaction[data-guided="true"]:active{cursor:grabbing}
+.riverfront-ride-train{pointer-events:none}
+.riverfront-ride-train > circle{fill:#ffd890;stroke:#101620;stroke-width:2}
+.riverfront-ride-train > line{stroke:#ffd890;stroke-width:2}
 @media(max-width:900px) and (min-height:501px){
   .willis-riverfront[data-guide-card="true"] .willis-details{max-height:55dvh}
   .willis-riverfront[data-guide-card="true"] .willis-details h2{padding-right:0}

@@ -2,14 +2,15 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent } from "react";
-import { addWillisTower } from "@/content/willis-tower";
+import { addWillisTower, WILLIS_ORBIT_DEFAULT } from "@/content/willis-tower";
 import { addMarinaCity } from "@/lib/atlas-marina-city";
 import { mountRiverRenderer, riverCamera, riverEntryZoom, RIVER_MARINA, RIVER_WILLIS } from "@/lib/atlas-river-renderer";
 import type { getRiverEnvironment } from "@/lib/atlas-river-environment";
+import TrainSprite from "./TrainSprite";
 import { orbitKeys } from "./WillisTowerOrbit";
-import { guidedPosition, guidedTransfer } from "@/lib/atlas-guided-route";
+import { guidedPosition, guidedTrain, guidedTransfer } from "@/lib/atlas-guided-route";
 import { riverCtaRoutes, riverCtaStations } from "@/lib/atlas-river-cta";
-import type { RiverPan } from "@/lib/atlas-river-renderer";
+import type { RiverGuide, RiverPan } from "@/lib/atlas-river-renderer";
 import type { PanView, TowerOrbit } from "./WillisTowerOrbit";
 
 type Props = {
@@ -24,6 +25,8 @@ type Props = {
 	guideProgress?: number;
 	guideStops?: readonly string[];
 	activeStop?: string;
+	exploreGuide?: RiverGuide;
+	exploreOnDrag?: PanView;
 	selectStop?: (id: string) => void;
 	pan: RiverPan;
 	movePan?: PanView;
@@ -50,6 +53,8 @@ function loadMesh() {
 
 export default function AtlasRiverfrontView(props: Props) {
 	const canvas = useRef<HTMLCanvasElement>(null);
+	const interaction = useRef<HTMLDivElement>(null);
+	const trainMarker = useRef<SVGGElement>(null);
 	const ctaLayer = useRef<SVGSVGElement>(null);
 	const [selectedStop, setSelectedStop] = useState<string | null>(null);
 	const ctaFrame = useRef("");
@@ -57,7 +62,7 @@ export default function AtlasRiverfrontView(props: Props) {
 	const entryFinished = useRef(!props.autoZoom);
 	const entryFactor = useRef(1);
 	const redraw = useRef<(() => void) | null>(null);
-	const pointer = useRef<{ id: number; x: number; y: number } | null>(null);
+	const pointer = useRef<{ id: number; x: number; y: number; dragging: boolean } | null>(null);
 	const { view, adjust } = props.orbit;
 
 	function updateCta(camera: ReturnType<typeof riverCamera>, element: HTMLCanvasElement, frameKey: string) {
@@ -77,6 +82,26 @@ export default function AtlasRiverfrontView(props: Props) {
 			const [u, v] = camera.project([x, ground, z]);
 			return [u * width, v * height];
 		}
+
+		const marker = trainMarker.current;
+		if (marker) {
+			const { point, start, end } = guidedTrain(current.current.guideProgress ?? 0);
+			const [x, y] = screen(...point);
+			const [a, b] = screen(...start);
+			const [c, d] = screen(...end);
+			const angle = Math.atan2(d - b, c - a) * 180 / Math.PI;
+			const visible = camera.depthOf([point[0], ground, point[1]]) > near &&
+				x >= -16 && x <= width + 16 && y >= 4 && y <= height + 16;
+			marker.style.display = visible ? "" : "none";
+			if (visible) {
+				marker.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+				const reverse = Math.abs(angle) > 90;
+				const tilt = reverse ? angle - Math.sign(angle) * 180 : angle;
+				marker.querySelector("[data-train-car]")?.setAttribute("transform",
+					`translate(0 -19) rotate(${tilt.toFixed(1)}) scale(${reverse ? -1.35 : 1.35} 1.35)`);
+			}
+		}
+		if (!current.current.showCta) return;
 
 		for (const route of riverCtaRoutes) {
 			let path = "";
@@ -149,13 +174,17 @@ export default function AtlasRiverfrontView(props: Props) {
 			let previous = 0;
 			const started = performance.now();
 			const paint = (time: number) => {
-				const { orbit, env, place, snow, pan, guided, guideProgress } = current.current;
+				const { orbit, env, place, snow, pan, guided, guideProgress = 0, exploreGuide } = current.current;
+				const guide = guided && guideProgress > .02 ? { ...guidedPosition(guideProgress), progress: guideProgress } : undefined;
+				const cameraGuide = guided ? guide : exploreGuide;
 				entryFactor.current = entryFinished.current || reduced.matches ? 1 : riverEntryZoom(time - started);
 				entryFinished.current ||= entryFactor.current >= 1;
-				const view = { ...orbit.view, zoom: orbit.view.zoom * entryFactor.current };
+				const baseView = guide ? WILLIS_ORBIT_DEFAULT : orbit.view;
+				const cameraPan = guide ? [0, 0] as const : pan;
+				const view = { ...baseView, zoom: baseView.zoom * entryFactor.current };
 				const scheduledColors = orbit.lighting?.palette ?? [];
 				const camera = renderer.draw(view, place === "willis" ? RIVER_WILLIS : RIVER_MARINA,
-					env, scheduledColors, reduced.matches ? 0 : time / 1000, snow, pan, guided && guideProgress ? { ...guidedPosition(guideProgress), progress: guideProgress } : undefined);
+					env, scheduledColors, reduced.matches ? 0 : time / 1000, snow, cameraPan, cameraGuide);
 				const [x] = place === "willis" ? RIVER_WILLIS : RIVER_MARINA;
 				const focus = place === "willis" ? [x - 22.86, 521, RIVER_WILLIS[2]] as const : [x, 173, RIVER_MARINA[2]] as const;
 				const foot = place === "willis" ? [x, -6, RIVER_WILLIS[2]] as const : [x, -6, RIVER_MARINA[2]] as const;
@@ -167,7 +196,7 @@ export default function AtlasRiverfrontView(props: Props) {
 				element.dataset.snow = String(snow);
 				element.dataset.foliage = env.foliage.cover.toFixed(3);
 				element.dataset.ride = guided ? (guideProgress ?? 0).toFixed(4) : "explore";
-				if (current.current.showCta) updateCta(camera, element, `${place}:${view.yaw}:${view.pitch}:${view.zoom}:${pan}:${element.dataset.ride}`);
+				updateCta(camera, element, `${place}:${view.yaw}:${view.pitch}:${view.zoom}:${cameraPan}:${guideProgress}:${cameraGuide?.progress}`);
 				element.dataset.frame = `${orbit.view.yaw}:${orbit.view.pitch}:${orbit.view.zoom}:${place}:${env.sun.elevation.toFixed(2)}`;
 			};
 			const schedule = () => {
@@ -215,32 +244,31 @@ export default function AtlasRiverfrontView(props: Props) {
 		current.current.orbit.adjust(0, 0, entryFactor.current);
 	}
 
-	function dragBy(element: HTMLCanvasElement, dx: number, dy: number) {
-		const { movePan, orbit, place } = current.current;
-		if (!movePan) {
-			orbit.adjust(dx * .55, dy * .4);
-			return;
+	useEffect(() => {
+		const element = interaction.current;
+		if (!element) return;
+		function zoom(event: WheelEvent) {
+			const { entry, guided, orbit } = current.current;
+			if (!entry || guided || event.ctrlKey || event.shiftKey || !event.deltaY) return;
+			event.preventDefault();
+			orbit.adjust(0, 0, Math.exp(-Math.sign(event.deltaY) * .06));
 		}
-		const { width, height } = element.getBoundingClientRect();
-		const target = place === "willis" ? RIVER_WILLIS : RIVER_MARINA;
-		const { distance, focal } = riverCamera(orbit.view, target, width / Math.max(1, height));
-		const metresPerPixel = 2 * distance * focal[1] / Math.max(1, height);
-		movePan(-dx * metresPerPixel, dy * metresPerPixel * 1.5);
-	}
+		element.addEventListener("wheel", zoom, { passive: false });
+		return () => element.removeEventListener("wheel", zoom);
+	}, []);
 
+	// The separate landmark view captures the whole touch gesture, including vertical drags.
 	useEffect(() => {
 		const element = canvas.current;
-		if (!element) return;
+		if (!element || current.current.entry) return;
 		let touch: { id: number; x: number; y: number } | null = null;
 		function startTouch(event: TouchEvent) {
-			if (current.current.guided) return;
 			if (event.touches.length !== 1) {
 				touch = null;
 				return;
 			}
 			const finger = event.touches[0];
 			touch = { id: finger.identifier, x: finger.clientX, y: finger.clientY };
-			stopEntryZoom();
 			event.preventDefault();
 			event.stopPropagation();
 		}
@@ -268,77 +296,119 @@ export default function AtlasRiverfrontView(props: Props) {
 		};
 	}, []);
 
-	function start(event: PointerEvent<HTMLCanvasElement>) {
-		if (props.guided || event.pointerType === "touch" || event.button !== 0 || pointer.current) return;
-		stopEntryZoom();
-		event.currentTarget.setPointerCapture(event.pointerId);
-		pointer.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+	function start(event: PointerEvent<HTMLDivElement>) {
+		if (!current.current.entry && event.pointerType === "touch") return;
+		if (event.button !== 0 || !event.isPrimary || pointer.current) return;
+		pointer.current = { id: event.pointerId, x: event.clientX, y: event.clientY, dragging: false };
 	}
 
-	function drag(event: PointerEvent<HTMLCanvasElement>) {
+	function dragBy(element: HTMLElement, dx: number, dy: number) {
+		const { guided, guideProgress = 0, movePan, exploreOnDrag, exploreGuide, orbit, place } = current.current;
+		const panView = exploreOnDrag ?? movePan;
+		if (!panView) {
+			orbit.adjust(dx * .55, dy * .4);
+			return;
+		}
+		const { width, height } = element.getBoundingClientRect();
+		const target = place === "willis" ? RIVER_WILLIS : RIVER_MARINA;
+		const ride = guided && guideProgress > .02
+			? { ...guidedPosition(guideProgress), progress: guideProgress }
+			: undefined;
+		const { distance, focal } = riverCamera(ride ? WILLIS_ORBIT_DEFAULT : orbit.view, target,
+			width / Math.max(1, height), undefined, ride ?? exploreGuide);
+		const metresPerPixel = 2 * distance * focal[1] / Math.max(1, height);
+		panView(-dx * metresPerPixel, dy * metresPerPixel * 1.5);
+	}
+
+	function drag(event: PointerEvent<HTMLDivElement>) {
 		const old = pointer.current;
 		if (!old || old.id !== event.pointerId) return;
+		const { guided } = current.current;
 		const dx = event.clientX - old.x, dy = event.clientY - old.y;
-		if (Math.hypot(dx, dy) < 2) return;
+		const firstMove = !old.dragging;
+		if (Math.hypot(dx, dy) < (firstMove ? 5 : 2)) return;
+		// A vertical touch swipe still drives the native scroll ride.
+		if (guided && event.pointerType === "touch" && Math.abs(dy) >= Math.abs(dx)) return;
+		if (guided && !firstMove) return;
+		if (firstMove) {
+			old.dragging = true;
+			stopEntryZoom();
+			canvas.current?.focus({ preventScroll: true });
+			event.currentTarget.setPointerCapture(event.pointerId);
+		}
 		dragBy(event.currentTarget, dx, dy);
 		old.x = event.clientX;
 		old.y = event.clientY;
 	}
 
-	function finish(event: PointerEvent<HTMLCanvasElement>) {
+	function finish(event: PointerEvent<HTMLDivElement>) {
 		if (pointer.current?.id === event.pointerId) pointer.current = null;
 	}
 
+	const train = props.entry ? guidedTrain(props.guideProgress ?? 0) : null;
+
 	return (
-		<>
-		<canvas ref={canvas} className={`riverfront-canvas tower-orbit-model${props.guided ? "" : " tower-orbit-drag"}`}
-			role="application" tabIndex={0} aria-label="Chicago River 3D view"
-			aria-describedby={props.guided ? "atlas-riverfront-guide-help" : "atlas-tower-orbit-help"} data-yaw={view.yaw} data-pitch={view.pitch} data-zoom={view.zoom} data-pan={props.pan.join(",")}
-			onPointerDown={start} onPointerMove={drag} onPointerUp={finish} onLostPointerCapture={finish} onPointerCancel={finish}
-			onKeyDown={(event) => {
-				if (event.key === "Escape") {
-					event.stopPropagation();
-					props.close();
-				} else if (!props.guided) orbitKeys(event, adjust, props.movePan);
-			}}
-		/>
-		{props.showCta ? (
-			<svg className="riverfront-cta" ref={ctaLayer} role="group" aria-label="CTA Red and Blue subway routes">
-				{riverCtaRoutes.map((route) => (
-					<g key={route.id} aria-hidden="true">
-						<path className="cta-route-casing" data-route={route.id} />
-						<path className="cta-route-line" data-route={route.id} stroke={route.color} />
-					</g>
-				))}
-				{props.guided ? (
-					<g aria-hidden="true">
-						<path className="cta-route-casing" data-transfer="" />
-						<path className="cta-transfer-line" data-transfer="" />
-					</g>
-				) : null}
-				{riverCtaStations.map((stop, i) => {
-					const projectStop = props.guideStops?.includes(stop.id);
-					if (props.guided && !projectStop) return null;
-					const key = `${stop.route}-${stop.id}`;
-					const select = () => {
-						if (projectStop && props.selectStop) props.selectStop(stop.id);
-						else setSelectedStop(selectedStop === key ? null : key);
-					};
-					return (
-						<g key={key} data-stop-index={i} role="button" tabIndex={0} className="riverfront-cta-stop"
-							aria-label={`${stop.name}, CTA ${stop.route === "red" ? "Red" : "Blue"} Line`}
-							aria-pressed={props.activeStop === stop.id || selectedStop === key}
-							onClick={select} onKeyDown={(event) => {
-								if (event.key === " " || event.key === "Enter") { event.preventDefault(); select(); }
-							}}>
-							<circle r="15" fill="transparent" />
-							<circle className="riverfront-cta-dot" r="5" stroke={stop.color} />
-							<text x="9" y="-8" aria-hidden="true">{stop.name}</text>
+		<div className="riverfront-interaction" ref={interaction} data-guided={Boolean(props.guided)}
+			onPointerDown={start} onPointerMove={drag} onPointerUp={finish}
+			onPointerLeave={(event) => { if (!pointer.current?.dragging) finish(event); }}
+			onLostPointerCapture={(event) => { if (event.target === event.currentTarget) finish(event); }} onPointerCancel={finish}>
+			<canvas ref={canvas} className={`riverfront-canvas tower-orbit-model${props.guided ? "" : " tower-orbit-drag"}`}
+				role="application" tabIndex={0} aria-label="Chicago River 3D view"
+				aria-describedby={props.guided ? "atlas-riverfront-guide-help" : "atlas-tower-orbit-help"} data-yaw={view.yaw} data-pitch={view.pitch} data-zoom={view.zoom} data-pan={props.pan.join(",")}
+				onKeyDown={(event) => {
+					if (event.key === "Escape") {
+						event.stopPropagation();
+						props.close();
+					} else if (!props.guided) orbitKeys(event, adjust, props.movePan);
+				}}
+			/>
+			{props.showCta || train ? (
+				<svg className="riverfront-cta" ref={ctaLayer} role="group" aria-label={props.showCta ? "CTA Red and Blue subway routes" : "Atlas ride position"}>
+					{props.showCta ? riverCtaRoutes.map((route) => (
+						<g key={route.id} aria-hidden="true">
+							<path className="cta-route-casing" data-route={route.id} />
+							<path className="cta-route-line" data-route={route.id} stroke={route.color} />
 						</g>
-					);
-				})}
-			</svg>
-		) : null}
-		</>
+					)) : null}
+					{props.guided && props.showCta ? (
+						<g aria-hidden="true">
+							<path className="cta-route-casing" data-transfer="" />
+							<path className="cta-transfer-line" data-transfer="" />
+						</g>
+					) : null}
+					{props.showCta ? riverCtaStations.map((stop, i) => {
+						const projectStop = props.guideStops?.includes(stop.id);
+						if (props.guided && !projectStop) return null;
+						const key = `${stop.route}-${stop.id}`;
+						const select = () => {
+							if (projectStop && props.selectStop) props.selectStop(stop.id);
+							else setSelectedStop(selectedStop === key ? null : key);
+						};
+						return (
+							<g key={key} data-stop-index={i} role="button" tabIndex={0} className="riverfront-cta-stop"
+								aria-label={`${stop.name}, CTA ${stop.route === "red" ? "Red" : "Blue"} Line`}
+								aria-pressed={props.activeStop === stop.id || selectedStop === key}
+								onClick={select} onKeyDown={(event) => {
+									if (event.key === " " || event.key === "Enter") { event.preventDefault(); select(); }
+								}}>
+								<circle r="15" fill="transparent" />
+								<circle className="riverfront-cta-dot" r="5" stroke={stop.color} />
+								<text x="9" y="-8" aria-hidden="true">{stop.name}</text>
+							</g>
+						);
+					}) : null}
+					{train ? (
+						<g ref={trainMarker} className="riverfront-ride-train" role="img"
+							aria-label={train.transfer ? "Your position in the Jackson transfer" : "Your train on the Atlas route"}
+							data-train-progress={(props.guideProgress ?? 0).toFixed(4)}
+							data-transfer-marker={train.transfer}>
+							{!train.transfer ? <line x1="0" y1="-13" x2="0" y2="0" /> : null}
+							<circle r={train.transfer ? 5 : 3.5} />
+							{!train.transfer ? <g data-train-car=""><TrainSprite tint={train.color} /></g> : null}
+						</g>
+					) : null}
+				</svg>
+			) : null}
+		</div>
 	);
 }

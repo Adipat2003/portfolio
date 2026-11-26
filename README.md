@@ -110,9 +110,10 @@ The first Atlas screen opens on the Chicago River. Start ride or scroll to guide
 the camera above the Loop subway. The route goes south on the Blue Line from
 Clark/Lake through Washington and Monroe to Jackson, transfers between the two
 Jackson stations, then runs north on the Red Line through Monroe to Lake.
-Each of the seven stations opens a project card. Explore enables free pan, orbit,
-and zoom. Resume ride returns to the last project station, and Simple view restores
-the illustrated Atlas. In Explore, the CTA subway toggle shows the other downtown
+Each of the seven stations opens a project card. A train marks the current
+position. Dragging the city with a mouse or dragging sideways on touch opens
+Explore for free pan, orbit, and zoom. Resume ride returns to where you left
+the route, and Simple view restores the illustrated Atlas. In Explore, the CTA subway toggle shows the other downtown
 stops as well. [CTA Blue Line](https://www.transitchicago.com/blueline/)
 · [CTA Red Line](https://www.transitchicago.com/redline/)
 
