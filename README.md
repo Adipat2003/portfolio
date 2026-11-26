@@ -106,8 +106,11 @@ upgraded from "projected" to "achieved" in the UI copy.
 
 Custom art, not stock imagery and not generated imagery.
 
-The inline Chicago River view starts at Willis Tower and can reframe to
-Marina City. The 499 KB compressed city mesh comes from an editable downtown
+The first Atlas screen opens on the Chicago River. Its camera zooms toward
+Willis Tower, with pan and orbit controls and a choice of Marina City.
+View projects opens the project ride, and Simple view restores the illustrated Atlas.
+The optional CTA subway layer plots downtown Red and Blue Line stops from the
+CTA schedule data. The 499 KB compressed city mesh comes from an editable downtown
 gen-map preset B export of OpenStreetMap data. Rebuild it with
 `python3 scripts/atlas-river-mesh.py /path/to/gen-map-export.zip`. The geometry
 uses a level river and simplified land grade, with approximate bridge decks
@@ -120,7 +123,7 @@ using architectural references. [OpenStreetMap attribution](https://www.openstre
 
 The inline scene uses Chicago time for the sun and moon, seasonal foliage
 estimates, and the latest available station observation from Chicago
-Midway. Weather and seasonal previews are labeled simulations. Building windows
+Midway. Time, Weather, and Season can be previewed independently. Overrides are labeled simulations. Building windows
 use a simulated light pattern and Willis antenna colors follow the published
 schedule when available. [NWS observations](https://www.weather.gov/documentation/services-web-api)
 · [JPL ephemeris verification](https://ssd.jpl.nasa.gov/horizons/manual.html)

@@ -99,3 +99,19 @@ for (let offset = 0; offset < mesh.length; offset += 32) {
 }
 for (const material of [0, 1, 2, 3, 4, 5, 7, 8, 9]) assert.ok(materialCounts.get(material) > 0);
 console.log("atlas-river-environment-check: river mesh size, normals, and water level passed");
+
+const { moveRiverPan, riverCamera, riverEntryZoom, RIVER_WILLIS } = await import("../src/lib/atlas-river-renderer.ts");
+const defaultView = { yaw: -28, pitch: 13, zoom: 1 };
+const initial = riverCamera(defaultView, RIVER_WILLIS, 1.5);
+assert.deepEqual(moveRiverPan(defaultView, RIVER_WILLIS, [0, 0], 70, 40), [70, -40]);
+const moved = riverCamera(defaultView, RIVER_WILLIS, 1.5, [70, -40]);
+near(moved.eye[0] - initial.eye[0], 70, 0.001, "pan east");
+near(moved.eye[2] - initial.eye[2], -40, 0.001, "pan north");
+assert.deepEqual(moved.back, initial.back, "panning does not rotate the city");
+const clamped = moveRiverPan(defaultView, RIVER_WILLIS, [0, 0], 1e6, -1e6);
+near(RIVER_WILLIS[0] + clamped[0], 1350, 0.001, "east mesh edge");
+near(RIVER_WILLIS[2] + clamped[1], 1470, 0.001, "south mesh edge");
+assert.equal(riverEntryZoom(0), .76);
+assert.ok(riverEntryZoom(475) > .76 && riverEntryZoom(475) < 1);
+assert.equal(riverEntryZoom(950), 1);
+console.log("atlas-river-environment-check: camera pan and entry zoom passed");

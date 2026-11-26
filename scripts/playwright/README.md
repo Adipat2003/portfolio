@@ -69,7 +69,11 @@ checked at desktop, short-laptop, tablet, phone and 320x740 widths. The position
 fixtures verify one poll, real-fix movement, reduced motion and honest fallback.
 Skyline checks cover the authored silhouettes and inline WebGL riverfront.
 At all nine viewports the rendered landmark must clear the trip strip and
-controls and remain prominent. The suite exercises a full rotation,
+controls and remain prominent. The opening scene is checked for automatic zoom, reduced-motion bypass,
+mouse and touch panning, the jump to the first project station, and camera
+restoration through Simple view and Projects. It combines snow, winter, and
+night before changing only time, and checks both CTA traces and station selection.
+The suite exercises a full rotation,
 keyboard tilt and zoom, mouse and touch drags, wheel scrolling back into the
 ride, phone orientation, visible focus and focus return. Controlled Skydeck
 and Midway responses verify the schedule and live conditions. The suite also

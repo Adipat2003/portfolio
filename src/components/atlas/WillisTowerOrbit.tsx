@@ -21,13 +21,15 @@ const glazing = Array.from({ length: 36 }, (_, cell) => {
 	return { x: column * WILLIS_BAY, y: row * WILLIS_FLOOR, shade };
 });
 
-export function orbitKeys(event: KeyboardEvent<Element>, adjust: TowerOrbit["adjust"]) {
+export type PanView = (right: number, forward: number) => void;
+
+export function orbitKeys(event: KeyboardEvent<Element>, adjust: TowerOrbit["adjust"], pan?: PanView) {
 	if (event.altKey || event.ctrlKey || event.metaKey) return;
 	switch (event.key) {
-		case "ArrowLeft": adjust(-15, 0); break;
-		case "ArrowRight": adjust(15, 0); break;
-		case "ArrowUp": adjust(0, 10); break;
-		case "ArrowDown": adjust(0, -10); break;
+		case "ArrowLeft": pan ? pan(-50, 0) : adjust(-15, 0); break;
+		case "ArrowRight": pan ? pan(50, 0) : adjust(15, 0); break;
+		case "ArrowUp": pan ? pan(0, 50) : adjust(0, 10); break;
+		case "ArrowDown": pan ? pan(0, -50) : adjust(0, -10); break;
 		case "+": case "=": adjust(0, 0, 1.2); break;
 		case "-": adjust(0, 0, 1 / 1.2); break;
 		default: return;
@@ -177,15 +179,15 @@ export default function WillisTowerOrbit({ view, adjust, lighting, close }: Towe
 	);
 }
 
-export function TowerOrbitControls({ view, adjust, reset, lighting, showLighting = true }: TowerOrbit & { showLighting?: boolean }) {
+export function TowerOrbitControls({ view, adjust, reset, lighting, showLighting = true, pan }: TowerOrbit & { showLighting?: boolean; pan?: PanView }) {
 	return (
-		<div className="tower-orbit-tools" onKeyDown={(event) => orbitKeys(event, adjust)}>
-			<p id="atlas-tower-orbit-help">Drag to orbit. Use the arrow keys or controls to rotate and tilt.</p>
+		<div className="tower-orbit-tools" onKeyDown={(event) => orbitKeys(event, adjust, pan)}>
+			<p id="atlas-tower-orbit-help">{pan ? "Drag or use the arrow keys to pan." : "Drag or use the arrow keys to orbit."}</p>
 			<div className="tower-orbit-controls" role="group" aria-label="Tower view controls">
-				<button type="button" aria-label="Rotate left" onClick={() => adjust(-30, 0)}>←</button>
-				<button type="button" aria-label="Rotate right" onClick={() => adjust(30, 0)}>→</button>
-				<button type="button" aria-label="Tilt up" disabled={view.pitch >= 78} onClick={() => adjust(0, 15)}>↑</button>
-				<button type="button" aria-label="Tilt down" disabled={view.pitch <= 0} onClick={() => adjust(0, -15)}>↓</button>
+				<button type="button" aria-label={pan ? "Pan left" : "Rotate left"} onClick={() => pan ? pan(-80, 0) : adjust(-30, 0)}>←</button>
+				<button type="button" aria-label={pan ? "Pan right" : "Rotate right"} onClick={() => pan ? pan(80, 0) : adjust(30, 0)}>→</button>
+				<button type="button" aria-label={pan ? "Pan forward" : "Tilt up"} disabled={!pan && view.pitch >= 78} onClick={() => pan ? pan(0, 80) : adjust(0, 15)}>↑</button>
+				<button type="button" aria-label={pan ? "Pan backward" : "Tilt down"} disabled={!pan && view.pitch <= 0} onClick={() => pan ? pan(0, -80) : adjust(0, -15)}>↓</button>
 				<button type="button" aria-label="Zoom out" disabled={view.zoom <= .75} onClick={() => adjust(0, 0, 1 / 1.2)}>−</button>
 				<button type="button" aria-label="Zoom in" disabled={view.zoom >= WILLIS_ORBIT_MAX_ZOOM} onClick={() => adjust(0, 0, 1.2)}>+</button>
 				<button type="button" aria-label="Reset view" onClick={reset}>↺</button>

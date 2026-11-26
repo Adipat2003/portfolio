@@ -170,8 +170,8 @@ async function checkMatrix(page, viewports) {
 		await page.keyboard.press("Enter");
 		const model = page.locator(".willis-riverfront[data-renderer=ready] .riverfront-canvas");
 		await model.waitFor();
-		await page.getByLabel("Conditions").selectOption("daylight");
-		await page.locator(".riverfront-status[data-mode=daylight]").waitFor();
+		await page.getByLabel("Time").selectOption("daylight");
+		await page.locator(".willis-riverfront[data-time=daylight]").waitFor();
 		const waterfront = await readWaterfrontGeometry(page);
 		assert.ok(waterfront.fits && waterfront.anchored && waterfront.prominent,
 			`${viewport.name}: the tower stays above the river, fills the scene and clears its controls: ${JSON.stringify(waterfront)}`);
@@ -451,7 +451,7 @@ try {
 			"0s",
 			"Atlas transitions respect reduced motion",
 		);
-		await motionPage.getByRole("button", { name: "Jump to Offline sync engine" }).click();
+		await motionPage.getByRole("button", { name: "View projects" }).click();
 		await motionPage.waitForFunction(() => document.querySelector(".trip-stop.hit")?.getAttribute("aria-label") === "Jump to Offline sync engine");
 		await motionPage.getByRole("button", { name: /Willis Tower:/ }).evaluate((tower) => tower.focus({ preventScroll: true }));
 		await motionPage.keyboard.press("Enter");
@@ -460,6 +460,14 @@ try {
 		assert.equal(await motionPage.locator(".willis-riverfront").evaluate((element) => getComputedStyle(element).animationName),
 			"none", "reduced motion shows the inline tower immediately");
 		await motionPage.close();
+
+		const stillOpening = await browser.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion: "reduce" });
+		await mockStreetTiles(stillOpening);
+		await stillOpening.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
+		const stillCanvas = stillOpening.locator(".willis-riverfront[data-entry=true][data-renderer=ready] .riverfront-canvas");
+		await stillCanvas.waitFor();
+		assert.equal(await stillCanvas.getAttribute("data-render-zoom"), "1.0000", "reduced motion skips the opening zoom");
+		await stillOpening.close();
 
 		const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 		await mockStreetTiles(page);
@@ -496,11 +504,92 @@ try {
 		await page.locator("#btn-atlas").click();
 		await page.waitForFunction(() => document.title.includes("The Atlas"));
 		assert.equal(new URL(page.url()).hash, "#atlas");
+		const opening = page.locator(".willis-riverfront[data-entry=true]");
+		await opening.getByRole("heading", { name: "Chicago riverfront", level: 1 }).waitFor();
+		const openingCanvas = opening.locator(".riverfront-canvas");
+		await opening.locator(".riverfront-canvas[data-initial-zoom]").waitFor();
+		assert.equal(await openingCanvas.getAttribute("data-initial-zoom"), "0.7600", "the first rendered scene starts wide");
+		await page.waitForFunction(() => document.querySelector(".riverfront-canvas")?.dataset.renderZoom === "1.0000");
+		await opening.getByLabel("Time").selectOption("daylight");
+		await capture(page, "atlas-opening-desktop");
+		assert.ok(await openingCanvas.evaluate((canvas) => canvas.width >= canvas.clientWidth), "desktop city renders at native width");
+		assert.equal(await opening.getByLabel("Drag").inputValue(), "pan");
+		const openingGrip = await towerGrip(openingCanvas);
+		const openingYaw = await openingCanvas.getAttribute("data-yaw");
+		await page.mouse.move(openingGrip.x, openingGrip.y);
+		await page.mouse.down();
+		await page.mouse.move(openingGrip.x + 72, openingGrip.y + 35, { steps: 6 });
+		await page.mouse.up();
+		await page.waitForFunction(() => {
+			const p = document.querySelector(".riverfront-canvas")?.dataset.pan?.split(",").map(Number);
+			return p && Math.abs(p[0]) > 20 && Math.abs(p[1]) > 20;
+		});
+		assert.equal(await openingCanvas.getAttribute("data-yaw"), openingYaw, "panning moves the camera without rotating the city");
+		const [eastBefore, southBefore] = (await openingCanvas.getAttribute("data-pan")).split(",").map(Number);
+		await openingCanvas.press("ArrowLeft");
+		await page.waitForFunction(([east, south]) => {
+			const [x, z] = (document.querySelector(".riverfront-canvas")?.dataset.pan ?? "").split(",").map(Number);
+			return Math.abs(x - (east - 50)) < .01 && Math.abs(z - south) < .01;
+		}, [eastBefore, southBefore]);
+		const panned = await openingCanvas.getAttribute("data-pan");
+		await opening.getByLabel("Drag").selectOption("orbit");
+		await openingCanvas.press("ArrowRight");
+		assert.notEqual(await openingCanvas.getAttribute("data-yaw"), openingYaw, "orbit rotates around the panned view");
+		assert.equal(await openingCanvas.getAttribute("data-pan"), panned);
+		await opening.getByLabel("Weather").selectOption("snow");
+		await opening.getByLabel("Season").selectOption("winter");
+		await opening.getByLabel("Time").selectOption("night");
+		await page.waitForFunction(() => {
+			const scene = document.querySelector(".riverfront-canvas");
+			return scene?.dataset.weather === "snow" && Number(scene.dataset.snow) > .8 &&
+				Number(scene.dataset.foliage) < .01 && Number(scene.dataset.frame?.split(":")[4]) < -15;
+		});
+		await capture(page, "atlas-winter-snow-night");
+		await opening.getByLabel("Time").selectOption("dawn");
+		await page.waitForFunction(() => {
+			const scene = document.querySelector(".riverfront-canvas");
+			const altitude = Number(scene?.dataset.frame?.split(":")[4]);
+			return scene?.dataset.weather === "snow" && Number(scene.dataset.foliage) < .01 && altitude < -2 && altitude > -8;
+		});
+		await opening.getByRole("button", { name: "Simple view" }).click();
+		await opening.waitFor({ state: "detached" });
+		await page.getByRole("heading", { name: "Take the scenic route." }).waitFor();
 		const introTower = page.getByRole("button", { name: "Explore the riverfront in 3D" });
 		await introTower.click();
-		await page.getByRole("heading", { name: "Willis Tower", exact: true }).waitFor();
-		await page.getByRole("button", { name: "Back to the ride" }).click();
-		assert.ok(await introTower.evaluate((button) => document.activeElement === button), "closing the waterfront returns focus to its intro button");
+		await openingCanvas.waitFor();
+		await page.waitForFunction((before) => document.querySelector(".riverfront-canvas")?.dataset.pan === before, panned);
+		assert.equal(await openingCanvas.getAttribute("data-initial-zoom"), "1.0000", "returning skips the opening zoom");
+		assert.equal(await opening.getByLabel("Weather").inputValue(), "snow");
+		assert.equal(await opening.getByLabel("Season").inputValue(), "winter");
+
+		await opening.getByRole("button", { name: "Reset view" }).click();
+		await page.waitForFunction(() => document.querySelector(".riverfront-canvas")?.dataset.pan === "0,0");
+		await opening.getByLabel("Weather").selectOption("clear");
+		await opening.getByLabel("Time").selectOption("daylight");
+		await opening.getByLabel("CTA subway").check();
+		const cta = opening.getByRole("group", { name: "CTA Red and Blue subway routes" });
+		await cta.waitFor();
+		await page.waitForFunction(() => [...document.querySelectorAll(".cta-route-line")].length === 2 &&
+			[...document.querySelectorAll(".cta-route-line")].every((line) => line.getAttribute("d")?.includes("L")));
+		assert.equal(await cta.locator('[data-stop-index]').count(), 13, "all downtown Red and Blue stops are plotted");
+		const stop = cta.getByRole("button").first();
+		await stop.press("Enter");
+		assert.equal(await stop.getAttribute("aria-pressed"), "true");
+		await capture(page, "atlas-cta-subway");
+		await opening.getByRole("button", { name: "View projects" }).click();
+		await opening.waitFor({ state: "detached" });
+		const firstProject = page.locator(".ride-overlay .station-card h3 a");
+		await firstProject.waitFor();
+		assert.equal(await firstProject.getAttribute("href"), "/portfolio/projects/offline-sync-engine/");
+		assert.ok(await firstProject.evaluate((link) => document.activeElement === link), "project view receives focus");
+		await page.getByRole("button", { name: "3D city", exact: true }).click();
+		await opening.waitFor();
+		await opening.getByLabel("CTA subway").waitFor();
+		assert.ok(await opening.getByLabel("CTA subway").isChecked(), "returning from projects restores the CTA layer");
+		await opening.getByRole("button", { name: "View projects" }).click();
+		await firstProject.waitFor();
+		await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+		await page.locator(".skip-ride").waitFor();
 		await page.locator(".skip-ride").click();
 		await page.waitForFunction(() => window.scrollY > 1000);
 		assert.ok(await page.locator(".rail-network").evaluate((element) => { const top = element.getBoundingClientRect().top; return top <= 1 && top >= -10; }), "Skip the ride places the full-screen network in view before the closing footer");
@@ -594,7 +683,7 @@ try {
 		assert.match(await lightingNote.getByRole("link").getAttribute("href"), /theskydeck\.com\/willis-tower-antennas-and-lights/);
 		await page.waitForFunction(() => document.querySelector(".riverfront-canvas")?.dataset.mastColors === "#e24353,#33333b");
 		await page.getByText(/^Midway · Mostly Cloudy · /).waitFor();
-		const conditions = page.getByLabel("Conditions");
+		const conditions = page.getByLabel("Time");
 		await conditions.selectOption("daylight");
 		const facing = () => tower.getAttribute("data-frame");
 		await page.waitForFunction(() => Number(document.querySelector(".riverfront-canvas")?.dataset.frame?.split(":")[4]) > 10);
@@ -602,11 +691,12 @@ try {
 		await conditions.selectOption("dusk");
 		await page.waitForFunction(() => Number(document.querySelector(".riverfront-canvas")?.dataset.frame?.split(":")[4]) < -4);
 		await capture(page, "riverfront-blue-hour");
-		await conditions.selectOption("snow");
-		assert.equal(await page.locator(".riverfront-status").innerText(), "Simulated conditions");
+		await page.getByLabel("Weather").selectOption("snow");
+		await page.waitForFunction(() => document.querySelector(".riverfront-canvas")?.dataset.weather === "snow");
 		await capture(page, "riverfront-snow");
-		await conditions.selectOption("autumn");
-		await page.locator(".riverfront-status[data-mode=autumn]").waitFor();
+		await page.getByLabel("Season").selectOption("autumn");
+		await page.locator(".willis-riverfront[data-season=autumn]").waitFor();
+		await page.getByLabel("Weather").selectOption("clear");
 		await conditions.selectOption("daylight");
 		await page.getByLabel("Landmark").selectOption("marina");
 		await page.getByRole("heading", { name: "Marina City", exact: true }).waitFor();
@@ -835,9 +925,28 @@ try {
 		touchPage.on("pageerror", (error) => errors.push(error.message));
 		await touchPage.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
 		await touchPage.waitForSelector("#view-atlas");
-		await capture(touchPage, "atlas-intro-phone");
-		await touchPage.locator(".ride").evaluate((element) => element.scrollIntoView({ block: "start" }));
 		const touchSession = await touchContext.newCDPSession(touchPage);
+		const mobileOpening = touchPage.locator(".willis-riverfront[data-entry=true][data-renderer=ready]");
+		await mobileOpening.waitFor();
+		await mobileOpening.getByLabel("Time").selectOption("daylight");
+		const ctaControl = await mobileOpening.getByLabel("CTA subway").boundingBox();
+		assert.ok(ctaControl && ctaControl.y >= 0 && ctaControl.y + ctaControl.height <= 844, "CTA toggle fits on the opening phone view");
+		await capture(touchPage, "atlas-intro-phone");
+		const openingPhoneGrip = await towerGrip(mobileOpening.locator(".riverfront-canvas"));
+		const openingScroll = await touchPage.evaluate(() => scrollY);
+		await touchSession.send("Input.dispatchTouchEvent", {
+			type: "touchStart", touchPoints: [{ id: 5, x: openingPhoneGrip.x, y: openingPhoneGrip.y }],
+		});
+		await touchSession.send("Input.dispatchTouchEvent", {
+			type: "touchMove", touchPoints: [{ id: 5, x: openingPhoneGrip.x - 65, y: openingPhoneGrip.y + 32 }],
+		});
+		await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+		await touchPage.waitForFunction(() => Math.abs(Number(document.querySelector(".riverfront-canvas")?.dataset.pan?.split(",")[0])) > 20);
+		assert.equal(await touchPage.evaluate(() => scrollY), openingScroll, "touch pan keeps the opening scene in place");
+		await mobileOpening.getByRole("button", { name: "View projects" }).tap();
+		await touchPage.locator(".ride-overlay .station-card").waitFor();
+		await touchPage.locator(".ride").evaluate((element) => element.scrollIntoView({ block: "start", behavior: "instant" }));
+		await touchPage.waitForFunction(() => !document.querySelector(".trip-stop.hit"));
 		const swipedStops = [];
 		for (let gesture = 0; gesture < 2; gesture++) {
 			const before = await touchPage.evaluate(() => ({
@@ -856,7 +965,12 @@ try {
 			await touchPage.waitForFunction(({ y, stop }) => {
 				const active = document.querySelector(".trip-stop.hit")?.getAttribute("aria-label");
 				return scrollY > y + 300 && active && active !== stop;
-			}, before);
+			}, before).catch(async (error) => {
+				console.error("Touch phase before", before, "after", await touchPage.evaluate(() => ({
+					y: scrollY, stop: document.querySelector(".trip-stop.hit")?.getAttribute("aria-label"),
+				})));
+				throw error;
+			});
 			swipedStops.push(await touchPage.locator(".trip-stop.hit").getAttribute("aria-label"));
 		}
 		assert.notEqual(swipedStops[0], swipedStops[1], "phone swipes advance through distinct ride phases");
@@ -903,7 +1017,7 @@ try {
 		const phoneTower = touchPage.locator(".tower-orbit-model");
 		await touchPage.locator(".willis-riverfront[data-renderer=ready]").waitFor();
 		await phoneTower.waitFor();
-		await touchPage.getByLabel("Conditions").selectOption("daylight");
+		await touchPage.getByLabel("Time").selectOption("daylight");
 		await touchPage.locator(".willis-riverfront").evaluate((scene) =>
 			Promise.allSettled(scene.getAnimations().map((animation) => animation.finished)));
 		assert.ok((await readWaterfrontGeometry(touchPage)).fits, "the artwork and controls fit on the phone");
@@ -968,11 +1082,17 @@ try {
 			return bounds && bounds.top < innerHeight && bounds.bottom > 0;
 		});
 		await touchPage.locator(".rail-network").evaluate((element)=>element.scrollIntoView({block:"start"}));
-		await touchPage.locator('.rail-network[data-ready="true"]').waitFor();
+		await touchPage.locator('.rail-network[data-ready="true"][data-entered="true"][data-camera="idle"]').waitFor();
+		await touchPage.locator(".rail-map-svg").evaluate((svg) => {
+			const y = svg.getBoundingClientRect().top;
+			return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => {
+				resolve(y === svg.getBoundingClientRect().top);
+			})));
+		});
 		const beforePan = await touchPage.locator(".rail-map-svg").getAttribute("viewBox");
 		const panOrigin = await touchPage.locator(".rail-map-svg").evaluate((svg)=>{
 			const r=svg.getBoundingClientRect();
-			for(const [dx,dy] of [[65,65],[r.width-65,65],[65,r.height-65]]){
+			for(const [dx,dy] of [[65,r.height-100],[r.width-65,r.height-100],[65,100]]){
 				const x=r.x+dx,y=r.y+dy,hit=document.elementFromPoint(x,y);
 				if(hit?.closest("svg")===svg && !hit.closest('[role="button"]'))return {x,y};
 			}
@@ -980,10 +1100,14 @@ try {
 		});
 		const scrollBeforePan=await touchPage.evaluate(()=>scrollY);
 		await touchSession.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[{id:2,x:panOrigin.x,y:panOrigin.y}]});
-		await touchSession.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[{id:2,x:panOrigin.x-45,y:panOrigin.y-55}]});
+		for (const distance of [1 / 3, 2 / 3, 1]) {
+			await touchSession.send("Input.dispatchTouchEvent", {
+				type: "touchMove", touchPoints: [{ id: 2, x: panOrigin.x - 45 * distance, y: panOrigin.y - 55 * distance }],
+			});
+			await touchPage.waitForTimeout(40);
+		}
 		await touchSession.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
-		await touchPage.waitForTimeout(100);
-		assert.notEqual(await touchPage.locator(".rail-map-svg").getAttribute("viewBox"),beforePan,"full-screen map pans with a touch drag");
+		await touchPage.waitForFunction((before) => document.querySelector(".rail-map-svg")?.getAttribute("viewBox") !== before, beforePan, { timeout: 3000 });
 		assert.equal(await touchPage.evaluate(()=>scrollY),scrollBeforePan,"map drag does not move the page");
 		await capture(touchPage, "network-end-phone");
 		await touchPage.locator(".atlas-end").scrollIntoViewIfNeeded();
