@@ -21,7 +21,7 @@ const glazing = Array.from({ length: 36 }, (_, cell) => {
 	return { x: column * WILLIS_BAY, y: row * WILLIS_FLOOR, shade };
 });
 
-function orbitKeys(event: KeyboardEvent<Element>, adjust: TowerOrbit["adjust"]) {
+export function orbitKeys(event: KeyboardEvent<Element>, adjust: TowerOrbit["adjust"]) {
 	if (event.altKey || event.ctrlKey || event.metaKey) return;
 	switch (event.key) {
 		case "ArrowLeft": adjust(-15, 0); break;
@@ -177,7 +177,7 @@ export default function WillisTowerOrbit({ view, adjust, lighting, close }: Towe
 	);
 }
 
-export function TowerOrbitControls({ view, adjust, reset, lighting }: TowerOrbit) {
+export function TowerOrbitControls({ view, adjust, reset, lighting, showLighting = true }: TowerOrbit & { showLighting?: boolean }) {
 	return (
 		<div className="tower-orbit-tools" onKeyDown={(event) => orbitKeys(event, adjust)}>
 			<p id="atlas-tower-orbit-help">Drag to orbit. Use the arrow keys or controls to rotate and tilt.</p>
@@ -190,7 +190,7 @@ export function TowerOrbitControls({ view, adjust, reset, lighting }: TowerOrbit
 				<button type="button" aria-label="Zoom in" disabled={view.zoom >= WILLIS_ORBIT_MAX_ZOOM} onClick={() => adjust(0, 0, 1.2)}>+</button>
 				<button type="button" aria-label="Reset view" onClick={reset}>↺</button>
 			</div>
-			<WillisLightingNote lighting={lighting} />
+			{showLighting ? <WillisLightingNote lighting={lighting} /> : null}
 		</div>
 	);
 }

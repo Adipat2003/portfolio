@@ -32,6 +32,7 @@ jobs:
         run: |
           node scripts/bite-check.mjs
           node scripts/season-check.mjs
+          node scripts/atlas-river-environment-check.mjs
           node scripts/ask-check.mjs
           node scripts/chicago-check.mjs
           node scripts/art-export.mjs --check

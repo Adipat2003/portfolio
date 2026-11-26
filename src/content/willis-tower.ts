@@ -49,17 +49,19 @@ function walls(id: string, x: number, z: number, width: number, top: number, bot
 	});
 }
 
+const height = (floor: number) => ({ 50: 200, 66: 260, 90: 355, 110: ROOF_HEIGHT } as Record<number, number>)[floor] ?? 0;
+
 const towers = levels.flatMap((row, j) => row.map((floors, i) => {
 	const id = `tube-${i}-${j}`;
 	const x = (i - 1.5) * TUBE_WIDTH;
 	const z = (j - 1.5) * TUBE_WIDTH;
-	const top = floors * FLOOR_HEIGHT;
+	const top = height(floors);
 	const surfaces = [
-		...walls(id, x, z, TUBE_WIDTH, top, (dx, dz) => (levels[j + dz]?.[i + dx] ?? 0) * FLOOR_HEIGHT, "glass"),
+		...walls(id, x, z, TUBE_WIDTH, top, (dx, dz) => height(levels[j + dz]?.[i + dx] ?? 0), "glass"),
 		roof(`${id}-roof`, x, z, top, TUBE_WIDTH, "roof"),
 	];
 	if (floors === 110) {
-		const tip = i === 0 ? 527 : 520;
+		const tip = i === 0 ? 527 : 520.3;
 		const centerX = x + TUBE_WIDTH / 2;
 		const centerZ = z + TUBE_WIDTH / 2;
 		const sections = [
@@ -79,6 +81,24 @@ const towers = levels.flatMap((row, j) => row.map((floors, i) => {
 	return { x: x + TUBE_WIDTH / 2, z: z + TUBE_WIDTH / 2, surfaces };
 }));
 
+export function addWillisTower(vertices: number[], x: number, z: number) {
+	const ground = -6;
+	const materials: Record<Material, number> = { glass: 3, roof: 0, metal: 0, antenna: 6, beacon: 6 };
+	for (const { surfaces } of towers) {
+		for (const surface of surfaces) {
+			const { origin, along, up, normal, width, top, bottom, material } = surface;
+			for (const [u, v] of [[0, bottom], [width, bottom], [width, top], [0, bottom], [width, top], [0, top]]) {
+				vertices.push(
+					x + origin[0] + along[0] * u + up[0] * v,
+					ground + origin[1] + along[1] * u + up[1] * v,
+					z + origin[2] + along[2] * u + up[2] * v,
+					...normal, materials[material], .25,
+				);
+			}
+		}
+	}
+}
+
 export const WILLIS_TOWER = "Willis Tower";
 export const WILLIS_BAY = TUBE_WIDTH / 6;
 export const WILLIS_FLOOR = FLOOR_HEIGHT;
@@ -90,7 +110,7 @@ export type OrbitView = typeof WILLIS_ORBIT_DEFAULT;
 
 export function moveOrbit(view: OrbitView, yaw: number, pitch: number, zoom = 1): OrbitView {
 	return {
-		yaw: (view.yaw + yaw) % 360,
+		yaw: ((view.yaw + yaw + 180) % 360 + 360) % 360 - 180,
 		pitch: Math.max(0, Math.min(78, view.pitch + pitch)),
 		zoom: Math.max(.75, Math.min(WILLIS_ORBIT_MAX_ZOOM, view.zoom * zoom)),
 	};

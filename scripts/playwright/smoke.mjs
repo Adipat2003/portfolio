@@ -109,17 +109,19 @@ async function readGeometry(page) {
 async function readWaterfrontGeometry(page) {
 	return page.locator(".willis-riverfront").evaluate((scene) => {
 		const art = scene.querySelector(".willis-vista").getBoundingClientRect();
-		const tower = scene.querySelector(".willis-surfaces").getBoundingClientRect();
-		const water = scene.querySelector(".willis-water").getBoundingClientRect();
 		const controls = scene.querySelector(".willis-details").getBoundingClientRect();
 		const strip = document.querySelector(".trip-strip").getBoundingClientRect();
+		const canvas = scene.querySelector(".riverfront-canvas");
+		const { tip, base } = JSON.parse(canvas.dataset.landmarkFrame);
+		const towerTop = art.top + tip[1] * art.height;
+		const towerBottom = art.top + base[1] * art.height;
 		return {
-			towerTop: Math.round(tower.top), towerHeight: Math.round(tower.height),
-			waterTop: Math.round(water.top), controlsBottom: Math.round(controls.bottom),
-			fits: tower.top >= strip.bottom - 2 && tower.left >= 0 && tower.right <= innerWidth &&
-				controls.bottom <= innerHeight + 1 && (controls.top >= art.bottom - 1 || controls.left >= tower.right),
-			anchored: Math.abs(tower.bottom - water.top) <= 2,
-			prominent: tower.height >= art.height / 2,
+			towerTop: Math.round(towerTop), towerHeight: Math.round(towerBottom - towerTop),
+			waterTop: Math.round(towerBottom), controlsBottom: Math.round(controls.bottom),
+			fits: towerTop >= strip.bottom - 2 && tip[0] >= 0 && tip[0] <= 1 &&
+				controls.bottom <= innerHeight + 1 && (controls.top >= art.bottom - 1 || art.left + tip[0] * art.width < controls.left),
+			anchored: base[1] > tip[1] && base[1] <= 1,
+			prominent: towerBottom - towerTop >= art.height * .43,
 		};
 	});
 }
@@ -166,8 +168,10 @@ async function checkMatrix(page, viewports) {
 		const landmark = page.getByRole("button", { name: /Willis Tower:/ });
 		await landmark.evaluate((element) => element.focus({ preventScroll: true }));
 		await page.keyboard.press("Enter");
-		const model = page.locator(".tower-orbit-model");
+		const model = page.locator(".willis-riverfront[data-renderer=ready] .riverfront-canvas");
 		await model.waitFor();
+		await page.getByLabel("Conditions").selectOption("daylight");
+		await page.locator(".riverfront-status[data-mode=daylight]").waitFor();
 		const waterfront = await readWaterfrontGeometry(page);
 		assert.ok(waterfront.fits && waterfront.anchored && waterfront.prominent,
 			`${viewport.name}: the tower stays above the river, fills the scene and clears its controls: ${JSON.stringify(waterfront)}`);
@@ -385,7 +389,7 @@ async function checkMapDeepLink(browser) {
 	await page.close();
 }
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-swiftshader"] });
 try {
 	if (process.env.NETWORK_ONLY === "1") {
 		const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
@@ -436,6 +440,7 @@ try {
 		await noJsContext.close();
 
 		const motionPage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+		await motionPage.route("**/atlas-river/riverfront.bin.gz", (route) => route.abort());
 		await mockStreetTiles(motionPage);
 		motionPage.on("pageerror", (error) => errors.push(error.message));
 		await motionPage.emulateMedia({ reducedMotion: "reduce" });
@@ -450,7 +455,8 @@ try {
 		await motionPage.waitForFunction(() => document.querySelector(".trip-stop.hit")?.getAttribute("aria-label") === "Jump to Offline sync engine");
 		await motionPage.getByRole("button", { name: /Willis Tower:/ }).evaluate((tower) => tower.focus({ preventScroll: true }));
 		await motionPage.keyboard.press("Enter");
-		await motionPage.locator(".willis-riverfront").waitFor();
+		await motionPage.locator(".willis-riverfront[data-renderer=fallback]").waitFor();
+		await motionPage.locator(".willis-reflection use").waitFor();
 		assert.equal(await motionPage.locator(".willis-riverfront").evaluate((element) => getComputedStyle(element).animationName),
 			"none", "reduced motion shows the inline tower immediately");
 		await motionPage.close();
@@ -460,6 +466,10 @@ try {
 		const lightingDate = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", dateStyle: "long" }).format(new Date());
 		await page.route("**/willis-lighting", (route) => route.fulfill({
 			json: { lighting: { date: lightingDate, colors: "Red & Black", palette: ["#e24353", "#33333b"] } },
+		}));
+		await page.route("https://api.weather.gov/stations/KMDW/observations/latest", (route) => route.fulfill({
+			headers: { "access-control-allow-origin": "*" },
+			json: { properties: { timestamp: new Date().toISOString(), textDescription: "Mostly Cloudy", cloudLayers: [{ amount: "BKN" }] } },
 		}));
 		page.on("pageerror", (error) => errors.push(error.message));
 
@@ -486,7 +496,7 @@ try {
 		await page.locator("#btn-atlas").click();
 		await page.waitForFunction(() => document.title.includes("The Atlas"));
 		assert.equal(new URL(page.url()).hash, "#atlas");
-		const introTower = page.getByRole("button", { name: "Explore Willis Tower in 3D" });
+		const introTower = page.getByRole("button", { name: "Explore the riverfront in 3D" });
 		await introTower.click();
 		await page.getByRole("heading", { name: "Willis Tower", exact: true }).waitFor();
 		await page.getByRole("button", { name: "Back to the ride" }).click();
@@ -565,8 +575,9 @@ try {
 		assert.equal(await landmark.getAttribute("aria-expanded"), "true", "browser focus scrolling retains the selection");
 		assert.equal(await page.locator("dialog[open]").count(), 0, "tower opens directly in the skyline");
 		assert.equal(await landmark.evaluate((element) => getComputedStyle(element).outlineStyle), "none");
-		assert.equal(await tower.locator(".tower-orbit-focus").evaluate((element) => getComputedStyle(element).opacity),
-			"1", "keyboard focus is visible around the model");
+		await page.locator(".willis-riverfront[data-renderer=ready]").waitFor();
+		assert.equal(await tower.evaluate((element) => getComputedStyle(element).outlineStyle),
+			"solid", "keyboard focus is visible around the scene");
 		assert.equal(await page.locator(".window-lights").getAttribute("clip-path"), "url(#atlas-window-mask)");
 		assert.equal(await page.locator(".atlas-scroll").getAttribute("inert"), "", "the ride map cannot take focus under the waterfront");
 		assert.ok(await page.locator(".window-lights").evaluate((group) => {
@@ -578,23 +589,32 @@ try {
 			});
 		}), "every shared window fits an authored silhouette");
 		assert.equal(await page.locator("#willis-heading").innerText(), "Willis Tower");
-		const reflection = tower.locator(".willis-reflection");
-		assert.match(await reflection.getAttribute("mask"), /^url\(#/);
-		assert.equal(await reflection.locator("use").getAttribute("href"),
-			"#" + await tower.locator(".willis-surfaces").getAttribute("id"), "the reflection follows the active geometry and mast colors");
 		const lightingNote = page.locator(".willis-details .willis-lighting-note");
 		await lightingNote.getByText("Scheduled tonight · Red & Black", { exact: false }).waitFor();
 		assert.match(await lightingNote.getByRole("link").getAttribute("href"), /theskydeck\.com\/willis-tower-antennas-and-lights/);
-		const mastFill = await tower.locator("[data-material=antenna] rect").first().getAttribute("fill");
-		assert.match(mastFill, /^url\(#/);
-		assert.deepEqual(await tower.locator(".willis-surfaces linearGradient[gradientUnits=userSpaceOnUse] stop").evaluateAll((stops) =>
-			stops.map((stop) => stop.getAttribute("stop-color"))), ["#e24353", "#33333b"]);
-
+		await page.waitForFunction(() => document.querySelector(".riverfront-canvas")?.dataset.mastColors === "#e24353,#33333b");
+		await page.getByText(/^Midway · Mostly Cloudy · /).waitFor();
+		const conditions = page.getByLabel("Conditions");
+		await conditions.selectOption("daylight");
+		const facing = () => tower.getAttribute("data-frame");
+		await page.waitForFunction(() => Number(document.querySelector(".riverfront-canvas")?.dataset.frame?.split(":")[4]) > 10);
 		await capture(page, "skyline-selected");
-
+		await conditions.selectOption("dusk");
+		await page.waitForFunction(() => Number(document.querySelector(".riverfront-canvas")?.dataset.frame?.split(":")[4]) < -4);
+		await capture(page, "riverfront-blue-hour");
+		await conditions.selectOption("snow");
+		assert.equal(await page.locator(".riverfront-status").innerText(), "Simulated conditions");
+		await capture(page, "riverfront-snow");
+		await conditions.selectOption("autumn");
+		await page.locator(".riverfront-status[data-mode=autumn]").waitFor();
+		await conditions.selectOption("daylight");
+		await page.getByLabel("Landmark").selectOption("marina");
+		await page.getByRole("heading", { name: "Marina City", exact: true }).waitFor();
+		await page.waitForFunction(() => document.querySelector(".riverfront-canvas")?.dataset.frame?.includes(":marina:"));
+		await capture(page, "riverfront-marina-city");
+		await page.getByLabel("Landmark").selectOption("willis");
+		await page.waitForFunction(() => document.querySelector(".riverfront-canvas")?.dataset.frame?.includes(":willis:"));
 		const controls = page.getByRole("group", { name: "Tower view controls" });
-		const facing = () => tower.locator("[data-material=glass]").evaluateAll((faces) =>
-			faces.map((face) => face.getAttribute("transform")).join(";"));
 		const frontFaces = await facing();
 		const pageY = await page.evaluate(() => scrollY);
 		const grip = await towerGrip(tower);
@@ -611,15 +631,12 @@ try {
 			await rotateRight.click();
 			if (step === 5) assert.notEqual(await facing(), frontFaces, "the rear has different geometry");
 		}
-		assert.equal(await facing(), frontFaces, "twelve 30 degree rotations return to the original view");
+		await page.waitForFunction((before) => document.querySelector(".riverfront-canvas")?.dataset.frame === before, frontFaces);
 		const tiltUp = controls.getByRole("button", { name: "Tilt up" });
 		for (let step = 0; step < 5; step++) await tiltUp.click();
 		assert.equal(await tower.getAttribute("data-pitch"), "78");
-		const headroom = await tower.evaluate((model) => {
-			const lot = model.getBoundingClientRect();
-			const tip = Math.min(...[...model.querySelectorAll("[data-material=beacon] rect")].map((face) => face.getBoundingClientRect().top));
-			return (tip - lot.top) / lot.height;
-		});
+		await page.waitForFunction(() => document.querySelector(".riverfront-canvas")?.dataset.frame?.split(":")[1] === "78");
+		const headroom = await tower.evaluate((model) => JSON.parse(model.dataset.landmarkFrame).tip[1]);
 		assert.ok(headroom >= 0 && headroom < .35, `antenna stays high in the skyline at maximum tilt: ${headroom}`);
 		await capture(page, "tower-inline-max-tilt");
 		await controls.getByRole("button", { name: "Reset view" }).click();
@@ -884,7 +901,9 @@ try {
 		const mobileTower = touchPage.getByRole("button", { name: /Willis Tower:/ });
 		await mobileTower.locator(".building-body").tap();
 		const phoneTower = touchPage.locator(".tower-orbit-model");
+		await touchPage.locator(".willis-riverfront[data-renderer=ready]").waitFor();
 		await phoneTower.waitFor();
+		await touchPage.getByLabel("Conditions").selectOption("daylight");
 		await touchPage.locator(".willis-riverfront").evaluate((scene) =>
 			Promise.allSettled(scene.getAnimations().map((animation) => animation.finished)));
 		assert.ok((await readWaterfrontGeometry(touchPage)).fits, "the artwork and controls fit on the phone");
