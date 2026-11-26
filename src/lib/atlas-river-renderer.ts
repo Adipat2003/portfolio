@@ -5,7 +5,7 @@ type RiverEnvironment = ReturnType<typeof getRiverEnvironment>;
 
 type Vec = readonly [number, number, number];
 export type RiverPan = readonly [east: number, south: number];
-export type RiverGuide = { point: RiverPan; progress: number };
+export type RiverGuide = { point: RiverPan; progress: number; orbitOrigin?: OrbitView };
 export const RIVER_CENTER: RiverPan = [0, 0];
 
 export const RIVER_WILLIS = [-282.44, 234, 657.10] as const;
@@ -16,20 +16,24 @@ export function riverCamera(view: OrbitView, target: Vec, aspect: number, pan: R
 	const ride = Math.min(1, Math.max(0, guide?.progress ?? 0));
 	const eased = ride * ride * (3 - 2 * ride);
 	// A stable diagonal view emphasizes the buildings and keeps both subway legs in context.
-	const heading = ((view.yaw + (willis ? 28 : 115)) * (1 - eased) - 33 * eased) * Math.PI / 180;
-	const tilt = ((view.pitch * .85 - (willis ? 6 : 17)) * (1 - eased) + 56 * eased) * Math.PI / 180;
+	const yaw = guide?.orbitOrigin ? view.yaw - guide.orbitOrigin.yaw : 0;
+	const pitch = guide?.orbitOrigin ? (view.pitch - guide.orbitOrigin.pitch) * .85 : 0;
+	const heading = ((view.yaw + (willis ? 28 : 115)) * (1 - eased) + (yaw - 33) * eased) * Math.PI / 180;
+	const tilt = Math.min(83, (view.pitch * .85 - (willis ? 6 : 17)) * (1 - eased) + (56 + pitch) * eased) * Math.PI / 180;
 	const cosTilt = Math.cos(tilt);
-	const distance = (((willis ? 740 : 230) / view.zoom) * (1 - eased) + 465 * eased) * Math.max(1, .72 / aspect);
+	const rideZoom = guide?.orbitOrigin ? view.zoom : 1;
+	const distance = (((willis ? 740 : 230) / view.zoom) * (1 - eased) + 465 * eased / rideZoom) * Math.max(1, .72 / aspect);
 	const focusX = target[0] * (1 - eased) + (guide?.point[0] ?? target[0]) * eased;
 	const focusY = target[1] * (1 - eased) + 36 * eased;
 	const focusZ = target[2] * (1 - eased) + (guide?.point[1] ?? target[2]) * eased;
 	const back: Vec = [Math.sin(heading) * cosTilt, Math.sin(tilt), Math.cos(heading) * cosTilt];
 	const right: Vec = [Math.cos(heading), 0, -Math.sin(heading)];
 	const up: Vec = [back[1] * right[2], cosTilt, -back[1] * right[0]];
+	const panWeight = guide?.orbitOrigin ? 1 : 1 - eased;
 	const eye: Vec = [
-		focusX + pan[0] * (1 - eased) + back[0] * distance,
+		focusX + pan[0] * panWeight + back[0] * distance,
 		focusY + back[1] * distance,
-		focusZ + pan[1] * (1 - eased) + back[2] * distance,
+		focusZ + pan[1] * panWeight + back[2] * distance,
 	];
 	const scale = .50;
 	const shift = aspect > 1.6 ? -.27 : 0;
@@ -43,17 +47,17 @@ export function riverCamera(view: OrbitView, target: Vec, aspect: number, pan: R
 			.5 - .5 * (x * up[0] + y * up[1] + z * up[2]) / (focal[1] * depth),
 		];
 	};
-	return { eye, right, up, back, focal, shift, project, depthOf, distance };
+	return { eye, right, up, back, focal, shift, project, depthOf, distance, focusX, focusZ };
 }
 
-export function moveRiverPan(view: OrbitView, target: Vec, pan: RiverPan, rightMetres: number, forwardMetres: number): RiverPan {
-	const { right } = riverCamera(view, target, 1);
-	const x = target[0] + pan[0] + right[0] * rightMetres + right[2] * forwardMetres;
-	const z = target[2] + pan[1] + right[2] * rightMetres - right[0] * forwardMetres;
+export function moveRiverPan(view: OrbitView, target: Vec, pan: RiverPan, rightMetres: number, forwardMetres: number, guide?: RiverGuide): RiverPan {
+	const { right, focusX, focusZ } = riverCamera(view, target, 1, RIVER_CENTER, guide);
+	const x = focusX + pan[0] + right[0] * rightMetres + right[2] * forwardMetres;
+	const z = focusZ + pan[1] + right[2] * rightMetres - right[0] * forwardMetres;
 	// Keep the focus inside the bundled downtown geometry.
 	return [
-		Math.min(1350, Math.max(-1270, x)) - target[0],
-		Math.min(1470, Math.max(-1360, z)) - target[2],
+		Math.min(1350, Math.max(-1270, x)) - focusX,
+		Math.min(1470, Math.max(-1360, z)) - focusZ,
 	];
 }
 

@@ -9,7 +9,7 @@ import { moveRiverPan, RIVER_CENTER, RIVER_MARINA, RIVER_WILLIS } from "@/lib/at
 import type { RiverPan } from "@/lib/atlas-river-renderer";
 import AtlasRiverfrontView from "./AtlasRiverfrontView";
 import { atlas, landmarkNote } from "@/content/load";
-import { WILLIS_TOWER } from "@/content/willis-tower";
+import { WILLIS_ORBIT_DEFAULT, WILLIS_TOWER } from "@/content/willis-tower";
 import WillisTowerOrbit, { TowerOrbitControls } from "./WillisTowerOrbit";
 import type { TowerOrbit } from "./WillisTowerOrbit";
 
@@ -132,6 +132,7 @@ export default function WillisRiverfront({
 	const [place, setPlace] = useState<"willis" | "marina">("willis");
 	const [dragMode, setDragMode] = useState<"pan" | "orbit">(entry ? "pan" : "orbit");
 	const [pan, setPan] = useState<RiverPan>(RIVER_CENTER);
+	const [exploreProgress, setExploreProgress] = useState(0);
 	const [time, setTime] = useState<RiverTime>("live");
 	const [weather, setWeather] = useState<RiverWeatherMode>("live");
 	const [season, setSeason] = useState<RiverSeason>("auto");
@@ -162,17 +163,26 @@ export default function WillisRiverfront({
 	}, [active]);
 
 	const target = place === "willis" ? RIVER_WILLIS : RIVER_MARINA;
+	const exploreGuide = exploreProgress > .02
+		? { ...guidedPosition(exploreProgress), progress: exploreProgress, orbitOrigin: WILLIS_ORBIT_DEFAULT }
+		: undefined;
 	const movePan = (right: number, forward: number) =>
-		setPan((position) => moveRiverPan(orbit.view, target, position, right, forward));
+		setPan((position) => moveRiverPan(orbit.view, target, position, right, forward, exploreGuide));
 	const resetView = () => {
+		setExploreProgress(0);
 		setPan(RIVER_CENTER);
 		orbit.reset();
 	};
-	function exploreFromRoute() {
-		if (guideProgress > .5) {
-			const { point } = guidedPosition(guideProgress);
-			setPan([point[0] - target[0], point[1] - target[2]]);
+	function exploreFromRoute(right = 0, forward = 0) {
+		setExploreProgress(guideProgress);
+		if (guideProgress > .02) {
+			const guide = { ...guidedPosition(guideProgress), progress: guideProgress, orbitOrigin: WILLIS_ORBIT_DEFAULT };
+			setPan(moveRiverPan(WILLIS_ORBIT_DEFAULT, target, RIVER_CENTER, right, forward, guide));
+			orbit.reset();
+		} else if (right || forward) {
+			setPan((position) => moveRiverPan(orbit.view, target, position, right, forward));
 		}
+		if (right || forward) setDragMode("pan");
 		explore?.();
 	}
 	const panControl = !guided && renderer === "ready" && dragMode === "pan" ? movePan : undefined;
@@ -243,7 +253,7 @@ export default function WillisRiverfront({
 		<section className="willis-riverfront" aria-labelledby="willis-heading" data-renderer={renderer} data-entry={entry} data-guided={guided} data-guide-stop={guideStop?.id} data-guide-card={atGuideStop} data-time={time} data-weather={weather} data-season={season}>
 			{renderer === "fallback" ? <IllustratedRiverfront orbit={orbit} close={close} /> :
 				<div className="willis-vista riverfront-vista">
-					<AtlasRiverfrontView orbit={orbit} env={env} place={place} close={close} status={(status) => {
+					<AtlasRiverfrontView orbit={orbit} env={env} place={place} close={entry && !guided && resume ? resume : close} status={(status) => {
 							if (status === "ready") hasOpened.current = true;
 							else if (entry) onFallback?.();
 							setRenderer(status);
@@ -251,6 +261,7 @@ export default function WillisRiverfront({
 						showCta={showCta || (guided && guideProgress > .25)} guided={guided} guideProgress={guideProgress}
 						guideStops={entry ? guidedStops.map(({ id }) => id) : undefined}
 						activeStop={guideStop?.id} selectStop={onStation}
+						exploreGuide={exploreGuide} exploreOnDrag={entry && guided ? exploreFromRoute : undefined}
 						snow={snow} />
 					{renderer === "ready" ? <a className="riverfront-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a> : null}
 				</div>}
@@ -268,13 +279,18 @@ export default function WillisRiverfront({
 							{guided ? (
 								<>
 									{!atGuideStop ? <button className="riverfront-projects" type="button" onClick={close}>Start ride <span aria-hidden="true">→</span></button> : null}
-									<button className="riverfront-simple" type="button" onClick={exploreFromRoute}>Explore</button>
+									<button className="riverfront-simple" type="button" onClick={() => exploreFromRoute()}>Explore</button>
 								</>
 							) : <button className="riverfront-projects" type="button" onClick={resume}>Resume ride <span aria-hidden="true">→</span></button>}
 							<button className="riverfront-simple" type="button" onClick={showSimple}>Simple view</button>
 						</div>
 						{guided ? <p id="atlas-riverfront-guide-help" className="riverfront-guide-help">
-							{guideStop?.id === "40070" ? "Transfer to the Red Line at Jackson." : "Scroll to ride, or select a station."}
+							{guideStop?.id === "40070" ? "Transfer to the Red Line at Jackson." : (
+								<>
+									<span className="riverfront-guide-pointer">Scroll to ride. Drag the city to explore.</span>
+									<span className="riverfront-guide-touch">Swipe up or down to ride. Drag sideways to explore.</span>
+								</>
+							)}
 						</p> : null}
 						{!atGuideStop ? <button type="button" className="riverfront-skip" onClick={skip}>Skip to the live map</button> : null}
 					</>

@@ -74,12 +74,30 @@ const legs = guidedStops.slice(1).map((stop, index) => {
 	return { segments, total };
 });
 
+const clampPosition = (position: number) => Math.min(guidedStops.length, Math.max(1, Number.isNaN(position) ? 1 : position));
+
 export function guidedPosition(position: number): { point: Point } {
-	const clamped = Math.min(guidedStops.length, Math.max(1, Number.isNaN(position) ? 1 : position));
+	const clamped = clampPosition(position);
 	if (Number.isInteger(clamped)) return { point: guidedStops[clamped - 1].point };
 	const index = Math.floor(clamped) - 1;
 	const { segments, total } = legs[index];
 	const meter = ((clamped - 1) % 1) * total;
 	const segment = segments.find(({ offset, length }) => meter <= offset + length);
 	return { point: segment ? interpolate(segment.start, segment.end, (meter - segment.offset) / segment.length) : guidedStops[index + 1].point };
+}
+
+export function guidedTrain(position: number) {
+	const clamped = clampPosition(position);
+	const station = Math.round(clamped);
+	// The document scroll position is rounded to a pixel at a station.
+	const progress = Math.abs(station - clamped) <= .002 ? station : clamped;
+	const blue = progress <= 4;
+	const transfer = progress > 4 && progress < 5;
+	const { point } = guidedPosition(progress);
+	return {
+		point, transfer,
+		color: guidedStops[blue ? 0 : 4].color,
+		start: guidedPosition(Math.max(blue ? 1 : 5, progress - .08)).point,
+		end: guidedPosition(Math.min(blue ? 4 : guidedStops.length, progress + .08)).point,
+	};
 }

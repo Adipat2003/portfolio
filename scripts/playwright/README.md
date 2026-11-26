@@ -72,7 +72,8 @@ At all nine viewports the rendered landmark must clear the trip strip and
 controls and remain prominent. The opening scene is checked for automatic zoom, reduced-motion bypass,
 mouse and touch panning, and camera restoration through Simple view and Explore.
 The 3D ride checks native scrolling, map selection, the project cards on both Jackson
-platforms, and return to the last stop from Explore. It combines snow, winter, and
+platforms, the moving train, automatic Explore on mouse and horizontal touch drags,
+and return to the same position between stations. It combines snow, winter, and
 night before changing only time, and checks both CTA traces and station selection.
 The suite exercises a full rotation,
 keyboard tilt and zoom, mouse and touch drags, wheel scrolling back into the

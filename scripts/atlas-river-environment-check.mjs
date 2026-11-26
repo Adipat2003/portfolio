@@ -116,8 +116,17 @@ assert.ok(riverEntryZoom(475) > .76 && riverEntryZoom(475) < 1);
 assert.equal(riverEntryZoom(950), 1);
 console.log("atlas-river-environment-check: camera pan and entry zoom passed");
 
-const jackson = riverCamera(defaultView, RIVER_WILLIS, 1.5, [0, 0], { point: [266, 735], progress: 4 });
+const blueJackson = { point: [266, 735], progress: 4 };
+const jackson = riverCamera(defaultView, RIVER_WILLIS, 1.5, [0, 0], blueJackson);
 assert.ok(jackson.eye[1] > 400, "the guided view stays above the Loop streets");
 near(jackson.project([266, 36, 735])[0], .5, 0.001, "camera centers on the mapped station");
 const state = riverCamera(defaultView, RIVER_WILLIS, 1.5, [0, 0], { point: [408, 738], progress: 5 });
 near(state.eye[0] - jackson.eye[0], 142, 0.001, "Jackson transfer spans Dearborn to State");
+
+const exploreGuide = { ...blueJackson, orbitOrigin: defaultView };
+const exploreAtJackson = riverCamera(defaultView, RIVER_WILLIS, 1.5, [0, 0], exploreGuide);
+assert.deepEqual(exploreAtJackson.eye, jackson.eye, "Explore starts at the guided camera");
+assert.deepEqual(exploreAtJackson.back, jackson.back, "Explore retains the guided camera angle");
+const dragged = moveRiverPan(defaultView, RIVER_WILLIS, [0, 0], 50, 0, exploreGuide);
+const exploreAfterDrag = riverCamera(defaultView, RIVER_WILLIS, 1.5, dragged, exploreGuide);
+near(Math.hypot(exploreAfterDrag.eye[0] - jackson.eye[0], exploreAfterDrag.eye[2] - jackson.eye[2]), 50, .001, "the first drag moves the guided camera");
