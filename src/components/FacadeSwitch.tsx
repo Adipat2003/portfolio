@@ -23,6 +23,7 @@ export default function FacadeSwitch() {
   const setFacadeWithHash = (next: "dispatch" | "atlas") => {
     setFacade(next);
     if (typeof window === "undefined") return;
+    if (next !== facade) window.scrollTo({ top: 0, behavior: "instant" });
     const nextHash = next === "atlas" ? "#atlas" : "";
     if (window.location.hash !== nextHash) {
       if (nextHash) {

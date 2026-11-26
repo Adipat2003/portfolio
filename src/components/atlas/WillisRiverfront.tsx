@@ -1,6 +1,10 @@
-import { useEffect, useId, useMemo, useState } from "react";
-import { fetchRiverObservation, getRiverEnvironment } from "@/lib/atlas-river-environment";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { fetchRiverObservation } from "@/lib/atlas-river-environment";
+import { riverPreview } from "@/lib/atlas-river-preview";
+import type { RiverTime, RiverWeatherMode, RiverSeason } from "@/lib/atlas-river-preview";
 import type { RiverObservation } from "@/lib/atlas-river-environment";
+import { moveRiverPan, RIVER_CENTER, RIVER_MARINA, RIVER_WILLIS } from "@/lib/atlas-river-renderer";
+import type { RiverPan } from "@/lib/atlas-river-renderer";
 import AtlasRiverfrontView from "./AtlasRiverfrontView";
 import { atlas, landmarkNote } from "@/content/load";
 import { WILLIS_TOWER } from "@/content/willis-tower";
@@ -103,39 +107,31 @@ function IllustratedRiverfront({ orbit, close }: { orbit: TowerOrbit; close: () 
 const chicagoTime = new Intl.DateTimeFormat("en-US", {
 	timeZone: "America/Chicago", hour: "numeric", minute: "2-digit", timeZoneName: "short",
 });
-const localParts = new Intl.DateTimeFormat("en-US", {
-	timeZone: "America/Chicago", year: "numeric", month: "numeric", day: "numeric",
-});
-const previewModes = ["live", "daylight", "dusk", "night", "rain", "snow", "spring", "summer", "autumn", "winter"] as const;
-type Preview = typeof previewModes[number];
-
-function previewTime(now: Date, mode: Preview) {
-	const parts = localParts.formatToParts(now);
-	const value = (type: string) => Number(parts.find((part) => part.type === type)?.value);
-	const year = value("year");
-	const season = { spring: [4, 5], summer: [6, 15], autumn: [9, 18], winter: [0, 20] } as const;
-	if (mode === "spring" || mode === "summer" || mode === "autumn" || mode === "winter") {
-		const [month, day] = season[mode];
-		return new Date(Date.UTC(year, month, day, 18));
-	}
-	const afternoon = Date.UTC(year, value("month") - 1, value("day"), 18);
-	if (mode === "night") return new Date(afternoon + 11 * 3600_000);
-	if (mode !== "dusk") return new Date(afternoon);
-	for (let minutes = 180; minutes <= 780; minutes += 5) {
-		const candidate = new Date(afternoon + minutes * 60_000);
-		if (getRiverEnvironment(candidate).sun.elevation < -4.5) return candidate;
-	}
-	return new Date(afternoon + 9 * 3600_000);
-}
-
-export default function WillisRiverfront({ orbit, close }: { orbit: TowerOrbit; close: () => void }) {
+export default function WillisRiverfront({ orbit, entry = false, active, close, showSimple }: {
+	orbit: TowerOrbit;
+	entry?: boolean;
+	active: boolean;
+	close: () => void;
+	showSimple?: () => void;
+}) {
 	const [renderer, setRenderer] = useState<"loading" | "ready" | "fallback">("loading");
 	const [place, setPlace] = useState<"willis" | "marina">("willis");
-	const [mode, setMode] = useState<Preview>("live");
+	const [dragMode, setDragMode] = useState<"pan" | "orbit">(entry ? "pan" : "orbit");
+	const [pan, setPan] = useState<RiverPan>(RIVER_CENTER);
+	const [time, setTime] = useState<RiverTime>("live");
+	const [weather, setWeather] = useState<RiverWeatherMode>("live");
+	const [season, setSeason] = useState<RiverSeason>("auto");
+	const [showCta, setShowCta] = useState(false);
+	const hasOpened = useRef(false);
 	const [now, setNow] = useState(() => new Date());
 	const [observation, setObservation] = useState<RiverObservation | null>(null);
 
 	useEffect(() => {
+		if (!active) {
+			setRenderer("loading");
+			return;
+		}
+		setNow(new Date());
 		const controller = new AbortController();
 		const refresh = async () => {
 			const latest = await fetchRiverObservation(controller.signal);
@@ -149,82 +145,114 @@ export default function WillisRiverfront({ orbit, close }: { orbit: TowerOrbit; 
 			window.clearInterval(clock);
 			window.clearInterval(weather);
 		};
-	}, []);
+	}, [active]);
 
-	const simulated = mode !== "live";
-	const env = useMemo(() => {
-		if (mode === "live") return getRiverEnvironment(now, observation);
-		const preview = getRiverEnvironment(previewTime(now, mode));
-		const wet = mode === "rain" || mode === "snow";
-		return { ...preview, weather: { ...preview.weather,
-			cloudCover: wet ? .96 : .14,
-			visibilityKm: mode === "rain" ? 4 : mode === "snow" ? 3 : 24,
-			windSpeedKmh: wet ? 21 : 8,
-			precipitation: wet ? mode : null,
-		} };
-	}, [mode, now, observation]);
+	const target = place === "willis" ? RIVER_WILLIS : RIVER_MARINA;
+	const movePan = (right: number, forward: number) =>
+		setPan((position) => moveRiverPan(orbit.view, target, position, right, forward));
+	const resetView = () => {
+		setPan(RIVER_CENTER);
+		orbit.reset();
+	};
+	const panControl = renderer === "ready" && dragMode === "pan" ? movePan : undefined;
+	const { env, snow, simulated } = useMemo(() =>
+		riverPreview(now, observation, time, weather, season), [now, observation, time, weather, season]);
+	if (!active) return null;
+
 	const visiblePlace = renderer === "fallback" ? "willis" : place;
 	const heading = visiblePlace === "willis" ? WILLIS_TOWER : "Marina City";
 	const landmark = visiblePlace === "willis" ? willis : atlas.buildings.find((building) => building.name === "Marina City (east)")!;
 	const note = landmarkNote(landmark.name);
 	const weatherStatus = renderer === "loading" ? "Loading riverfront…" :
 		renderer === "fallback" ? "Illustrated waterfront" :
-		simulated ? "Simulated conditions" :
+		weather !== "live" ? "Simulated weather" :
 		env.weather.status === "current" && env.weather.observedAt
 			? `Midway · ${env.weather.description ?? "Conditions reported"} · ${chicagoTime.format(new Date(env.weather.observedAt))}`
-			: "Midway weather unavailable · Chicago time";
+			: "Midway weather unavailable";
 
 	return (
-		<section className="willis-riverfront" aria-labelledby="willis-heading" data-renderer={renderer}>
+		<section className="willis-riverfront" aria-labelledby="willis-heading" data-renderer={renderer} data-entry={entry} data-time={time} data-weather={weather} data-season={season}>
 			{renderer === "fallback" ? <IllustratedRiverfront orbit={orbit} close={close} /> :
 				<div className="willis-vista riverfront-vista">
-					<AtlasRiverfrontView orbit={orbit} env={env} place={place} close={close} status={setRenderer}
-						snow={mode === "snow" ? .85 : 0} />
+					<AtlasRiverfrontView orbit={orbit} env={env} place={place} close={close} status={(status) => {
+							if (status === "ready") hasOpened.current = true;
+							setRenderer(status);
+						}} entry={entry} autoZoom={entry && !hasOpened.current} pan={pan} movePan={panControl} showCta={showCta}
+						snow={snow} />
 					{renderer === "ready" ? <a className="riverfront-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a> : null}
 				</div>}
 
 			<div className="willis-details">
-				<button className="tower-orbit-close" type="button" onClick={close}>
-					<span aria-hidden="true">←</span> Back to the ride
-				</button>
-				<h2 id="willis-heading">{heading}</h2>
-				<p className="willis-feature">{landmark.feature}</p>
-				{note ? <p className="willis-feature">{note}</p> : null}
+				{entry ? (
+					<>
+						<h1 id="willis-heading">Chicago riverfront</h1>
+						<div className="riverfront-entry-actions">
+							<button className="riverfront-projects" type="button" onClick={close}>View projects <span aria-hidden="true">→</span></button>
+							<button className="riverfront-simple" type="button" onClick={showSimple}>Simple view</button>
+						</div>
+					</>
+				) : (
+					<>
+						<button className="tower-orbit-close" type="button" onClick={close}><span aria-hidden="true">←</span> Back to the ride</button>
+						<h2 id="willis-heading">{heading}</h2>
+					</>
+				)}
+				{!entry ? <p className="willis-feature">{landmark.feature}</p> : null}
+				{note && !entry ? <p className="willis-feature">{note}</p> : null}
 				{renderer === "ready" ? (
 					<div className="riverfront-settings">
 						<label>Landmark
 							<select value={place} onChange={(event) => {
 								setPlace(event.currentTarget.value as typeof place);
-								orbit.reset();
+								resetView();
 							}}>
 								<option value="willis">Willis Tower</option>
 								<option value="marina">Marina City</option>
 							</select>
 						</label>
-						<label>Conditions
-							<select value={mode} onChange={(event) => setMode(event.currentTarget.value as Preview)}>
-								<option value="live">Live Chicago</option>
-								<optgroup label="Time of day">
-									<option value="daylight">Daylight</option>
-									<option value="dusk">Blue hour</option>
-									<option value="night">Night</option>
-								</optgroup>
-								<optgroup label="Weather preview">
-									<option value="rain">Rain preview</option>
-									<option value="snow">Snow preview</option>
-								</optgroup>
-								<optgroup label="Season preview">
-									<option value="spring">Spring</option>
-									<option value="summer">Summer</option>
-									<option value="autumn">Autumn</option>
-									<option value="winter">Winter</option>
-								</optgroup>
+						<label>Time
+							<select value={time} onChange={(event) => setTime(event.currentTarget.value as RiverTime)}>
+								<option value="live">Live time</option>
+								<option value="dawn">Dawn</option>
+								<option value="daylight">Daylight</option>
+								<option value="dusk">Blue hour</option>
+								<option value="night">Night</option>
+							</select>
+						</label>
+						<label>Weather
+							<select value={weather} onChange={(event) => setWeather(event.currentTarget.value as RiverWeatherMode)}>
+								<option value="live">Live weather</option>
+								<option value="clear">Clear</option>
+								<option value="overcast">Overcast</option>
+								<option value="rain">Rain</option>
+								<option value="snow">Snow</option>
+							</select>
+						</label>
+						<label>Season
+							<select value={season} onChange={(event) => setSeason(event.currentTarget.value as RiverSeason)}>
+								<option value="auto">Current season</option>
+								<option value="spring">Spring</option>
+								<option value="summer">Summer</option>
+								<option value="autumn">Autumn</option>
+								<option value="winter">Winter</option>
+							</select>
+						</label>
+						<label>Drag
+							<select value={dragMode} onChange={(event) => setDragMode(event.currentTarget.value as typeof dragMode)}>
+								<option value="pan">Pan</option>
+								<option value="orbit">Orbit</option>
 							</select>
 						</label>
 					</div>
 				) : null}
-				<TowerOrbitControls {...orbit} showLighting={visiblePlace === "willis"} />
-				<p className="riverfront-status" data-mode={mode}>{weatherStatus}</p>
+				<TowerOrbitControls {...orbit} reset={resetView} pan={panControl} showLighting={visiblePlace === "willis" && !entry} />
+				{renderer === "ready" ? (
+					<label className="riverfront-rail-toggle">
+						<input type="checkbox" checked={showCta} onChange={(event) => setShowCta(event.currentTarget.checked)} />
+						<span>CTA subway</span><i className="red" aria-hidden="true" /><i className="blue" aria-hidden="true" />
+					</label>
+				) : null}
+				<p className="riverfront-status">{simulated && weather === "live" ? "Preview · " : ""}{weatherStatus}</p>
 			</div>
 		</section>
 	);

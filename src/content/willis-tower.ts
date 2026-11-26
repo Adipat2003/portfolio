@@ -83,18 +83,49 @@ const towers = levels.flatMap((row, j) => row.map((floors, i) => {
 
 export function addWillisTower(vertices: number[], x: number, z: number) {
 	const ground = -6;
-	const materials: Record<Material, number> = { glass: 3, roof: 0, metal: 0, antenna: 6, beacon: 6 };
+	const materials: Record<Material, number> = { glass: 14, roof: 0, metal: 12, antenna: 6, beacon: 6 };
+
+	function face(surface: Surface, left: number, right: number, bottom: number, top: number, material: number, offset = 0) {
+		const { origin, along, up, normal } = surface;
+		const corners = [[left, bottom], [right, bottom], [right, top], [left, bottom], [right, top], [left, top]];
+		for (const [u, v] of corners) {
+			vertices.push(
+				x + origin[0] + along[0] * u + up[0] * v + normal[0] * offset,
+				ground + origin[1] + along[1] * u + up[1] * v + normal[1] * offset,
+				z + origin[2] + along[2] * u + up[2] * v + normal[2] * offset,
+				...normal, material, .25,
+			);
+		}
+	}
+
 	for (const { surfaces } of towers) {
 		for (const surface of surfaces) {
-			const { origin, along, up, normal, width, top, bottom, material } = surface;
-			for (const [u, v] of [[0, bottom], [width, bottom], [width, top], [0, bottom], [width, top], [0, top]]) {
-				vertices.push(
-					x + origin[0] + along[0] * u + up[0] * v,
-					ground + origin[1] + along[1] * u + up[1] * v,
-					z + origin[2] + along[2] * u + up[2] * v,
-					...normal, materials[material], .25,
-				);
+			const { width, top, bottom, material } = surface;
+			face(surface, 0, width, bottom, top, materials[material]);
+			if (material !== "glass") continue;
+
+			// The black aluminum frames project forward from the dark glazing.
+			for (let bay = 1; bay < 6; bay += 1) {
+				const u = bay * width / 6;
+				face(surface, u - .11, u + .11, bottom, top, 15, .14);
 			}
+			for (const level of WILLIS_BANDS) {
+				const low = Math.max(bottom, level - 2.3);
+				const high = Math.min(top, level + 2.3);
+				if (high > low) face(surface, 0, width, low, high, 15, .24);
+			}
+			face(surface, 0, width, Math.max(bottom, top - .72), top, 15, .20);
+		}
+	}
+
+	// The rooftop housings are simplified from photographs of the upper roof.
+	for (const [left, front, width, rise] of [[-33, -10, 5, 1.8], [-11, 5.8, 4.6, 2.1], [4.8, -9, 4.8, 1.5]]) {
+		const height = ROOF_HEIGHT + rise;
+		for (const surface of [
+			...walls("roof-housing", left, front, width, height, () => ROOF_HEIGHT, "metal"),
+			roof("roof-housing-top", left, front, height, width, "roof"),
+		]) {
+			face(surface, 0, surface.width, surface.bottom, surface.top, materials[surface.material]);
 		}
 	}
 }
