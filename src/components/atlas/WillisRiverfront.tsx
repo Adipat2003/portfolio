@@ -1,8 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { fetchRiverObservation } from "@/lib/atlas-river-environment";
 import { riverPreview } from "@/lib/atlas-river-preview";
 import type { RiverTime, RiverWeatherMode, RiverSeason } from "@/lib/atlas-river-preview";
 import type { RiverObservation } from "@/lib/atlas-river-environment";
+import { guidedPosition, guidedStops } from "@/lib/atlas-guided-route";
 import { moveRiverPan, RIVER_CENTER, RIVER_MARINA, RIVER_WILLIS } from "@/lib/atlas-river-renderer";
 import type { RiverPan } from "@/lib/atlas-river-renderer";
 import AtlasRiverfrontView from "./AtlasRiverfrontView";
@@ -107,12 +109,24 @@ function IllustratedRiverfront({ orbit, close }: { orbit: TowerOrbit; close: () 
 const chicagoTime = new Intl.DateTimeFormat("en-US", {
 	timeZone: "America/Chicago", hour: "numeric", minute: "2-digit", timeZoneName: "short",
 });
-export default function WillisRiverfront({ orbit, entry = false, active, close, showSimple }: {
+export default function WillisRiverfront({
+	orbit, entry = false, active, close, showSimple, guided = false, guideProgress = 0,
+	guideStop, explore, resume, skip, onStation, onFallback, children,
+}: {
 	orbit: TowerOrbit;
 	entry?: boolean;
 	active: boolean;
 	close: () => void;
 	showSimple?: () => void;
+	guided?: boolean;
+	guideProgress?: number;
+	guideStop?: typeof guidedStops[number];
+	explore?: () => void;
+	resume?: () => void;
+	skip?: () => void;
+	onStation?: (id: string) => void;
+	onFallback?: () => void;
+	children?: ReactNode;
 }) {
 	const [renderer, setRenderer] = useState<"loading" | "ready" | "fallback">("loading");
 	const [place, setPlace] = useState<"willis" | "marina">("willis");
@@ -154,7 +168,15 @@ export default function WillisRiverfront({ orbit, entry = false, active, close, 
 		setPan(RIVER_CENTER);
 		orbit.reset();
 	};
-	const panControl = renderer === "ready" && dragMode === "pan" ? movePan : undefined;
+	function exploreFromRoute() {
+		if (guideProgress > .5) {
+			const { point } = guidedPosition(guideProgress);
+			setPan([point[0] - target[0], point[1] - target[2]]);
+		}
+		explore?.();
+	}
+	const panControl = !guided && renderer === "ready" && dragMode === "pan" ? movePan : undefined;
+	const atGuideStop = guided && Boolean(children);
 	const { env, snow, simulated } = useMemo(() =>
 		riverPreview(now, observation, time, weather, season), [now, observation, time, weather, season]);
 	if (!active) return null;
@@ -170,14 +192,65 @@ export default function WillisRiverfront({ orbit, entry = false, active, close, 
 			? `Midway · ${env.weather.description ?? "Conditions reported"} · ${chicagoTime.format(new Date(env.weather.observedAt))}`
 			: "Midway weather unavailable";
 
+
+	const settings = renderer === "ready" ? (
+		<div className="riverfront-settings">
+			{!guided ? <label>Landmark
+				<select value={place} onChange={(event) => {
+					setPlace(event.currentTarget.value as typeof place);
+					resetView();
+				}}>
+					<option value="willis">Willis Tower</option>
+					<option value="marina">Marina City</option>
+				</select>
+			</label> : null}
+			<label>Time
+				<select value={time} onChange={(event) => setTime(event.currentTarget.value as RiverTime)}>
+					<option value="live">Live time</option>
+					<option value="dawn">Dawn</option>
+					<option value="daylight">Daylight</option>
+					<option value="dusk">Blue hour</option>
+					<option value="night">Night</option>
+				</select>
+			</label>
+			<label>Weather
+				<select value={weather} onChange={(event) => setWeather(event.currentTarget.value as RiverWeatherMode)}>
+					<option value="live">Live weather</option>
+					<option value="clear">Clear</option>
+					<option value="overcast">Overcast</option>
+					<option value="rain">Rain</option>
+					<option value="snow">Snow</option>
+				</select>
+			</label>
+			<label>Season
+				<select value={season} onChange={(event) => setSeason(event.currentTarget.value as RiverSeason)}>
+					<option value="auto">Current season</option>
+					<option value="spring">Spring</option>
+					<option value="summer">Summer</option>
+					<option value="autumn">Autumn</option>
+					<option value="winter">Winter</option>
+				</select>
+			</label>
+			{!guided ? <label>Drag
+				<select value={dragMode} onChange={(event) => setDragMode(event.currentTarget.value as typeof dragMode)}>
+					<option value="pan">Pan</option>
+					<option value="orbit">Orbit</option>
+				</select>
+			</label> : null}
+		</div>
+	) : null;
 	return (
-		<section className="willis-riverfront" aria-labelledby="willis-heading" data-renderer={renderer} data-entry={entry} data-time={time} data-weather={weather} data-season={season}>
+		<section className="willis-riverfront" aria-labelledby="willis-heading" data-renderer={renderer} data-entry={entry} data-guided={guided} data-guide-stop={guideStop?.id} data-guide-card={atGuideStop} data-time={time} data-weather={weather} data-season={season}>
 			{renderer === "fallback" ? <IllustratedRiverfront orbit={orbit} close={close} /> :
 				<div className="willis-vista riverfront-vista">
 					<AtlasRiverfrontView orbit={orbit} env={env} place={place} close={close} status={(status) => {
 							if (status === "ready") hasOpened.current = true;
+							else if (entry) onFallback?.();
 							setRenderer(status);
-						}} entry={entry} autoZoom={entry && !hasOpened.current} pan={pan} movePan={panControl} showCta={showCta}
+						}} entry={entry} autoZoom={entry && !hasOpened.current} pan={pan} movePan={panControl}
+						showCta={showCta || (guided && guideProgress > .25)} guided={guided} guideProgress={guideProgress}
+						guideStops={entry ? guidedStops.map(({ id }) => id) : undefined}
+						activeStop={guideStop?.id} selectStop={onStation}
 						snow={snow} />
 					{renderer === "ready" ? <a className="riverfront-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a> : null}
 				</div>}
@@ -185,11 +258,25 @@ export default function WillisRiverfront({ orbit, entry = false, active, close, 
 			<div className="willis-details">
 				{entry ? (
 					<>
-						<h1 id="willis-heading">Chicago riverfront</h1>
+						{atGuideStop ? (
+							<>
+								{guideStop ? <p className="riverfront-line" style={{ borderColor: guideStop.color }}>{guideStop.route === "blue" ? "Blue Line" : "Red Line"}</p> : null}
+								<h2 id="willis-heading">{guideStop?.name ?? "The terminal"}</h2>
+							</>
+						) : <h1 id="willis-heading">Chicago riverfront</h1>}
 						<div className="riverfront-entry-actions">
-							<button className="riverfront-projects" type="button" onClick={close}>View projects <span aria-hidden="true">→</span></button>
+							{guided ? (
+								<>
+									{!atGuideStop ? <button className="riverfront-projects" type="button" onClick={close}>Start ride <span aria-hidden="true">→</span></button> : null}
+									<button className="riverfront-simple" type="button" onClick={exploreFromRoute}>Explore</button>
+								</>
+							) : <button className="riverfront-projects" type="button" onClick={resume}>Resume ride <span aria-hidden="true">→</span></button>}
 							<button className="riverfront-simple" type="button" onClick={showSimple}>Simple view</button>
 						</div>
+						{guided ? <p id="atlas-riverfront-guide-help" className="riverfront-guide-help">
+							{guideStop?.id === "40070" ? "Transfer to the Red Line at Jackson." : "Scroll to ride, or select a station."}
+						</p> : null}
+						{!atGuideStop ? <button type="button" className="riverfront-skip" onClick={skip}>Skip to the live map</button> : null}
 					</>
 				) : (
 					<>
@@ -199,54 +286,12 @@ export default function WillisRiverfront({ orbit, entry = false, active, close, 
 				)}
 				{!entry ? <p className="willis-feature">{landmark.feature}</p> : null}
 				{note && !entry ? <p className="willis-feature">{note}</p> : null}
-				{renderer === "ready" ? (
-					<div className="riverfront-settings">
-						<label>Landmark
-							<select value={place} onChange={(event) => {
-								setPlace(event.currentTarget.value as typeof place);
-								resetView();
-							}}>
-								<option value="willis">Willis Tower</option>
-								<option value="marina">Marina City</option>
-							</select>
-						</label>
-						<label>Time
-							<select value={time} onChange={(event) => setTime(event.currentTarget.value as RiverTime)}>
-								<option value="live">Live time</option>
-								<option value="dawn">Dawn</option>
-								<option value="daylight">Daylight</option>
-								<option value="dusk">Blue hour</option>
-								<option value="night">Night</option>
-							</select>
-						</label>
-						<label>Weather
-							<select value={weather} onChange={(event) => setWeather(event.currentTarget.value as RiverWeatherMode)}>
-								<option value="live">Live weather</option>
-								<option value="clear">Clear</option>
-								<option value="overcast">Overcast</option>
-								<option value="rain">Rain</option>
-								<option value="snow">Snow</option>
-							</select>
-						</label>
-						<label>Season
-							<select value={season} onChange={(event) => setSeason(event.currentTarget.value as RiverSeason)}>
-								<option value="auto">Current season</option>
-								<option value="spring">Spring</option>
-								<option value="summer">Summer</option>
-								<option value="autumn">Autumn</option>
-								<option value="winter">Winter</option>
-							</select>
-						</label>
-						<label>Drag
-							<select value={dragMode} onChange={(event) => setDragMode(event.currentTarget.value as typeof dragMode)}>
-								<option value="pan">Pan</option>
-								<option value="orbit">Orbit</option>
-							</select>
-						</label>
-					</div>
-				) : null}
-				<TowerOrbitControls {...orbit} reset={resetView} pan={panControl} showLighting={visiblePlace === "willis" && !entry} />
-				{renderer === "ready" ? (
+				{children}
+				{atGuideStop && settings ? (
+					<details className="riverfront-guide-settings"><summary>Scene settings</summary>{settings}</details>
+				) : settings}
+				{!guided ? <TowerOrbitControls {...orbit} reset={resetView} pan={panControl} showLighting={visiblePlace === "willis" && !entry} /> : null}
+				{renderer === "ready" && !atGuideStop ? (
 					<label className="riverfront-rail-toggle">
 						<input type="checkbox" checked={showCta} onChange={(event) => setShowCta(event.currentTarget.checked)} />
 						<span>CTA subway</span><i className="red" aria-hidden="true" /><i className="blue" aria-hidden="true" />

@@ -106,17 +106,23 @@ upgraded from "projected" to "achieved" in the UI copy.
 
 Custom art, not stock imagery and not generated imagery.
 
-The first Atlas screen opens on the Chicago River. Its camera zooms toward
-Willis Tower, with pan and orbit controls and a choice of Marina City.
-View projects opens the project ride, and Simple view restores the illustrated Atlas.
-The optional CTA subway layer plots downtown Red and Blue Line stops from the
-CTA schedule data. The 499 KB compressed city mesh comes from an editable downtown
+The first Atlas screen opens on the Chicago River. Start ride or scroll to guide
+the camera above the Loop subway. The route goes south on the Blue Line from
+Clark/Lake through Washington and Monroe to Jackson, transfers between the two
+Jackson stations, then runs north on the Red Line through Monroe to Lake.
+Each of the seven stations opens a project card. Explore enables free pan, orbit,
+and zoom. Resume ride returns to the last project station, and Simple view restores
+the illustrated Atlas. In Explore, the CTA subway toggle shows the other downtown
+stops as well. [CTA Blue Line](https://www.transitchicago.com/blueline/)
+· [CTA Red Line](https://www.transitchicago.com/redline/)
+
+The 499 KB compressed city mesh comes from an editable downtown
 gen-map preset B export of OpenStreetMap data. Rebuild it with
 `python3 scripts/atlas-river-mesh.py /path/to/gen-map-export.zip`. The geometry
 uses a level river and simplified land grade, with approximate bridge decks
 based on published closed clearances. Nearby buildings use mapped footprints
-and approximate materials, while Willis Tower and Marina City are modeled
-using architectural references. [OpenStreetMap attribution](https://www.openstreetmap.org/copyright)
+and approximate materials. Willis Tower, Marina City, and select Loop façades
+use architectural references. [OpenStreetMap attribution](https://www.openstreetmap.org/copyright)
 · [USCG Light List](https://www.navcen.uscg.gov/sites/default/files/pdf/lightLists/LightList_V5_2024.pdf)
 · [Skydeck architecture guide](https://theskydeck.com/wp-content/uploads/2020/03/The-Hows-Whats-and-Wows-of-Willis-Tower-A-Guide-For-Teachers.pdf)
 · [Bertrand Goldberg's Marina City archive](https://bertrandgoldberg.org/projects/marina-city/)

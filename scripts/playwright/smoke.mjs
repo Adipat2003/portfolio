@@ -82,8 +82,8 @@ function assertGeometry(geometry, label) {
 	assert.ok(geometry.overflow <= 0, `${label}: no horizontal page overflow`);
 }
 
-async function readGeometry(page) {
-	return page.evaluate(() => {
+async function readGeometry(page, guided) {
+	return page.evaluate((guided) => {
 		const bounds = (selector) => {
 			const element = document.querySelector(selector);
 			if (!element) return null;
@@ -95,7 +95,7 @@ async function readGeometry(page) {
 		return {
 			viewport: { width: innerWidth, height: innerHeight },
 			stage: bounds(".ride-stage"),
-			city: bounds(".atlas-scroll .chi-map"),
+			city: bounds(guided ? ".riverfront-canvas" : ".atlas-scroll .chi-map"),
 			strip: bounds(".trip-strip"),
 			header: bounds(".concept-bar"),
 			card: cardBounds
@@ -103,7 +103,7 @@ async function readGeometry(page) {
 				: null,
 			overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
 		};
-	});
+	}, guided);
 }
 
 async function readWaterfrontGeometry(page) {
@@ -126,7 +126,7 @@ async function readWaterfrontGeometry(page) {
 	});
 }
 
-async function checkMatrix(page, viewports) {
+async function checkMatrix(page, viewports, guided = false) {
 	const matrix = [];
 	for (const viewport of viewports) {
 		await page.setViewportSize({ width: viewport.width, height: viewport.height });
@@ -136,8 +136,16 @@ async function checkMatrix(page, viewports) {
 			window.scrollTo(0, window.scrollY + bounds.top + (bounds.height - stage.offsetHeight) / 2);
 		});
 		await page.waitForTimeout(250);
-		const geometry = await readGeometry(page);
+		if (guided) {
+			await page.locator(".willis-riverfront[data-guided=true][data-renderer=ready] .riverfront-project-card .station-card").waitFor();
+		}
+		const geometry = await readGeometry(page, guided);
 		assertGeometry(geometry, `${viewport.name} ${viewport.width}x${viewport.height}`);
+		if (guided) {
+			await capture(page, `guided-${viewport.width}x${viewport.height}`);
+			matrix.push({ name: viewport.name, ...geometry });
+			continue;
+		}
 		if (viewport.width <= 860) {
 			if (viewport.width <= 390) {
 				assert.ok(geometry.header.height <= 64, "phone facade header fits in one compact row");
@@ -409,8 +417,11 @@ try {
 		await session.send("Network.setCacheDisabled", { cacheDisabled: true });
 		await page.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
 		await page.waitForSelector("#view-atlas");
-		const matrix = await checkMatrix(page, viewports.filter(({ width }) => [1920, 1280, 390].includes(width)).filter(({ height }) => height !== 800));
-		console.log(JSON.stringify({ result: "passed", baseUrl: baseUrl.href, cacheDisabled: true, matrix }, null, 2));
+		const spotViewports = viewports.filter(({ width, height }) => width === 1920 || height === 600 || width === 390);
+		const guidedMatrix = await checkMatrix(page, spotViewports, true);
+		await page.getByRole("button", { name: "Simple view" }).click();
+		const matrix = await checkMatrix(page, spotViewports);
+		console.log(JSON.stringify({ result: "passed", baseUrl: baseUrl.href, cacheDisabled: true, matrix, guidedMatrix }, null, 2));
 	} else {
 		const keyboardPage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 		await mockStreetTiles(keyboardPage);
@@ -451,7 +462,7 @@ try {
 			"0s",
 			"Atlas transitions respect reduced motion",
 		);
-		await motionPage.getByRole("button", { name: "View projects" }).click();
+		await motionPage.getByRole("button", { name: "Jump to Offline sync engine" }).click();
 		await motionPage.waitForFunction(() => document.querySelector(".trip-stop.hit")?.getAttribute("aria-label") === "Jump to Offline sync engine");
 		await motionPage.getByRole("button", { name: /Willis Tower:/ }).evaluate((tower) => tower.focus({ preventScroll: true }));
 		await motionPage.keyboard.press("Enter");
@@ -513,6 +524,7 @@ try {
 		await opening.getByLabel("Time").selectOption("daylight");
 		await capture(page, "atlas-opening-desktop");
 		assert.ok(await openingCanvas.evaluate((canvas) => canvas.width >= canvas.clientWidth), "desktop city renders at native width");
+		await opening.getByRole("button", { name: "Explore", exact: true }).click();
 		assert.equal(await opening.getByLabel("Drag").inputValue(), "pan");
 		const openingGrip = await towerGrip(openingCanvas);
 		const openingYaw = await openingCanvas.getAttribute("data-yaw");
@@ -557,6 +569,7 @@ try {
 		const introTower = page.getByRole("button", { name: "Explore the riverfront in 3D" });
 		await introTower.click();
 		await openingCanvas.waitFor();
+		await opening.getByRole("button", { name: "Explore", exact: true }).click();
 		await page.waitForFunction((before) => document.querySelector(".riverfront-canvas")?.dataset.pan === before, panned);
 		assert.equal(await openingCanvas.getAttribute("data-initial-zoom"), "1.0000", "returning skips the opening zoom");
 		assert.equal(await opening.getByLabel("Weather").inputValue(), "snow");
@@ -572,30 +585,45 @@ try {
 		await page.waitForFunction(() => [...document.querySelectorAll(".cta-route-line")].length === 2 &&
 			[...document.querySelectorAll(".cta-route-line")].every((line) => line.getAttribute("d")?.includes("L")));
 		assert.equal(await cta.locator('[data-stop-index]').count(), 13, "all downtown Red and Blue stops are plotted");
-		const stop = cta.getByRole("button").first();
-		await stop.press("Enter");
-		assert.equal(await stop.getAttribute("aria-pressed"), "true");
 		await capture(page, "atlas-cta-subway");
-		await opening.getByRole("button", { name: "View projects" }).click();
-		await opening.waitFor({ state: "detached" });
-		const firstProject = page.locator(".ride-overlay .station-card h3 a");
-		await firstProject.waitFor();
+		await opening.getByRole("button", { name: "Resume ride" }).click();
+		await opening.locator(".riverfront-project-card .station-card h3 a").waitFor();
+		const firstProject = opening.locator(".riverfront-project-card .station-card h3 a");
 		assert.equal(await firstProject.getAttribute("href"), "/portfolio/projects/offline-sync-engine/");
+		assert.equal(await opening.getAttribute("data-guide-stop"), "40380");
 		assert.ok(await firstProject.evaluate((link) => document.activeElement === link), "project view receives focus");
-		await page.getByRole("button", { name: "3D city", exact: true }).click();
-		await opening.waitFor();
-		await opening.getByLabel("CTA subway").waitFor();
-		assert.ok(await opening.getByLabel("CTA subway").isChecked(), "returning from projects restores the CTA layer");
-		await opening.getByRole("button", { name: "View projects" }).click();
-		await firstProject.waitFor();
+		assert.equal(await cta.locator("[data-stop-index]").count(), 7, "the guide shows all seven project stations");
+		const clarkLakeProgress = await openingCanvas.getAttribute("data-ride");
+		await page.mouse.move(420, 440);
+		await page.mouse.wheel(0, 120);
+		await page.waitForFunction((progress) => Number(document.querySelector(".riverfront-canvas")?.dataset.ride) > Number(progress), clarkLakeProgress);
+		await cta.getByRole("button", { name: "Washington, CTA Blue Line", exact: true }).locator(".riverfront-cta-dot").click();
+		await opening.locator('a[href="/portfolio/projects/cross-platform-rollout/"]').waitFor();
+		assert.equal(await opening.getAttribute("data-guide-stop"), "40370");
+		await page.getByRole("button", { name: "Jump to Jackson (Blue)", exact: true }).click();
+		await opening.locator('a[href="/portfolio/projects/ece391-os-kernel/"]').waitFor();
+		assert.equal(await opening.getAttribute("data-guide-stop"), "40070");
+		assert.ok(await opening.getByText("Transfer to the Red Line at Jackson.").isVisible());
+		await page.waitForFunction(() => document.querySelector(".cta-transfer-line")?.getAttribute("d")?.includes("L"));
+		await capture(page, "guided-jackson-transfer");
+		await page.getByRole("button", { name: "Jump to Jackson (Red)", exact: true }).click();
+		await opening.locator('a[href="/portfolio/projects/supervised-automation/"]').waitFor();
+		assert.equal(await opening.getAttribute("data-guide-stop"), "40560");
+		await opening.getByRole("button", { name: "Explore", exact: true }).click();
+		assert.ok(await opening.getByLabel("CTA subway").isChecked(), "Explore restores the user's CTA layer setting");
+		assert.equal(await opening.getByLabel("Season").inputValue(), "winter");
+		await opening.getByRole("button", { name: "Resume ride" }).click();
+		await opening.locator('a[href="/portfolio/projects/supervised-automation/"]').waitFor();
+		assert.equal(await opening.getAttribute("data-guide-stop"), "40560", "resuming restores the last project station");
 		await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
-		await page.locator(".skip-ride").waitFor();
-		await page.locator(".skip-ride").click();
+		await opening.getByRole("button", { name: "Skip to the live map" }).click();
 		await page.waitForFunction(() => window.scrollY > 1000);
 		assert.ok(await page.locator(".rail-network").evaluate((element) => { const top = element.getBoundingClientRect().top; return top <= 1 && top >= -10; }), "Skip the ride places the full-screen network in view before the closing footer");
-		await page.goto(new URL("#atlas", baseUrl).href, { waitUntil: "domcontentloaded" });
-		await page.waitForSelector("#view-atlas");
+		await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+		await opening.getByRole("button", { name: "Start ride" }).waitFor();
 
+		const guidedMatrix = await checkMatrix(page, viewports, true);
+		await opening.getByRole("button", { name: "Simple view" }).click();
 		const matrix = await checkMatrix(page, viewports);
 
 		await page.setViewportSize({ width: 1440, height: 900 });
@@ -932,6 +960,7 @@ try {
 		const ctaControl = await mobileOpening.getByLabel("CTA subway").boundingBox();
 		assert.ok(ctaControl && ctaControl.y >= 0 && ctaControl.y + ctaControl.height <= 844, "CTA toggle fits on the opening phone view");
 		await capture(touchPage, "atlas-intro-phone");
+		await mobileOpening.getByRole("button", { name: "Explore", exact: true }).tap();
 		const openingPhoneGrip = await towerGrip(mobileOpening.locator(".riverfront-canvas"));
 		const openingScroll = await touchPage.evaluate(() => scrollY);
 		await touchSession.send("Input.dispatchTouchEvent", {
@@ -943,8 +972,31 @@ try {
 		await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
 		await touchPage.waitForFunction(() => Math.abs(Number(document.querySelector(".riverfront-canvas")?.dataset.pan?.split(",")[0])) > 20);
 		assert.equal(await touchPage.evaluate(() => scrollY), openingScroll, "touch pan keeps the opening scene in place");
-		await mobileOpening.getByRole("button", { name: "View projects" }).tap();
-		await touchPage.locator(".ride-overlay .station-card").waitFor();
+		await mobileOpening.getByRole("button", { name: "Resume ride" }).tap();
+		await touchPage.locator(".riverfront-project-card .station-card").waitFor();
+		const mobileCanvas = mobileOpening.locator(".riverfront-canvas");
+		for (let station = 0; station < 2; station++) {
+			const departedFrom = await mobileOpening.getAttribute("data-guide-stop");
+			for (let swipe = 0; swipe < 5 && await mobileOpening.getAttribute("data-guide-stop") === departedFrom; swipe++) {
+				const box = await mobileCanvas.boundingBox();
+				const x = Math.round(box.x + box.width * .85);
+				const y = Math.round(box.y + box.height * .9);
+				const length = Math.round(box.height * .8);
+				await touchSession.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ id: 6, x, y }] });
+				for (const fraction of [.25, .5, .75, 1]) {
+					await touchSession.send("Input.dispatchTouchEvent", {
+						type: "touchMove", touchPoints: [{ id: 6, x, y: y - Math.round(length * fraction) }],
+					});
+					await touchPage.waitForTimeout(32);
+				}
+				await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+				await touchPage.waitForTimeout(250);
+			}
+			assert.notEqual(await mobileOpening.getAttribute("data-guide-stop"), departedFrom, "phone swipes advance to another CTA project station");
+		}
+		assert.equal(await mobileOpening.getAttribute("data-guided"), "true", "phone swipes keep the 3D ride active");
+		await capture(touchPage, "guided-touch-phone");
+		await mobileOpening.getByRole("button", { name: "Simple view" }).tap();
 		await touchPage.locator(".ride").evaluate((element) => element.scrollIntoView({ block: "start", behavior: "instant" }));
 		await touchPage.waitForFunction(() => !document.querySelector(".trip-stop.hit"));
 		const swipedStops = [];
@@ -1123,7 +1175,7 @@ try {
 		assert.deepEqual(errors, [], "no uncaught browser errors");
 		console.log(
 			JSON.stringify(
-				{ result: "passed", baseUrl: baseUrl.href, dispatchDesktopOverflow, matrix, dispatchPhoneOverflow },
+				{ result: "passed", baseUrl: baseUrl.href, dispatchDesktopOverflow, matrix, guidedMatrix, dispatchPhoneOverflow },
 				null,
 				2,
 			),

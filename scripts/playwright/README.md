@@ -38,7 +38,7 @@ BASE_URL=http://localhost:3001/portfolio/ npm exec --yes --package=playwright@1.
 
 The script checks keyboard focus visibility, the no-JavaScript Dispatch view,
 reduced-motion behavior, Atlas deep-link and facade state, all nine ride-stage
-geometries from `AGENTS.md` at mid-ride, native wheel steps and idle camera work,
+geometries from `AGENTS.md` at mid-ride in both 3D and Simple view, native wheel steps and idle camera work,
 station settling and small wheel-step departures, station and stop jumps, keyboard landmark
 selection/release, the terminal's sourced answer, Skip the ride, Dispatch
 search and tag filters, project details and return navigation, phone ride swipes and trip-strip
@@ -70,8 +70,9 @@ fixtures verify one poll, real-fix movement, reduced motion and honest fallback.
 Skyline checks cover the authored silhouettes and inline WebGL riverfront.
 At all nine viewports the rendered landmark must clear the trip strip and
 controls and remain prominent. The opening scene is checked for automatic zoom, reduced-motion bypass,
-mouse and touch panning, the jump to the first project station, and camera
-restoration through Simple view and Projects. It combines snow, winter, and
+mouse and touch panning, and camera restoration through Simple view and Explore.
+The 3D ride checks native scrolling, map selection, the project cards on both Jackson
+platforms, and return to the last stop from Explore. It combines snow, winter, and
 night before changing only time, and checks both CTA traces and station selection.
 The suite exercises a full rotation,
 keyboard tilt and zoom, mouse and touch drags, wheel scrolling back into the

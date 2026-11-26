@@ -7,6 +7,7 @@ import { addMarinaCity } from "@/lib/atlas-marina-city";
 import { mountRiverRenderer, riverCamera, riverEntryZoom, RIVER_MARINA, RIVER_WILLIS } from "@/lib/atlas-river-renderer";
 import type { getRiverEnvironment } from "@/lib/atlas-river-environment";
 import { orbitKeys } from "./WillisTowerOrbit";
+import { guidedPosition, guidedTransfer } from "@/lib/atlas-guided-route";
 import { riverCtaRoutes, riverCtaStations } from "@/lib/atlas-river-cta";
 import type { RiverPan } from "@/lib/atlas-river-renderer";
 import type { PanView, TowerOrbit } from "./WillisTowerOrbit";
@@ -19,6 +20,11 @@ type Props = {
 	entry: boolean;
 	autoZoom: boolean;
 	showCta: boolean;
+	guided?: boolean;
+	guideProgress?: number;
+	guideStops?: readonly string[];
+	activeStop?: string;
+	selectStop?: (id: string) => void;
 	pan: RiverPan;
 	movePan?: PanView;
 	close: () => void;
@@ -92,6 +98,11 @@ export default function AtlasRiverfrontView(props: Props) {
 			}
 			overlay.querySelectorAll(`[data-route="${route.id}"]`).forEach((element) => element.setAttribute("d", path));
 		}
+		if (current.current.guided) {
+			const visible = guidedTransfer.every(([x, z]) => camera.depthOf([x, ground, z]) > near);
+			const transfer = visible ? guidedTransfer.map(([x, z]) => screen(x, z).map((coordinate) => coordinate.toFixed(1)).join(",")).join("L") : "";
+			overlay.querySelectorAll("[data-transfer]").forEach((element) => element.setAttribute("d", transfer ? `M${transfer}` : ""));
+		}
 		for (const [i, stop] of riverCtaStations.entries()) {
 			const station = overlay.querySelector<SVGGElement>(`[data-stop-index="${i}"]`);
 			if (!station) continue;
@@ -109,10 +120,10 @@ export default function AtlasRiverfrontView(props: Props) {
 
 	useLayoutEffect(() => {
 		if (current.current.orbit.view !== props.orbit.view ||
-			current.current.pan !== props.pan || current.current.place !== props.place) {
+			current.current.pan !== props.pan || current.current.place !== props.place || (props.guideProgress ?? 0) > .02) {
 			entryFinished.current = true;
 		}
-		if (current.current.showCta !== props.showCta) ctaFrame.current = "";
+		if (current.current.showCta !== props.showCta || current.current.guided !== props.guided) ctaFrame.current = "";
 		current.current = props;
 		redraw.current?.();
 	}, [props]);
@@ -138,13 +149,13 @@ export default function AtlasRiverfrontView(props: Props) {
 			let previous = 0;
 			const started = performance.now();
 			const paint = (time: number) => {
-				const { orbit, env, place, snow, pan } = current.current;
+				const { orbit, env, place, snow, pan, guided, guideProgress } = current.current;
 				entryFactor.current = entryFinished.current || reduced.matches ? 1 : riverEntryZoom(time - started);
 				entryFinished.current ||= entryFactor.current >= 1;
 				const view = { ...orbit.view, zoom: orbit.view.zoom * entryFactor.current };
 				const scheduledColors = orbit.lighting?.palette ?? [];
 				const camera = renderer.draw(view, place === "willis" ? RIVER_WILLIS : RIVER_MARINA,
-					env, scheduledColors, reduced.matches ? 0 : time / 1000, snow, pan);
+					env, scheduledColors, reduced.matches ? 0 : time / 1000, snow, pan, guided && guideProgress ? { ...guidedPosition(guideProgress), progress: guideProgress } : undefined);
 				const [x] = place === "willis" ? RIVER_WILLIS : RIVER_MARINA;
 				const focus = place === "willis" ? [x - 22.86, 521, RIVER_WILLIS[2]] as const : [x, 173, RIVER_MARINA[2]] as const;
 				const foot = place === "willis" ? [x, -6, RIVER_WILLIS[2]] as const : [x, -6, RIVER_MARINA[2]] as const;
@@ -155,7 +166,8 @@ export default function AtlasRiverfrontView(props: Props) {
 				element.dataset.weather = env.weather.precipitation ?? "unknown";
 				element.dataset.snow = String(snow);
 				element.dataset.foliage = env.foliage.cover.toFixed(3);
-				if (current.current.showCta) updateCta(camera, element, `${place}:${view.yaw}:${view.pitch}:${view.zoom}:${pan}`);
+				element.dataset.ride = guided ? (guideProgress ?? 0).toFixed(4) : "explore";
+				if (current.current.showCta) updateCta(camera, element, `${place}:${view.yaw}:${view.pitch}:${view.zoom}:${pan}:${element.dataset.ride}`);
 				element.dataset.frame = `${orbit.view.yaw}:${orbit.view.pitch}:${orbit.view.zoom}:${place}:${env.sun.elevation.toFixed(2)}`;
 			};
 			const schedule = () => {
@@ -221,6 +233,7 @@ export default function AtlasRiverfrontView(props: Props) {
 		if (!element) return;
 		let touch: { id: number; x: number; y: number } | null = null;
 		function startTouch(event: TouchEvent) {
+			if (current.current.guided) return;
 			if (event.touches.length !== 1) {
 				touch = null;
 				return;
@@ -256,7 +269,7 @@ export default function AtlasRiverfrontView(props: Props) {
 	}, []);
 
 	function start(event: PointerEvent<HTMLCanvasElement>) {
-		if (event.pointerType === "touch" || event.button !== 0 || pointer.current) return;
+		if (props.guided || event.pointerType === "touch" || event.button !== 0 || pointer.current) return;
 		stopEntryZoom();
 		event.currentTarget.setPointerCapture(event.pointerId);
 		pointer.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
@@ -278,15 +291,15 @@ export default function AtlasRiverfrontView(props: Props) {
 
 	return (
 		<>
-		<canvas ref={canvas} className="riverfront-canvas tower-orbit-model tower-orbit-drag"
+		<canvas ref={canvas} className={`riverfront-canvas tower-orbit-model${props.guided ? "" : " tower-orbit-drag"}`}
 			role="application" tabIndex={0} aria-label="Chicago River 3D view"
-			aria-describedby="atlas-tower-orbit-help" data-yaw={view.yaw} data-pitch={view.pitch} data-zoom={view.zoom} data-pan={props.pan.join(",")}
+			aria-describedby={props.guided ? "atlas-riverfront-guide-help" : "atlas-tower-orbit-help"} data-yaw={view.yaw} data-pitch={view.pitch} data-zoom={view.zoom} data-pan={props.pan.join(",")}
 			onPointerDown={start} onPointerMove={drag} onPointerUp={finish} onLostPointerCapture={finish} onPointerCancel={finish}
 			onKeyDown={(event) => {
 				if (event.key === "Escape") {
 					event.stopPropagation();
 					props.close();
-				} else orbitKeys(event, adjust, props.movePan);
+				} else if (!props.guided) orbitKeys(event, adjust, props.movePan);
 			}}
 		/>
 		{props.showCta ? (
@@ -297,13 +310,24 @@ export default function AtlasRiverfrontView(props: Props) {
 						<path className="cta-route-line" data-route={route.id} stroke={route.color} />
 					</g>
 				))}
+				{props.guided ? (
+					<g aria-hidden="true">
+						<path className="cta-route-casing" data-transfer="" />
+						<path className="cta-transfer-line" data-transfer="" />
+					</g>
+				) : null}
 				{riverCtaStations.map((stop, i) => {
+					const projectStop = props.guideStops?.includes(stop.id);
+					if (props.guided && !projectStop) return null;
 					const key = `${stop.route}-${stop.id}`;
-					const select = () => setSelectedStop(selectedStop === key ? null : key);
+					const select = () => {
+						if (projectStop && props.selectStop) props.selectStop(stop.id);
+						else setSelectedStop(selectedStop === key ? null : key);
+					};
 					return (
 						<g key={key} data-stop-index={i} role="button" tabIndex={0} className="riverfront-cta-stop"
 							aria-label={`${stop.name}, CTA ${stop.route === "red" ? "Red" : "Blue"} Line`}
-							aria-pressed={selectedStop === key}
+							aria-pressed={props.activeStop === stop.id || selectedStop === key}
 							onClick={select} onKeyDown={(event) => {
 								if (event.key === " " || event.key === "Enter") { event.preventDefault(); select(); }
 							}}>
