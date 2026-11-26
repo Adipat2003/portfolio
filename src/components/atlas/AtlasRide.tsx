@@ -6,6 +6,7 @@ import AtlasScene from "@/components/atlas/AtlasScene";
 import TrainSprite from "@/components/atlas/TrainSprite";
 import WillisRiverfront from "@/components/atlas/WillisRiverfront";
 import type { TowerOrbit } from "@/components/atlas/WillisTowerOrbit";
+import { guidedStops } from "@/lib/atlas-guided-route";
 import { useWillisLighting } from "@/components/chicago/WillisLighting";
 import AskBox from "@/components/AskBox";
 import { clampedCamera } from "@/content/cta-geometry";
@@ -113,9 +114,10 @@ function stopAccent(stop: Stop): string {
 }
 
 /** The overlay card: a landmark, a station, a figure, or a hint. */
-function RideCard({ stop, landmark }: {
+function RideCard({ stop, landmark, guided }: {
 	stop: Stop | null;
 	landmark: string | null;
+	guided: boolean;
 }) {
 	const building = landmark ? atlas.buildings.find((b) => b.name === landmark) ?? null : null;
 	const note = landmark ? landmarkNote(landmark) : null;
@@ -134,12 +136,16 @@ function RideCard({ stop, landmark }: {
 	if (stationRecord) {
 		return (
 			<div className="chi-card station-card" key={stationRecord.slug}>
-				<span
-					className="line-band-dot"
-					aria-hidden="true"
-					style={{ background: LINE_COLORS[stationRecord.project.line] }}
-				/>
-				<p className="sign">{stationRecord.station.label}</p>
+				{!guided ? (
+					<>
+						<span
+							className="line-band-dot"
+							aria-hidden="true"
+							style={{ background: LINE_COLORS[stationRecord.project.line] }}
+						/>
+						<p className="sign">{stationRecord.station.label}</p>
+					</>
+				) : null}
 				<h3>
 					<a href={`/portfolio/projects/${stationRecord.slug}/`}>{stationRecord.project.title}</a>
 				</h3>
@@ -188,6 +194,15 @@ export default function AtlasRide() {
 		typeof window !== "undefined" && !["#map", "#atlas-ride"].includes(window.location.hash));
 	const entryRef = useRef(entryOpen);
 	const [entryVisited, setEntryVisited] = useState(entryOpen);
+	const [exploring, setExploring] = useState(false);
+	const exploringRef = useRef(false);
+	const [guideProgress, setGuideProgress] = useState(0);
+	const [stageVisible, setStageVisible] = useState(true);
+	const guided = entryOpen && !exploring;
+	const setExplore = useCallback((on: boolean) => {
+		exploringRef.current = on;
+		setExploring(on);
+	}, []);
 	const [cityView, setCityView] = useState(WILLIS_ORBIT_DEFAULT);
 	const projectFocus = useRef<number | null>(null);
 	const lastProject = useRef(1);
@@ -229,6 +244,7 @@ export default function AtlasRide() {
 		const stage = stageRef.current;
 		if (stage) stage.style.setProperty("--entry-stage-offset", `${Math.max(0, stage.getBoundingClientRect().top)}px`);
 		entryRef.current = true;
+		setExplore(false);
 		setEntryVisited(true);
 		setEntryOpen(true);
 	}
@@ -238,10 +254,23 @@ export default function AtlasRide() {
 		jumpToPhase(lastProject.current);
 	}
 
+	function exploreCity() {
+		if (phase > 0 && phase <= guidedStops.length) lastProject.current = phase;
+		interruptSnap.current?.();
+		setExplore(true);
+	}
+
+	function selectGuidedStop(id: string) {
+		const index = guidedStops.findIndex((station) => station.id === id);
+		if (index < 0) return;
+		projectFocus.current = index + 1;
+		jumpToPhase(index + 1, true);
+	}
+
 	useLayoutEffect(() => {
-		if (riverfrontOpen) return;
+		if (riverfrontOpen && !guided) return;
 		if (projectFocus.current === phase) {
-			const heading = overlayRef.current?.querySelector<HTMLElement>(
+			const heading = stageRef.current?.querySelector<HTMLElement>(
 				".station-card h3 a, .terminal-card input, .terminal-continue",
 			);
 			heading?.focus({ preventScroll: true });
@@ -250,7 +279,7 @@ export default function AtlasRide() {
 			returnToCity.current?.focus({ preventScroll: true });
 			simpleFocus.current = false;
 		}
-	}, [phase, riverfrontOpen]);
+	}, [phase, riverfrontOpen, guided]);
 
 	useLayoutEffect(() => {
 		if (wasWillisOpen.current && !willisOpen && document.activeElement === document.body) {
@@ -351,8 +380,11 @@ export default function AtlasRide() {
 			const progress = Math.min(1, Math.max(0, (window.scrollY - rideTop) / travel));
 			const position = ridePhaseAtProgress(progress, stops.length);
 			const next = Math.round(position);
+			if (entryRef.current && !exploringRef.current) {
+				setGuideProgress(Number(position.toFixed(4)));
+				if (next > 0 && next <= guidedStops.length) lastProject.current = next;
+			}
 			if (next !== phaseRef.current) {
-				if (next > 0) dismissEntry();
 				phaseRef.current = next;
 				setPhase(next);
 				if (landmarkFocusRef.current?.name !== WILLIS_TOWER) {
@@ -446,7 +478,7 @@ export default function AtlasRide() {
 		};
 		const snap = () => {
 			cancelSnap();
-			if (landmarkFocusRef.current) return;
+			if (landmarkFocusRef.current || (entryRef.current && exploringRef.current)) return;
 			const extent = layout ??= measure();
 			const y = window.scrollY;
 			const target = rideSnapPhase((y - extent.rideTop) / extent.travel, stops.length);
@@ -478,7 +510,6 @@ export default function AtlasRide() {
 			waitToSnap();
 		};
 		const release = () => {
-			dismissEntry();
 			if (!landmarkFocusRef.current) return;
 			landmarkFocusRef.current = null;
 			setLandmark(null);
@@ -486,6 +517,10 @@ export default function AtlasRide() {
 		};
 		const navigationInput = () => {
 			lastInput = performance.now();
+			if (entryRef.current && exploringRef.current) {
+				setExplore(false);
+				schedule();
+			}
 			release();
 			waitToSnap();
 		};
@@ -551,6 +586,8 @@ export default function AtlasRide() {
 		window.addEventListener("keydown", key, { signal: listeners.signal });
 		interruptSnap.current = cancelSnap;
 
+		const visibility = new IntersectionObserver(([entry]) => setStageVisible(entry.isIntersecting));
+		visibility.observe(stage);
 		const observer = new ResizeObserver(resize);
 		for (const element of [bar, ride, stage, strip, svg, overlay]) observer.observe(element);
 		window.addEventListener("resize", resize);
@@ -560,6 +597,7 @@ export default function AtlasRide() {
 		schedule();
 		return () => {
 			observer.disconnect();
+			visibility.disconnect();
 			listeners.abort();
 			touchEnd?.abort();
 			cancelSnap();
@@ -570,7 +608,7 @@ export default function AtlasRide() {
 			if (raf !== null) cancelAnimationFrame(raf);
 			wakeScene.current = null;
 		};
-	}, [dismissEntry]);
+	}, [setExplore]);
 
 	/** After each phase renders, keep the active stop visible inside the
 	    strip's own scroll track; the page itself never moves here. The
@@ -591,12 +629,19 @@ export default function AtlasRide() {
 		}
 	}, [phase]);
 
-	function jumpToPhase(target: number) {
-		selectLandmark(null);
+	function jumpToPhase(target: number, glide = false) {
+		const animate = glide && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		if (entryRef.current) {
+			interruptSnap.current?.();
+			setExplore(false);
+			if (!animate) setGuideProgress(target);
+		} else selectLandmark(null);
 		const ride = rideRef.current;
 		if (!ride) return;
 		const rideTop = ride.getBoundingClientRect().top + window.scrollY;
-		jumpInstantly(ridePhaseOffset({ rideTop, rideHeight: ride.offsetHeight, viewportHeight: stageRef.current?.clientHeight ?? window.innerHeight, target, stopCount: stops.length }), window.scrollTo.bind(window));
+		const top = ridePhaseOffset({ rideTop, rideHeight: ride.offsetHeight, viewportHeight: stageRef.current?.clientHeight ?? window.innerHeight, target, stopCount: stops.length });
+		if (animate) window.scrollTo({ top, behavior: "smooth" });
+		else jumpInstantly(top, window.scrollTo.bind(window));
 	}
 
 	/** Clicking a station scrolls the ride to that phase. */
@@ -608,7 +653,8 @@ export default function AtlasRide() {
 	}
 
 	function skipRide() {
-		selectLandmark(null);
+		if (entryRef.current) interruptSnap.current?.();
+		else selectLandmark(null);
 		const ride = rideRef.current;
 		if (!ride) return;
 		const rideTop = ride.getBoundingClientRect().top + window.scrollY;
@@ -617,14 +663,24 @@ export default function AtlasRide() {
 
 	const nextStop = stops[Math.min(stops.length, phase)];
 	const activeStationSlug = stop && stop.kind === "station" ? stop.slug : null;
-	const atTerminal = !riverfrontOpen && ((stop !== null && stop.kind === "terminal") || phase > stops.length);
+	const atTerminal = (!riverfrontOpen || guided) && ((stop !== null && stop.kind === "terminal") || phase > stops.length);
+	const guideStop = guided && phase > 0 ? guidedStops[phase - 1] : undefined;
+	const namedStop = guideStop?.name ?? stop?.label;
+	const projectStop = guideStop ? stops.find((item) => item.kind === "station" && item.slug === guideStop.slug) ?? null : stop;
+	const card = atTerminal ? (
+		<div className="chi-card terminal-card" key="terminal">
+			<CtaLive />
+			<AskBox variant="panel" examples={site.ask_examples} headingId="ride-ask" heading="Ask the agent" />
+			<button type="button" className="terminal-continue" onClick={skipRide}>Continue to live map</button>
+		</div>
+	) : <RideCard stop={landmark ? null : projectStop} landmark={landmark} guided={guided} />;
 
 	const stripText =
 		stop === null
-			? `NEXT STOP · ${nextStop ? nextStop.label.toUpperCase() : "END OF THE LINE"}`
+			? `NEXT STOP · ${nextStop ? (guided ? guidedStops[phase]?.name ?? nextStop.label : nextStop.label).toUpperCase() : "END OF THE LINE"}`
 			: atTerminal
 				? "THE TERMINAL · ASK THE AGENT"
-				: `${stop.kind === "station" ? "NOW STOPPING" : "PASSING"} · ${stop.label.toUpperCase()}`;
+				: `${stop.kind === "station" ? "NOW STOPPING" : "PASSING"} · ${namedStop?.toUpperCase()}`;
 	const counter =
 		phase >= 1 && phase <= stops.length && !(stop !== null && stop.kind === "terminal")
 			? `STOP ${phase} OF ${stops.length}`
@@ -633,7 +689,7 @@ export default function AtlasRide() {
 				: "";
 
 	return (
-		<div id="atlas-ride" data-city-active={entryOpen} className={`ride${phase === 0 ? " ride-phase-0" : ""}`} ref={rideRef} style={{ ["--ride-phases" as string]: stops.length + 4 }}>
+		<div id="atlas-ride" data-city-active={entryOpen && (exploring || phase === 0)} className={`ride${phase === 0 ? " ride-phase-0" : ""}`} ref={rideRef} style={{ ["--ride-phases" as string]: stops.length + 4 }}>
 			<div className="ride-stage atlas-hero" ref={stageRef}>
 				<AtlasScene>
 					<div className="atlas-scroll" inert={riverfrontOpen}>
@@ -660,13 +716,13 @@ export default function AtlasRide() {
 								<button
 									key={s.kind === "station" ? s.slug : `${s.kind}-${i}`}
 									type="button"
-									aria-label={`Jump to ${s.label}`}
+									aria-label={`Jump to ${guided && s.kind === "station" ? guidedStops[i].name : s.label}`}
 									className={`trip-stop${phase === i + 1 ? " hit" : i + 1 < phase ? " past" : ""}`}
-									style={{ ["--accent-dot" as string]: stopAccent(s) }}
+									style={{ ["--accent-dot" as string]: guided && s.kind === "station" ? guidedStops[i].color : stopAccent(s) }}
 									onClick={() => jumpToPhase(i + 1)}
 								>
 									<i className="trip-stop-dot" aria-hidden="true" />
-									<em>{s.kind === "terminal" ? "Terminal" : s.label}</em>
+									<em>{s.kind === "terminal" ? "Terminal" : guided ? guidedStops[i].name : s.label}</em>
 								</button>
 							))}
 						</span>
@@ -692,28 +748,22 @@ export default function AtlasRide() {
 					</div>
 
 					<div className={`ride-overlay${atTerminal ? " terminal-overlay" : ""}`} ref={overlayRef} role="status" aria-live="polite" hidden={riverfrontOpen}>
-						{atTerminal ? (
-							<div className="chi-card terminal-card" key="terminal">
-								<CtaLive />
-								<AskBox
-									variant="panel"
-									examples={site.ask_examples}
-									headingId="ride-ask"
-									heading="Ask the agent"
-								/>
-								<button type="button" className="terminal-continue" onClick={skipRide}>Continue to live map</button>
-							</div>
-						) : (
-							<RideCard stop={landmark ? null : stop} landmark={landmark} />
-						)}
+						{!riverfrontOpen ? card : null}
 					</div>
 
 					{!riverfrontOpen && phase > 0 ? (
 						<button type="button" className="atlas-city-return" ref={returnToCity} onClick={openCity}>3D city</button>
 					) : null}
 					{entryVisited ? (
-						<WillisRiverfront key="city" orbit={cityOrbit} active={entryOpen} entry close={openProjects}
-							showSimple={() => { simpleFocus.current = true; dismissEntry(); }} />
+						<WillisRiverfront key="city" orbit={cityOrbit} active={entryOpen && stageVisible} entry close={openProjects}
+							guided={guided} guideProgress={guideProgress} guideStop={guideStop}
+							explore={exploreCity} resume={openProjects} skip={skipRide} onStation={selectGuidedStop}
+							onFallback={dismissEntry}
+							showSimple={() => { simpleFocus.current = true; dismissEntry(); }}>
+							{guided && phase > 0 ? (
+								<div className={`ride-overlay riverfront-project-card${atTerminal ? " terminal-overlay" : ""}`} role="status" aria-live="polite">{card}</div>
+							) : null}
+						</WillisRiverfront>
 					) : null}
 					{willisOpen ? <WillisRiverfront key="landmark" orbit={towerOrbit} active close={() => selectLandmark(null)} /> : null}
 

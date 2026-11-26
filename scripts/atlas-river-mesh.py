@@ -42,6 +42,20 @@ VERTEX = struct.Struct("<8f")
 TRIANGLE_SIZE = VERTEX.size * 3
 INDEX_TYPES = {5121: "B", 5123: "H", 5125: "I"}
 ROOF, GLASS, STONE, DARK_GLASS, RIVER, FOLIAGE, _, BRIDGE, LAND, PAVING = range(10)
+LIGHT_STONE, GRAPHITE_GLASS, WARM_MASONRY, AQUAMARINE_GLASS, SULLIVAN_FACADE, THOMPSON_FACADE = range(16, 22)
+
+# OSM buildings or parts. Chicago Architecture Center documents the finishes,
+# with City Hall/County Building in the City landmarks register and Federal Center in GSA.
+FACADE_MATERIALS = {
+    108240968: LIGHT_STONE, 1178167014: LIGHT_STONE,  # City Hall/County Building granite
+    685519267: LIGHT_STONE, 685519269: LIGHT_STONE, 685519270: LIGHT_STONE,
+    1425860168: LIGHT_STONE, 1425860169: LIGHT_STONE,  # Board of Trade Indiana limestone
+    64391487: GRAPHITE_GLASS, 73693773: GRAPHITE_GLASS, 73743541: GRAPHITE_GLASS,  # Federal Center
+    73671128: WARM_MASONRY, 124865455: WARM_MASONRY,  # Monadnock brick and Marquette terra cotta
+    145203366: AQUAMARINE_GLASS,  # Inland Steel
+    148164109: SULLIVAN_FACADE, 148164116: SULLIVAN_FACADE,  # Terra cotta over cast iron
+    230926922: THOMPSON_FACADE,  # Historic blue glazing and salmon trim
+}
 
 
 def read_glb(source):
@@ -171,6 +185,8 @@ def render_water(result, faces):
 
 
 def building_material(tags, osm_id):
+    if osm_id in FACADE_MATERIALS:
+        return FACADE_MATERIALS[osm_id]
     material = str(tags.get("building:material", "")).lower()
     color = str(tags.get("building:colour", "")).lower()
     if color in {"black", "#000000", "darkgray", "darkgrey"}:
@@ -306,9 +322,10 @@ def export(source, target):
                         continue
                     local_distance = min(math.hypot(x + 380, z - 520), math.hypot(x - 200, z + 300))
                     importance = math.sqrt(area) * (math.sqrt(height) + 1) / (1 + local_distance / 450)
-                    compact = local_distance > 240 and height < 85
+                    is_landmark = osm_id in FACADE_MATERIALS
+                    compact = not is_landmark and local_distance > 240 and height < 85
                     batch = building(mesh, metadata, binary, extras, low, high, compact)
-                    building_batches.append((importance, osm_id, batch))
+                    building_batches.append((math.inf if is_landmark else importance, osm_id, batch))
                 elif is_water:
                     for primitive in mesh:
                         water_faces.extend(triangles(metadata, binary, primitive))

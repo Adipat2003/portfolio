@@ -92,12 +92,12 @@ for (let offset = 0; offset < mesh.length; offset += 32) {
   assert.ok(vertex.every(Number.isFinite));
   near(Math.hypot(...vertex.slice(3, 6)), 1, 0.001, "mesh normal");
   const [, height, , nx, ny, nz, material, seed] = vertex;
-  assert.ok(Number.isInteger(material) && material >= 0 && material <= 9 && seed >= 0 && seed <= 1);
+  assert.ok(Number.isInteger(material) && ((material >= 0 && material <= 9) || (material >= 16 && material <= 21)) && seed >= 0 && seed <= 1);
   materialCounts.set(material, (materialCounts.get(material) ?? 0) + 1);
   if (material === 4) assert.ok(height === -5 && nx === 0 && ny === 1 && nz === 0, "level water");
   if (material === 8) assert.equal(height, -6, "land stays below the water");
 }
-for (const material of [0, 1, 2, 3, 4, 5, 7, 8, 9]) assert.ok(materialCounts.get(material) > 0);
+for (const material of [0, 1, 2, 3, 4, 5, 7, 8, 9, 16, 17, 18, 19, 20, 21]) assert.ok(materialCounts.get(material) > 0);
 console.log("atlas-river-environment-check: river mesh size, normals, and water level passed");
 
 const { moveRiverPan, riverCamera, riverEntryZoom, RIVER_WILLIS } = await import("../src/lib/atlas-river-renderer.ts");
@@ -115,3 +115,9 @@ assert.equal(riverEntryZoom(0), .76);
 assert.ok(riverEntryZoom(475) > .76 && riverEntryZoom(475) < 1);
 assert.equal(riverEntryZoom(950), 1);
 console.log("atlas-river-environment-check: camera pan and entry zoom passed");
+
+const jackson = riverCamera(defaultView, RIVER_WILLIS, 1.5, [0, 0], { point: [266, 735], progress: 4 });
+assert.ok(jackson.eye[1] > 400, "the guided view stays above the Loop streets");
+near(jackson.project([266, 36, 735])[0], .5, 0.001, "camera centers on the mapped station");
+const state = riverCamera(defaultView, RIVER_WILLIS, 1.5, [0, 0], { point: [408, 738], progress: 5 });
+near(state.eye[0] - jackson.eye[0], 142, 0.001, "Jackson transfer spans Dearborn to State");

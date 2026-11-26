@@ -5,24 +5,31 @@ type RiverEnvironment = ReturnType<typeof getRiverEnvironment>;
 
 type Vec = readonly [number, number, number];
 export type RiverPan = readonly [east: number, south: number];
+export type RiverGuide = { point: RiverPan; progress: number };
 export const RIVER_CENTER: RiverPan = [0, 0];
 
 export const RIVER_WILLIS = [-282.44, 234, 657.10] as const;
 export const RIVER_MARINA = [305.9, 85, -364.6] as const;
 
-export function riverCamera(view: OrbitView, target: Vec, aspect: number, pan: RiverPan = RIVER_CENTER) {
+export function riverCamera(view: OrbitView, target: Vec, aspect: number, pan: RiverPan = RIVER_CENTER, guide?: RiverGuide) {
 	const willis = target === RIVER_WILLIS;
-	const heading = (view.yaw + (willis ? 28 : 115)) * Math.PI / 180;
-	const tilt = (view.pitch * .85 - (willis ? 6 : 17)) * Math.PI / 180;
+	const ride = Math.min(1, Math.max(0, guide?.progress ?? 0));
+	const eased = ride * ride * (3 - 2 * ride);
+	// A stable diagonal view emphasizes the buildings and keeps both subway legs in context.
+	const heading = ((view.yaw + (willis ? 28 : 115)) * (1 - eased) - 33 * eased) * Math.PI / 180;
+	const tilt = ((view.pitch * .85 - (willis ? 6 : 17)) * (1 - eased) + 56 * eased) * Math.PI / 180;
 	const cosTilt = Math.cos(tilt);
-	const distance = (willis ? 740 : 230) / view.zoom * Math.max(1, .72 / aspect);
+	const distance = (((willis ? 740 : 230) / view.zoom) * (1 - eased) + 465 * eased) * Math.max(1, .72 / aspect);
+	const focusX = target[0] * (1 - eased) + (guide?.point[0] ?? target[0]) * eased;
+	const focusY = target[1] * (1 - eased) + 36 * eased;
+	const focusZ = target[2] * (1 - eased) + (guide?.point[1] ?? target[2]) * eased;
 	const back: Vec = [Math.sin(heading) * cosTilt, Math.sin(tilt), Math.cos(heading) * cosTilt];
 	const right: Vec = [Math.cos(heading), 0, -Math.sin(heading)];
 	const up: Vec = [back[1] * right[2], cosTilt, -back[1] * right[0]];
 	const eye: Vec = [
-		target[0] + pan[0] + back[0] * distance,
-		target[1] + back[1] * distance,
-		target[2] + pan[1] + back[2] * distance,
+		focusX + pan[0] * (1 - eased) + back[0] * distance,
+		focusY + back[1] * distance,
+		focusZ + pan[1] * (1 - eased) + back[2] * distance,
 	];
 	const scale = .50;
 	const shift = aspect > 1.6 ? -.27 : 0;
@@ -285,6 +292,35 @@ void main() {
 		emit = (vec3(.70,.44,.22)+vec3(.18,.23,.24)*step(.88,column))*uNight
 			*step(.77,column)*(1.0-mullion)*(.14+.58*detail);
 	}
+	if (mat >= 16.0 && mat <= 21.0) {
+		float along = mix(vPosition.x,vPosition.z,abs(normal.x));
+		vec2 window = vec2(along/3.6,(vPosition.y+6.0)/3.7);
+		vec2 pane = fract(window);
+		vec2 edge = min(pane,1.0-pane);
+		vec2 soft = ${derivatives ? "clamp(fwidth(window)*.62,vec2(.018),vec2(.28))" : "vec2(.06)"};
+		vec2 border = vec2(.12,.16);
+		if (mat == 16.0 || mat == 18.0 || mat == 20.0) border = vec2(.27,.23);
+		vec2 inset = smoothstep(border-soft,border+soft,edge);
+		float paneArea = inset.x*inset.y;
+		vec3 face = vec3(.70,.66,.58);
+		vec3 glass = vec3(.28,.36,.39);
+		if (mat == 17.0) { face = vec3(.14,.15,.15); glass = vec3(.18,.23,.24); }
+		if (mat == 18.0) { face = mix(vec3(.36,.23,.16),vec3(.60,.42,.34),seed); glass = vec3(.21,.23,.23); }
+		if (mat == 19.0) { face = vec3(.45,.54,.53); glass = vec3(.22,.47,.49); }
+		if (mat == 20.0) {
+			face = mix(vec3(.13,.21,.19),vec3(.78,.75,.70),smoothstep(3.0,4.1,vPosition.y));
+			glass = vec3(.26,.31,.33);
+		}
+		if (mat == 21.0) {
+			face = vec3(.67,.38,.33);
+			glass = vec3(.31,.55,.68);
+			paneArea = max(.62,paneArea);
+		}
+		surface = mix(face,glass*(.92+.10*max(normal.z,0.0)),paneArea);
+		float cell = hash(floor(window)+seed*59.0);
+		emit = vec3(.73,.46,.22)*uNight*paneArea*step(.83,cell)*.39;
+	}
+
 	if (mat == 5.0) {
 		vec3 summer = mix(vec3(.29,.36,.22),vec3(.40,.47,.29),seed);
 		vec3 fall = mix(vec3(.52,.33,.19),vec3(.70,.54,.26),seed);
@@ -408,7 +444,7 @@ export function mountRiverRenderer(canvas: HTMLCanvasElement, mesh: Float32Array
 	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, shadowDepth);
 	let lastSun = "";
 
-	function draw(view: OrbitView, target: Vec, env: RiverEnvironment, palette: string[], time: number, snow: number, pan: RiverPan) {
+	function draw(view: OrbitView, target: Vec, env: RiverEnvironment, palette: string[], time: number, snow: number, pan: RiverPan, guide?: RiverGuide) {
 		const cssWidth = Math.max(1, canvas.clientWidth), cssHeight = Math.max(1, canvas.clientHeight);
 		const pixelRatio = Math.min(devicePixelRatio || 1, 2, 2560 / cssWidth, Math.sqrt(3_200_000 / (cssWidth * cssHeight)));
 		const width = Math.max(1, Math.round(cssWidth * pixelRatio));
@@ -423,7 +459,7 @@ export function mountRiverRenderer(canvas: HTMLCanvasElement, mesh: Float32Array
 			gl.bindRenderbuffer(gl.RENDERBUFFER, depth);
 			gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, mirrorWidth, mirrorHeight);
 		}
-		const camera = riverCamera(view, target, width / height, pan);
+		const camera = riverCamera(view, target, width / height, pan, guide);
 		const cloud = env.weather.cloudCover ?? .24;
 		const wind = Math.min(1, (env.weather.windSpeedKmh ?? 10) / 48);
 		const precip = env.weather.precipitation === "snow" || env.weather.precipitation === "mixed" ? 2 : env.weather.precipitation === "rain" ? 1 : 0;
