@@ -623,7 +623,7 @@ export default function AtlasRide() {
 						<p className="dye-note">River dye week: Chicago runs the river green ahead of St. Patrick's Day.</p>
 						<div className="ride-actions">
 							<button type="button" className="explore-willis" onClick={(event) => selectLandmark(WILLIS_TOWER, event.currentTarget)}>
-								Explore Willis Tower in 3D
+								Explore the riverfront in 3D
 							</button>
 							<button type="button" className="skip-ride" onClick={skipRide}>
 								Skip to the live map

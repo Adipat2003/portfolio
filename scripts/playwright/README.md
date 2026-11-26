@@ -67,14 +67,14 @@ route filtering, search, on-demand panels, 44 px controls, Escape/focus return,
 read-only official alerts and sourced transit-guide fixtures. Map geometry is
 checked at desktop, short-laptop, tablet, phone and 320x740 widths. The positions
 fixtures verify one poll, real-fix movement, reduced motion and honest fallback.
-Skyline checks cover the authored window silhouettes and the inline Willis
-Tower riverfront. At all nine viewports, the model must clear the trip strip
-and controls, fill at least half the artwork height, and meet the waterline.
-The tower checks cover a full rotation, keyboard tilt and zoom, mouse and touch
-drags, wheel scrolling over the tower, phone orientation changes, visible
-focus, reduced motion, and focus return. A mocked Skydeck schedule must color
-the masts and appear in both facades. The river reflection must reuse the
-active model so it follows the orbit and antenna colors.
+Skyline checks cover the authored silhouettes and inline WebGL riverfront.
+At all nine viewports the rendered landmark must clear the trip strip and
+controls and remain prominent. The suite exercises a full rotation,
+keyboard tilt and zoom, mouse and touch drags, wheel scrolling back into the
+ride, phone orientation, visible focus and focus return. Controlled Skydeck
+and Midway responses verify the schedule and live conditions. The suite also
+exercises daylight, blue-hour, snow and fall previews, focuses Marina City,
+and forces the illustrated fallback with reduced motion.
 Desktop and phone captures also cover Dispatch sections and project details.
 
 To run only the map checks during development, set `NETWORK_ONLY=1` with the

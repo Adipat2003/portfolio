@@ -106,6 +106,25 @@ upgraded from "projected" to "achieved" in the UI copy.
 
 Custom art, not stock imagery and not generated imagery.
 
+The inline Chicago River view starts at Willis Tower and can reframe to
+Marina City. The 499 KB compressed city mesh comes from an editable downtown
+gen-map preset B export of OpenStreetMap data. Rebuild it with
+`python3 scripts/atlas-river-mesh.py /path/to/gen-map-export.zip`. The geometry
+uses a level river and simplified land grade, with approximate bridge decks
+based on published closed clearances. Nearby buildings use mapped footprints
+and approximate materials, while Willis Tower and Marina City are modeled
+using architectural references. [OpenStreetMap attribution](https://www.openstreetmap.org/copyright)
+· [USCG Light List](https://www.navcen.uscg.gov/sites/default/files/pdf/lightLists/LightList_V5_2024.pdf)
+· [Skydeck architecture guide](https://theskydeck.com/wp-content/uploads/2020/03/The-Hows-Whats-and-Wows-of-Willis-Tower-A-Guide-For-Teachers.pdf)
+· [Bertrand Goldberg's Marina City archive](https://bertrandgoldberg.org/projects/marina-city/)
+
+The inline scene uses Chicago time for the sun and moon, seasonal foliage
+estimates, and the latest available station observation from Chicago
+Midway. Weather and seasonal previews are labeled simulations. Building windows
+use a simulated light pattern and Willis antenna colors follow the published
+schedule when available. [NWS observations](https://www.weather.gov/documentation/services-web-api)
+· [JPL ephemeris verification](https://ssd.jpl.nasa.gov/horizons/manual.html)
+
 1. **Named landmarks as authored SVG.** Willis Tower's bundled setbacks, the
    Hancock's tapered cross-braced body, Marina City's corncob cylinders, and the
    rest are hand-placed path data in `content/atlas.json`, each entry naming its
